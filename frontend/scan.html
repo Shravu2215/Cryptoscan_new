@@ -1318,6 +1318,10 @@
         setTimeout(() => { showState('state-completed'); }, 800);
       }
 
+      function getToken() {
+        return localStorage.getItem('cs_token') || localStorage.getItem('cs_auth_token') || '';
+      }
+
       async function startRealScan() {
         if (!selectedFile && !selectedRepoId) return;
         showState('state-scanning');
@@ -1327,12 +1331,14 @@
         addLog('Initializing upload pipeline...');
         setPipe(1);
 
-        const token = localStorage.getItem('cs_token');
+        const token = getToken();
+        const API_BASE = (window.Auth && window.Auth.API_BASE) ? window.Auth.API_BASE : (window.location.port === '3000' || window.location.protocol === 'file:' ? 'http://localhost:3000' : 'https://cryptoscan-new-backend.onrender.com');
+
         if (!token) {
-          alert('Please login first');
+          addLog('<span style="color:var(--green)">Running client-side local scan engine...</span>');
+          await runFallbackClientScan();
           return;
         }
-        const API_BASE = Auth.API_BASE || 'http://localhost:3000';
 
         try {
           let repo;
