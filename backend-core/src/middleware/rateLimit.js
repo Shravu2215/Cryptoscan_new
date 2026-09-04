@@ -3,14 +3,15 @@
 const rateLimit = require('express-rate-limit');
 
 function buildStore(prefix) {
-  if (!process.env.REDIS_URL || process.env.REDIS_URL.includes('redis:6379')) return undefined;
+  // If Redis is not explicitly configured or running in docker/local dev without Redis container, use in-memory store
+  if (!process.env.REDIS_URL || process.env.USE_REDIS !== 'true') return undefined;
 
   try {
     const Redis = require('ioredis');
     const { RedisStore } = require('rate-limit-redis');
-    const client = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1 });
-    client.on('error', (err) => console.error('Rate-limit Redis error:', err.message));
-    client.connect().catch(err => console.error('Rate-limit Redis connect failed:', err.message));
+    const client = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, enableOfflineQueue: false });
+    client.on('error', (err) => console.warn('Rate-limit Redis warning:', err.message));
+    client.connect().catch(() => {});
     return new RedisStore({ prefix: prefix || 'rl:', sendCommand: (...args) => client.call(...args) });
   } catch (err) {
     console.warn('Redis rate-limit store unavailable, falling back to in-memory:', err.message);
