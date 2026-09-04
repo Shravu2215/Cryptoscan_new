@@ -42,24 +42,26 @@ class AppShell {
   }
 
   renderSidebar(currentPage) {
-    const sidebar = document.getElementById('app-sidebar');
+    const sidebar = document.getElementById('app-sidebar') || document.querySelector('.app-sidebar') || document.querySelector('.sb') || document.querySelector('.sidebar');
     if (!sidebar) return;
 
+    const pageName = currentPage.split('/').pop() || 'dashboard.html';
+
     const navItems = [
-      { group: 'Overview', items: [
+      { group: 'OVERVIEW', items: [
         { name: 'Dashboard', url: 'dashboard.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>' }
       ]},
-      { group: 'Analysis', items: [
+      { group: 'ANALYSIS', items: [
         { name: 'Repositories', url: 'repositories.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>' },
         { name: 'Scan', url: 'scan.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>' },
         { name: 'Findings', url: 'findings.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>' },
         { name: 'CBOM', url: 'cbom.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>' }
       ]},
-      { group: 'Security', items: [
+      { group: 'SECURITY', items: [
         { name: 'Risk & Migration', url: 'risk-migration.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>' },
         { name: 'Verification', url: 'verification.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' }
       ]},
-      { group: 'System', items: [
+      { group: 'SYSTEM', items: [
         { name: 'Profile', url: 'profile.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>' },
         { name: 'Settings', url: 'settings.html', icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>' }
       ]}
@@ -69,10 +71,10 @@ class AppShell {
     navItems.forEach(group => {
       navHtml += `<div class="sb-nav-group"><div class="sb-nav-group-title">${group.group}</div>`;
       group.items.forEach(item => {
-        const isActive = currentPage === item.url ? 'active' : '';
+        const isActive = (pageName === item.url || (pageName === '' && item.url === 'dashboard.html')) ? 'active' : '';
         navHtml += `
-          <a href="${item.url}" class="sb-nav-item ${isActive}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">${item.icon}</svg>
+          <a href="${item.url}" class="sb-nav-item nav-item ${isActive}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${item.icon}</svg>
             <span class="sb-label">${item.name}</span>
           </a>
         `;
@@ -83,7 +85,12 @@ class AppShell {
     sidebar.innerHTML = `
       <div class="sb-header">
         <a href="dashboard.html" class="sb-brand">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <div class="sb-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" width="24" height="24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
           <span class="sb-brand-name">CryptoScan</span>
         </a>
       </div>
@@ -96,9 +103,9 @@ class AppShell {
           <span class="status-text">System Operational</span>
         </div>
         <div class="sb-user">
-          <div class="sb-user-avatar" id="sb-user-avatar">U</div>
+          <div class="sb-user-avatar" id="sb-user-avatar">S</div>
           <div class="sb-user-info">
-            <div class="sb-user-name" id="sb-user-name">User</div>
+            <div class="sb-user-name" id="sb-user-name">Shravani Dinesh Joshi</div>
             <div class="sb-user-role">Security Analyst</div>
           </div>
         </div>
