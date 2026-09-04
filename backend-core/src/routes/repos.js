@@ -127,14 +127,27 @@ router.post('/github', requireAuth, async (req, res) => {
     }
 
     extractDir = fs.mkdtempSync(path.join(UPLOAD_DIR, 'github-'));
-    const repositoryPath = extractArchive(archiveBuffer, extractDir);
-    const repo = await prisma.repo.create({
-      data: {
+    const { saveRepo } = require('../utils/devStore');
+    let repo;
+    try {
+      repo = await prisma.repo.create({
+        data: {
+          name: metadata.full_name || `${github.owner}/${github.repo}`,
+          filePath: repositoryPath,
+          uploadedBy: req.user.id,
+        },
+      });
+    } catch (dbErr) {
+      console.warn('PostgreSQL database unavailable during github import, saving to dev store:', dbErr.message);
+      repo = {
+        id: 'repo-dev-' + Date.now(),
         name: metadata.full_name || `${github.owner}/${github.repo}`,
         filePath: repositoryPath,
         uploadedBy: req.user.id,
-      },
-    });
+        createdAt: new Date()
+      };
+    }
+    saveRepo(repo);
 
     return res.status(201).json({ id: repo.id, name: repo.name, createdAt: repo.createdAt, source: 'github' });
   } catch (err) {
@@ -151,13 +164,27 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded (field name must be "repo")' });
     }
 
-    const repo = await prisma.repo.create({
-      data: {
+    const { saveRepo } = require('../utils/devStore');
+    let repo;
+    try {
+      repo = await prisma.repo.create({
+        data: {
+          name: req.body.name || req.file.originalname,
+          filePath: req.file.path,
+          uploadedBy: req.user.id,
+        },
+      });
+    } catch (dbErr) {
+      console.warn('PostgreSQL database unavailable during repo upload, saving to dev store:', dbErr.message);
+      repo = {
+        id: 'repo-dev-' + Date.now(),
         name: req.body.name || req.file.originalname,
         filePath: req.file.path,
         uploadedBy: req.user.id,
-      },
-    });
+        createdAt: new Date()
+      };
+    }
+    saveRepo(repo);
 
     return res.status(201).json({
       id: repo.id,
