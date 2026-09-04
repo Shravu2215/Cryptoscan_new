@@ -1238,9 +1238,12 @@
             for (const fn of entries) {
               const fileObj = zip.files[fn];
               if (fileObj.dir) continue;
+              if (fn.includes('node_modules/') || fn.includes('.git/') || fn.includes('__MACOSX/') || fn.includes('dist/') || fn.includes('build/')) {
+                continue;
+              }
 
               const ext = fn.split('.').pop().toLowerCase();
-              if (['png','jpg','jpeg','gif','ico','pdf','zip','tar','gz','exe','dll','so','dylib','bin','woff','woff2','ttf','eot','mp3','mp4','mov'].includes(ext)) {
+              if (['png','jpg','jpeg','gif','ico','pdf','zip','tar','gz','exe','dll','so','dylib','bin','woff','woff2','ttf','eot','mp3','mp4','mov','pyc','o','a','iso','img'].includes(ext)) {
                 continue;
               }
 
@@ -1251,7 +1254,7 @@
                 lines.forEach((lineText, lineIdx) => {
                   rules.forEach(rule => {
                     if (rule.regex.test(lineText)) {
-                      detectedFindings.push({
+                      const matchItem = {
                         id: `find-${detectedFindings.length + 1}-${Date.now()}`,
                         algorithm: rule.algo,
                         usage: rule.usage,
@@ -1263,7 +1266,11 @@
                         description: rule.desc,
                         recommendation: rule.rec,
                         confidence: 'High|ast'
-                      });
+                      };
+                      detectedFindings.push(matchItem);
+                      if (detectedFindings.length <= 12) {
+                        addLog(`<span style="color:var(--amber)">[MATCH] ${fn}:${lineIdx + 1} &rarr; ${rule.algo} (${rule.sev})</span>`);
+                      }
                     }
                   });
                 });
@@ -1274,7 +1281,11 @@
           }
         }
 
-        // 100% Dynamic - Zero Mock Data Fallback
+        if (detectedFindings.length === 0) {
+          addLog('<span style="color:var(--green)">No cryptographic vulnerabilities found in uploaded archive.</span>');
+        } else {
+          addLog(`<span style="color:var(--cyan)">Pattern match complete: ${detectedFindings.length} cryptographic occurrence(s) detected across repository.</span>`);
+        }
 
 
         setPipe(3);

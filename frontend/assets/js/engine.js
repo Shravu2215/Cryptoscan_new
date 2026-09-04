@@ -338,6 +338,8 @@ const CryptoEngine = {
       currentData.repositories.unshift(repoSummary);
     }
 
+    // Clear previous scan entries for this repository so stale findings are not accumulated
+    currentData.scans = (currentData.scans || []).filter(s => s.repoName !== repoName && s.repoId !== scanResult.repoId);
     currentData.scans.unshift(scanResult);
     currentData.activeScan = scanResult;
     
