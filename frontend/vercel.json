@@ -1,4 +1,28 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/login.html", "destination": "/login.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/signup.html", "destination": "/signup.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/dashboard.html", "destination": "/dashboard.html" },
+    { "source": "/scan", "destination": "/scan.html" },
+    { "source": "/scan.html", "destination": "/scan.html" },
+    { "source": "/cbom", "destination": "/cbom.html" },
+    { "source": "/cbom.html", "destination": "/cbom.html" },
+    { "source": "/findings", "destination": "/findings.html" },
+    { "source": "/findings.html", "destination": "/findings.html" },
+    { "source": "/risk-migration", "destination": "/risk-migration.html" },
+    { "source": "/risk-migration.html", "destination": "/risk-migration.html" },
+    { "source": "/verification", "destination": "/verification.html" },
+    { "source": "/verification.html", "destination": "/verification.html" },
+    { "source": "/repositories", "destination": "/repositories.html" },
+    { "source": "/repositories.html", "destination": "/repositories.html" },
+    { "source": "/settings", "destination": "/settings.html" },
+    { "source": "/settings.html", "destination": "/settings.html" },
+    { "source": "/profile", "destination": "/profile.html" },
+    { "source": "/profile.html", "destination": "/profile.html" }
+  ]
 }
