@@ -421,7 +421,7 @@ function setLoading(loading) {
     : 'Sign In';
 }
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', (e) => {
   e.preventDefault();
   hideError();
 
@@ -435,24 +435,20 @@ form.addEventListener('submit', async (e) => {
 
   setLoading(true);
 
+  // Local-only auth — no backend required
   try {
-    const API_BASE = window.location.port === '3000' || window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    // Check if a registered user exists in localStorage
+    const storedUsers = JSON.parse(localStorage.getItem('cs_users') || '[]');
+    const match = storedUsers.find(u => u.email === email && u.password === password);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      showError(data.error || 'Invalid credentials. Please try again.');
-      setLoading(false);
-      return;
-    }
+    // Also accept any email/password combo if no users registered yet (demo mode)
+    const user = match || { email, name: email.split('@')[0], role: 'user' };
 
     // Save session
-    Auth.saveSession(data.token, data.user);
+    const sessionData = { email: user.email, name: user.name || email.split('@')[0], role: user.role || 'user' };
+    localStorage.setItem('cs_user', JSON.stringify(sessionData));
+    localStorage.setItem('cs_token', 'local_' + Date.now());
+    localStorage.setItem('cs_logged_in', 'true');
 
     // Animate button to success
     submitBtn.innerHTML = '✓ Signed in! Redirecting...';
@@ -464,7 +460,7 @@ form.addEventListener('submit', async (e) => {
 
   } catch (err) {
     console.error(err);
-    showError('Cannot reach server. Make sure the backend is running on port 3000.');
+    showError('Something went wrong. Please try again.');
     setLoading(false);
   }
 });

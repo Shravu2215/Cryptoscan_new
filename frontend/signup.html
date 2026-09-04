@@ -424,7 +424,7 @@ function setLoading(loading) {
     : 'Create Account';
 }
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const name     = document.getElementById('name').value.trim();
@@ -449,20 +449,19 @@ form.addEventListener('submit', async (e) => {
   try {
     const displayName = company ? `${name} (${company})` : name;
 
-    const API_BASE = window.location.port === '3000' || window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-    const res = await fetch(`${API_BASE}/api/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name: displayName })
-    });
+    // Local-only registration — no backend required
+    const storedUsers = JSON.parse(localStorage.getItem('cs_users') || '[]');
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      showAlert('error', data.error || 'Could not create account. Please try again.');
+    // Check if email already exists
+    if (storedUsers.find(u => u.email === email)) {
+      showAlert('error', 'An account with this email already exists. Please sign in.');
       setLoading(false);
       return;
     }
+
+    // Save new user
+    storedUsers.push({ email, password, name: displayName, role: 'user', createdAt: Date.now() });
+    localStorage.setItem('cs_users', JSON.stringify(storedUsers));
 
     // Success
     showAlert('success');
@@ -475,7 +474,7 @@ form.addEventListener('submit', async (e) => {
 
   } catch (err) {
     console.error(err);
-    showAlert('error', 'Cannot reach server. Make sure the backend is running on port 3000.');
+    showAlert('error', 'Something went wrong. Please try again.');
     setLoading(false);
   }
 });
