@@ -110,7 +110,18 @@ router.get('/:scanId/findings', requireAuth, async (req, res) => {
     }
 
     const findings = await prisma.finding.findMany({ where: { scanId } });
-    return res.json({ scanId, status: scan.status, findings });
+    
+    // Count unique files scanned and unique algorithms (crypto components)
+    const uniqueFiles = new Set(findings.map(f => f.filePath)).size;
+    const uniqueAlgos = new Set(findings.map(f => f.algorithm).filter(a => a && a !== 'UNKNOWN')).size;
+    
+    return res.json({
+      scanId,
+      status: scan.status,
+      findings,
+      filesScanned: uniqueFiles || null,
+      components: uniqueAlgos || null
+    });
   } catch (err) {
     console.error('Findings fetch error:', err);
     return res.status(500).json({ error: 'Internal server error' });

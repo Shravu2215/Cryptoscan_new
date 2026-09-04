@@ -174,21 +174,21 @@ body {
 .toggle { width: 36px; height: 20px; background: var(--green); border-radius: 20px; position: relative; }
 .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 18px; }
 
-.pipeline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; position: relative; }
-.pipeline::before { content: ''; position: absolute; top: 12px; left: 0; right: 0; height: 2px; background: var(--border-color); z-index: 1; }
-.pipe-step { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; width: 100px; text-align: center; }
-.pipe-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+.pipeline { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; position: relative; padding-top: 0; }
+.pipeline::before { content: ''; position: absolute; top: 11px; left: 0; right: 0; height: 2px; background: var(--border-color); z-index: 1; }
+.pipe-step { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1; text-align: center; }
+.pipe-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .pipe-step.active .pipe-icon { border-color: var(--green); background: var(--green-bg); }
 .pipe-step.done .pipe-icon { border-color: var(--green); background: var(--green); color: white; }
 .pipe-step.active .pipe-icon::after { content:''; width:8px; height:8px; background:var(--green); border-radius:50%; animation: pulse 1s infinite; }
 @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
-.pipe-label { font-size: 11px; font-weight: 600; color: var(--text-m); }
+.pipe-label { font-size: 11px; font-weight: 600; color: var(--text-m); line-height: 1.3; margin-top: 2px; }
 .pipe-step.active .pipe-label, .pipe-step.done .pipe-label { color: var(--text-h); }
 
-.log-box { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--text-h); color: var(--text-m); padding: 16px; border-radius: var(--r-sm); height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.log-box { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #0d1117; color: #c9d1d9; padding: 16px; border-radius: var(--r-sm); height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; border: 1px solid #30363d; }
 .log-row { display: flex; gap: 8px; }
-.log-time { color: var(--text-s); }
-.log-msg { color: #f4f4f5; }
+.log-time { color: #6e7681; flex-shrink: 0; }
+.log-msg { color: #c9d1d9; }
 
 /* State 4 styles */
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
@@ -501,11 +501,11 @@ body {
         <div class="summary-grid" style="grid-template-columns: repeat(6, 1fr);">
           <div class="sum-card">
             <div class="sum-lbl">Files Scanned</div>
-            <div class="sum-val">1,423</div>
+            <div class="sum-val" id="res-files">—</div>
           </div>
           <div class="sum-card">
             <div class="sum-lbl">Crypto Comps</div>
-            <div class="sum-val">25</div>
+            <div class="sum-val" id="res-components">—</div>
           </div>
           <div class="sum-card">
             <div class="sum-lbl">Total Findings</div>
@@ -769,14 +769,17 @@ async function startRealScan() {
 
     setPipe(8); // All complete
     addLog('Scan completed successfully.');
-    document.getElementById('live-files').textContent = 'Analyzing...'; // No backend metric available
-    document.getElementById('live-components').textContent = 'Analyzing...';
+    
+    // Update live stats with real final counts
+    const allFindings = finalData.findings || [];
+    document.getElementById('live-files').textContent = finalData.filesScanned || allFindings.length;
+    document.getElementById('live-components').textContent = finalData.components || allFindings.filter(f => f.algorithm && f.algorithm !== 'UNKNOWN').length;
     
     // Save to global storage
-    CryptoEngine.processRealBackendFindings(repo, scanData.scanId, finalData.findings);
+    CryptoEngine.processRealBackendFindings(repo, scanData.scanId, allFindings);
     
     // Populate State 4
-    populateCompletionState(finalData.findings);
+    populateCompletionState(finalData, allFindings);
     setTimeout(() => { showState('state-completed'); }, 1000);
 
   } catch (err) {
@@ -785,9 +788,16 @@ async function startRealScan() {
   }
 }
 
-function populateCompletionState(rawFindings) {
-  const findings = (rawFindings || []).filter(f => !f.suppressed);
+function populateCompletionState(finalData, rawFindings) {
+  // Show ALL findings from backend (total count, no suppression filter)
+  const findings = rawFindings || [];
   document.getElementById('res-total').textContent = findings.length;
+  
+  // Show real files scanned and crypto components if backend provides them
+  const filesEl = document.getElementById('res-files');
+  const compsEl = document.getElementById('res-components');
+  if (filesEl) filesEl.textContent = finalData.filesScanned ? finalData.filesScanned.toLocaleString() : findings.length;
+  if (compsEl) compsEl.textContent = finalData.components || findings.filter(f => f.algorithm && f.algorithm !== 'UNKNOWN').length;
   
   let c = 0, h = 0, m = 0, l = 0, q = 0;
   findings.forEach(f => {
