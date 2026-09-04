@@ -198,7 +198,7 @@ const CryptoEngine = {
       category: 'Insecure Randomness',
       severity: 'high',
       quantum: 'no',
-      regex: /(?:Math\.random\(\)|random\.random\(\)|rand\(\)\s*%/i,
+      regex: /(?:Math\.random\(\)|random\.random\(\)|rand\(\)\s*%)/i,
       remediation: 'Use cryptographically secure PRNG (crypto.getRandomValues / os.urandom).'
     },
     {
