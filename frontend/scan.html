@@ -1205,9 +1205,9 @@
         addLog('Initializing upload pipeline...');
         setPipe(1);
 
-        const token = Auth.getToken();
+        const token = localStorage.getItem('cs_token');
         if (!token) {
-          addLog('<span style="color:var(--red)">Error: Authentication token missing. Please log in first.</span>');
+          alert('Please login first');
           return;
         }
         const API_BASE = Auth.API_BASE || 'http://localhost:3000';

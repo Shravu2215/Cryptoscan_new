@@ -15,7 +15,7 @@ const Auth = {
 
   /** Get stored JWT */
   getToken() {
-    return localStorage.getItem(AUTH_KEY) || localStorage.getItem('cs_auth_token');
+    return localStorage.getItem(AUTH_KEY);
   },
 
   /** Get stored user object */
