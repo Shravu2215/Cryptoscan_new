@@ -1216,15 +1216,23 @@
             document.getElementById('live-files').textContent = totalFilesCount;
 
             const rules = [
-              { regex: /(?:RSA\.generate\(\s*(?:512|1024)|key_size\s*=\s*(?:512|1024)|generate_private_key\([^)]*1024|RSA-1024)/i, algo: 'RSA-1024', usage: 'Asymmetric Key Generation', library: 'Crypto API', sev: 'CRITICAL', q: 'VULNERABLE', desc: 'RSA 1024-bit key generation detected. Short RSA keys are vulnerable to factorization attacks and Shor\'s quantum algorithm.', rec: 'Migrate immediately to NIST ML-DSA or minimum RSA-3072 bit key.' },
-              { regex: /(?:RSA\.generate\(\s*(?:2048)|key_size\s*=\s*(?:2048)|generate_private_key\([^)]*2048|RSA-2048)/i, algo: 'RSA-2048', usage: 'Asymmetric Key Pair', library: 'Crypto API', sev: 'MEDIUM', q: 'VULNERABLE', desc: 'RSA 2048-bit key detected. Vulnerable to Shor\'s algorithm on quantum computers.', rec: 'Migrate to NIST ML-DSA or ML-KEM post-quantum algorithms.' },
-              { regex: /(?:createHash\(\s*['"]md5['"]|hashlib\.md5|MessageDigest\.getInstance\(\s*["']MD5["']|MD5_Init|crypto\.md5|MD5\()/i, algo: 'MD5', usage: 'Data Integrity Hashing', library: 'Standard Hash API', sev: 'CRITICAL', q: 'SAFE', desc: 'MD5 hash algorithm detected. Cryptographically broken due to collision attacks.', rec: 'Replace MD5 with collision-resistant SHA-256 or SHA-3.' },
-              { regex: /(?:createHash\(\s*['"]sha1['"]|hashlib\.sha1|MessageDigest\.getInstance\(\s*["']SHA-?1["']|SHA1_Init|SHA1\()/i, algo: 'SHA-1', usage: 'Digest Hashing', library: 'Standard Hash API', sev: 'HIGH', q: 'SAFE', desc: 'SHA-1 hash algorithm detected. Cryptographically weak due to collision vulnerabilities.', rec: 'Upgrade to SHA-256 or SHA-512.' },
-              { regex: /(?:des\.NewCipher|DES_ecb_encrypt|Cipher\.getInstance\(\s*["']DES|CryptoJS\.DES|TripleDES|3DES)/i, algo: '3DES / DES', usage: 'Symmetric Encryption', library: 'Block Cipher API', sev: 'CRITICAL', q: 'SAFE', desc: 'DES/3DES block cipher detected. Deprecated by NIST due to Sweet32 64-bit block size attacks.', rec: 'Migrate to AES-256-GCM authenticated encryption.' },
-              { regex: /(?:secp256k1|secp256r1|prime256v1|SECP256R1|crypto\.createECDH|EC_KEY_new_by_curve_name|ECDSA|ECDH)/i, algo: 'ECDSA / ECDH', usage: 'Elliptic Curve Signatures', library: 'OpenSSL / WebCrypto', sev: 'HIGH', q: 'VULNERABLE', desc: 'Classical ECDSA / ECDH detected. Quantum computers running Shor\'s algorithm break elliptic curve discrete logarithms.', rec: 'Implement NIST PQC hybrid signatures (ML-DSA / Falcon).' },
+              { regex: /(?:RSA\.generate\(\s*(?:512|1024)|key_size\s*=\s*(?:512|1024)|generate_private_key\([^)]*1024|RSA-?1024|rsa1024)/i, algo: 'RSA-1024', usage: 'Asymmetric Key Generation', library: 'Crypto API', sev: 'CRITICAL', q: 'VULNERABLE', desc: 'RSA 1024-bit key generation detected. Short RSA keys are vulnerable to factorization attacks and Shor\'s quantum algorithm.', rec: 'Migrate immediately to NIST ML-DSA or minimum RSA-3072 bit key.' },
+              { regex: /(?:RSA\.generate\(\s*(?:2048|3072|4096)|key_size\s*=\s*(?:2048|3072|4096)|generate_private_key\([^)]*(?:2048|3072|4096)|RSA-?2048|RSA-?3072|RSA-?4096|rsa\.generate_keypair|RSAPublicKey|RSAPrivateKey)/i, algo: 'RSA-2048', usage: 'Asymmetric Key Pair', library: 'Crypto API', sev: 'MEDIUM', q: 'VULNERABLE', desc: 'RSA key pair detected. Vulnerable to Shor\'s algorithm on quantum computers.', rec: 'Migrate to NIST ML-DSA or ML-KEM post-quantum standards.' },
+              { regex: /(?:createHash\(\s*['"]md5['"]|hashlib\.md5|MessageDigest\.getInstance\(\s*["']MD5["']|MD5_Init|crypto\.md5|MD5\(|md5_hex|md5_bytes)/i, algo: 'MD5', usage: 'Data Integrity Hashing', library: 'Standard Hash API', sev: 'CRITICAL', q: 'SAFE', desc: 'MD5 hash algorithm detected. Cryptographically broken due to collision attacks.', rec: 'Replace MD5 with collision-resistant SHA-256 or SHA-3.' },
+              { regex: /(?:createHash\(\s*['"]sha1['"]|hashlib\.sha1|MessageDigest\.getInstance\(\s*["']SHA-?1["']|SHA1_Init|SHA1\(|sha1_hex|sha1_bytes)/i, algo: 'SHA-1', usage: 'Digest Hashing', library: 'Standard Hash API', sev: 'HIGH', q: 'SAFE', desc: 'SHA-1 hash algorithm detected. Cryptographically weak due to collision vulnerabilities.', rec: 'Upgrade to SHA-256 or SHA-512.' },
+              { regex: /(?:createHash\(\s*['"]sha256['"]|hashlib\.sha256|MessageDigest\.getInstance\(\s*["']SHA-?256["']|SHA256_Init|SHA256\(|sha256_hex)/i, algo: 'SHA-256', usage: 'Secure Hashing', library: 'Standard Hash API', sev: 'INFO', q: 'SAFE', desc: 'SHA-256 cryptographic hash function detected. Resistant to collision and quantum attacks.', rec: 'Compliant with NIST FIPS 180-4 standard.' },
+              { regex: /(?:createHash\(\s*['"]sha512['"]|hashlib\.sha512|MessageDigest\.getInstance\(\s*["']SHA-?512["']|SHA512_Init|SHA512\()/i, algo: 'SHA-512', usage: 'Secure Hashing', library: 'Standard Hash API', sev: 'INFO', q: 'SAFE', desc: 'SHA-512 cryptographic hash function detected.', rec: 'Compliant with modern cryptographic standards.' },
+              { regex: /(?:des\.NewCipher|DES_ecb_encrypt|Cipher\.getInstance\(\s*["']DES|CryptoJS\.DES|TripleDES|3DES|DES3_Init|DES_ecb)/i, algo: '3DES / DES', usage: 'Symmetric Encryption', library: 'Block Cipher API', sev: 'CRITICAL', q: 'SAFE', desc: 'DES/3DES block cipher detected. Deprecated by NIST due to Sweet32 64-bit block size attacks.', rec: 'Migrate to AES-256-GCM authenticated encryption.' },
+              { regex: /(?:Cipher\.getInstance\(\s*["'](?:RC4|ARC4|Blowfish)|CryptoJS\.RC4|CryptoJS\.Blowfish|RC4_Init|Blowfish_Init)/i, algo: 'RC4 / Blowfish', usage: 'Legacy Stream Cipher', library: 'Block Cipher API', sev: 'CRITICAL', q: 'SAFE', desc: 'RC4 / Blowfish weak cipher detected. Vulnerable to keystream biases and small block attacks.', rec: 'Replace with AES-256-GCM or ChaCha20-Poly1305.' },
+              { regex: /(?:secp256k1|secp256r1|prime256v1|SECP256R1|crypto\.createECDH|EC_KEY_new_by_curve_name|ECDSA|ECDH|curve25519|ed25519)/i, algo: 'ECDSA / ECDH', usage: 'Elliptic Curve Signatures', library: 'OpenSSL / WebCrypto', sev: 'HIGH', q: 'VULNERABLE', desc: 'Classical ECDSA / ECDH detected. Quantum computers running Shor\'s algorithm break elliptic curve discrete logarithms.', rec: 'Implement NIST PQC hybrid signatures (ML-DSA / Falcon).' },
+              { regex: /(?:AES\/ECB|Cipher\.AES_ECB|modes\.ECB|AES-128-ECB|AES-256-ECB)/i, algo: 'AES-ECB', usage: 'ECB Cipher Mode', library: 'Symmetric Cipher API', sev: 'CRITICAL', q: 'SAFE', desc: 'AES Electronic Codebook (ECB) mode detected. ECB mode leaks pattern structure.', rec: 'Migrate to Authenticated Encryption (AES-256-GCM).' },
               { regex: /(?:AES\/CBC\/PKCS5Padding|AES\/CBC\/PKCS7Padding|modes\.CBC|Cipher\.AES_CBC|AES-128-CBC|AES-256-CBC)/i, algo: 'AES-CBC', usage: 'CBC Cipher Mode', library: 'Symmetric Cipher API', sev: 'MEDIUM', q: 'SAFE', desc: 'AES in CBC mode detected. Vulnerable to padding oracle attacks if unauthenticated.', rec: 'Switch to Authenticated Encryption (AES-256-GCM).' },
-              { regex: /(?:AES-256-GCM|AES\/GCM\/NoPadding|modes\.GCM|aes-256-gcm)/i, algo: 'AES-256-GCM', usage: 'Authenticated Encryption', library: 'WebCrypto / AEAD', sev: 'INFO', q: 'SAFE', desc: 'AES-256-GCM authenticated encryption detected. FIPS 140-3 compliant.', rec: 'Compliant with modern cryptographic standards.' },
-              { regex: /(?:-----BEGIN (?:RSA )?PRIVATE KEY-----|api[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"]|secret[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"])/i, algo: 'Hardcoded Private Key / Secret', usage: 'Secret Management', library: 'Embedded Literal', sev: 'CRITICAL', q: 'SAFE', desc: 'Hardcoded key or API secret material found embedded in source code.', rec: 'Remove hardcoded credentials immediately and inject via environment manager / KMS.' }
+              { regex: /(?:AES-256-GCM|AES\/GCM\/NoPadding|modes\.GCM|aes-256-gcm|createCipheriv\(\s*['"]aes-256-gcm['"])/i, algo: 'AES-256-GCM', usage: 'Authenticated Encryption', library: 'WebCrypto / AEAD', sev: 'INFO', q: 'SAFE', desc: 'AES-256-GCM authenticated encryption detected. FIPS 140-3 compliant.', rec: 'Compliant with modern cryptographic standards.' },
+              { regex: /(?:-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----|api[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"]|secret[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"]|private[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"])/i, algo: 'Hardcoded Secret', usage: 'Secret Management', library: 'Embedded Literal', sev: 'CRITICAL', q: 'SAFE', desc: 'Hardcoded key or API secret material found embedded in source code.', rec: 'Remove hardcoded credentials immediately and inject via environment manager / KMS.' },
+              { regex: /(?:pbkdf2|PBKDF2|bcrypt|argon2|scrypt|crypto\.pbkdf2Sync)/i, algo: 'PBKDF2 / Password KDF', usage: 'Password Hashing', library: 'Key Derivation API', sev: 'INFO', q: 'SAFE', desc: 'Key Derivation Function (KDF) detected for password storage or key stretch.', rec: 'Ensure high iteration count or memory-hard parameters (Argon2id).' },
+              { regex: /(?:createHmac|hmac\.new|HMAC_Init|crypto\.createHmac)/i, algo: 'HMAC Authentication', usage: 'Message Authentication Code', library: 'Standard Crypto API', sev: 'INFO', q: 'SAFE', desc: 'Keyed-Hash Message Authentication Code (HMAC) detected.', rec: 'Ensure HMAC is paired with SHA-256 or SHA-512.' },
+              { regex: /(?:Math\.random\(\)|random\.random\(\)|rand\(\)\s*%/i, algo: 'Non-CSPRNG', usage: 'Random Number Generation', library: 'Standard Library', sev: 'HIGH', q: 'SAFE', desc: 'Non-cryptographic Pseudo-Random Number Generator (PRNG) detected.', rec: 'Use cryptographically secure PRNG (crypto.getRandomValues / os.urandom).' },
+              { regex: /(?:NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['"]?0['"]?|verify\s*=\s*False|InsecureSkipVerify\s*:\s*true|--insecure|-k\b)/i, algo: 'TLS Verification Disabled', usage: 'Transport Layer Security', library: 'Network Transport', sev: 'CRITICAL', q: 'SAFE', desc: 'TLS/SSL certificate validation explicitly disabled.', rec: 'Re-enable TLS certificate validation to prevent Man-in-the-Middle (MitM) attacks.' }
             ];
 
             for (const fn of entries) {
@@ -1232,7 +1240,7 @@
               if (fileObj.dir) continue;
 
               const ext = fn.split('.').pop().toLowerCase();
-              if (['png','jpg','jpeg','gif','ico','pdf','zip','tar','gz','exe','dll','so','dylib','bin','woff','woff2','ttf','eot'].includes(ext)) {
+              if (['png','jpg','jpeg','gif','ico','pdf','zip','tar','gz','exe','dll','so','dylib','bin','woff','woff2','ttf','eot','mp3','mp4','mov'].includes(ext)) {
                 continue;
               }
 
@@ -1427,28 +1435,48 @@
       }
 
       function populateCompletionState(finalData, rawFindings) {
-        // Show ALL findings from backend (total count, no suppression filter)
         const findings = rawFindings || [];
         document.getElementById('res-total').textContent = findings.length;
 
-        // Show real files scanned and crypto components if backend provides them
         const filesEl = document.getElementById('res-files');
         const compsEl = document.getElementById('res-components');
         if (filesEl) filesEl.textContent = finalData.filesScanned ? finalData.filesScanned.toLocaleString() : findings.length;
-        if (compsEl) compsEl.textContent = finalData.components || findings.filter(f => f.algorithm && f.algorithm !== 'UNKNOWN').length;
+        if (compsEl) compsEl.textContent = finalData.components || new Set(findings.map(f => f.algorithm)).size || findings.length;
 
-        let c = 0, h = 0, m = 0, l = 0, q = 0;
+        let c = 0, h = 0, m = 0, l = 0, info = 0, q = 0;
         findings.forEach(f => {
-          if (f.severity === 'CRITICAL') c++;
-          if (f.severity === 'HIGH') h++;
-          if (f.severity === 'MEDIUM') m++;
-          if (f.severity === 'LOW') l++;
-          if (f.isQuantumVulnerable || (f.quantumStatus && f.quantumStatus.toLowerCase().includes('vulnerable'))) q++;
+          const sev = (f.severity || '').toUpperCase();
+          if (sev === 'CRITICAL') c++;
+          else if (sev === 'HIGH') h++;
+          else if (sev === 'MEDIUM') m++;
+          else if (sev === 'LOW') l++;
+          else if (sev === 'INFO') info++;
+          if (f.isQuantumVulnerable || f.quantum === 'yes' || (f.quantumStatus && f.quantumStatus.toLowerCase().includes('vulnerable'))) q++;
         });
 
         document.getElementById('res-crit').textContent = c;
-
         document.getElementById('res-quantum').textContent = q;
+
+        // Dynamic Risk Score Calculation
+        const scoreEl = document.getElementById('res-score');
+        if (scoreEl) {
+          if (findings.length === 0) {
+            scoreEl.textContent = '0 / 100';
+            scoreEl.style.color = 'var(--green)';
+          } else {
+            const rawScore = Math.min(100, Math.round(c * 25 + h * 15 + m * 8 + l * 3 + q * 10));
+            if (rawScore >= 60) {
+              scoreEl.textContent = `${rawScore} / 100 (High Risk)`;
+              scoreEl.style.color = 'var(--red)';
+            } else if (rawScore >= 30) {
+              scoreEl.textContent = `${rawScore} / 100 (Moderate)`;
+              scoreEl.style.color = 'var(--amber)';
+            } else {
+              scoreEl.textContent = `${rawScore} / 100 (Low Risk)`;
+              scoreEl.style.color = 'var(--green)';
+            }
+          }
+        }
 
         const chart = document.getElementById('risk-chart');
         const leg = document.getElementById('risk-legend');
@@ -1466,11 +1494,13 @@
           const hPct = (h / tot) * 100;
           const mPct = (m / tot) * 100;
           const lPct = (l / tot) * 100;
+          const infoPct = (info / tot) * 100;
 
           if (c > 0) { chart.innerHTML += `<div style="width:${cPct}%; background:var(--red);" title="Critical: ${c}"></div>`; leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div> Critical (${c})</div>`; }
           if (h > 0) { chart.innerHTML += `<div style="width:${hPct}%; background:var(--amber);" title="High: ${h}"></div>`; leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber)"></div> High (${h})</div>`; }
           if (m > 0) { chart.innerHTML += `<div style="width:${mPct}%; background:var(--yellow);" title="Medium: ${m}"></div>`; leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--yellow)"></div> Medium (${m})</div>`; }
           if (l > 0) { chart.innerHTML += `<div style="width:${lPct}%; background:var(--gray);" title="Low: ${l}"></div>`; leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gray)"></div> Low (${l})</div>`; }
+          if (info > 0) { chart.innerHTML += `<div style="width:${infoPct}%; background:#3b82f6;" title="Info: ${info}"></div>`; leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6"></div> Info (${info})</div>`; }
         }
       }
 

@@ -90,8 +90,17 @@ const CryptoEngine = {
       category: 'Asymmetric Key Length',
       severity: 'critical',
       quantum: 'yes',
-      regex: /(?:RSA\.generate\(\s*(?:512|1024)|key_size\s*=\s*(?:512|1024)|generate_private_key\([^)]*1024)/i,
+      regex: /(?:RSA\.generate\(\s*(?:512|1024)|key_size\s*=\s*(?:512|1024)|generate_private_key\([^)]*1024|RSA-?1024|rsa1024)/i,
       remediation: 'Migrate to NIST ML-DSA or minimum RSA-3072 bit key.'
+    },
+    {
+      id: 'CRYPTO-RULE-RSA-CLASSIC',
+      name: 'Classical RSA Asymmetric Key Pair (Quantum-Vulnerable)',
+      category: 'Post-Quantum Risk',
+      severity: 'medium',
+      quantum: 'yes',
+      regex: /(?:RSA\.generate\(\s*(?:2048|3072|4096)|key_size\s*=\s*(?:2048|3072|4096)|generate_private_key\([^)]*(?:2048|3072|4096)|RSA-?2048|RSA-?3072|RSA-?4096|rsa\.generate_keypair|RSAPublicKey|RSAPrivateKey)/i,
+      remediation: 'Migrate to NIST ML-DSA or ML-KEM post-quantum standards.'
     },
     {
       id: 'CRYPTO-RULE-MD5-BROKEN',
@@ -99,7 +108,7 @@ const CryptoEngine = {
       category: 'Broken Hash Function',
       severity: 'critical',
       quantum: 'no',
-      regex: /(?:createHash\(\s*['"]md5['"]|hashlib\.md5|MessageDigest\.getInstance\(\s*["']MD5["']|MD5_Init|crypto\.md5)/i,
+      regex: /(?:createHash\(\s*['"]md5['"]|hashlib\.md5|MessageDigest\.getInstance\(\s*["']MD5["']|MD5_Init|crypto\.md5|MD5\(|md5_hex|md5_bytes)/i,
       remediation: 'Replace MD5 with collision-resistant SHA-256 or SHA-3.'
     },
     {
@@ -108,17 +117,35 @@ const CryptoEngine = {
       category: 'Deprecated Hash',
       severity: 'high',
       quantum: 'no',
-      regex: /(?:createHash\(\s*['"]sha1['"]|hashlib\.sha1|MessageDigest\.getInstance\(\s*["']SHA-?1["']|SHA1_Init)/i,
+      regex: /(?:createHash\(\s*['"]sha1['"]|hashlib\.sha1|MessageDigest\.getInstance\(\s*["']SHA-?1["']|SHA1_Init|SHA1\(|sha1_hex|sha1_bytes)/i,
       remediation: 'Upgrade to SHA-256 or SHA-512.'
+    },
+    {
+      id: 'CRYPTO-RULE-SHA256-SAFE',
+      name: 'SHA-256 Secure Hash Function',
+      category: 'Secure Hash',
+      severity: 'info',
+      quantum: 'safe',
+      regex: /(?:createHash\(\s*['"]sha256['"]|hashlib\.sha256|MessageDigest\.getInstance\(\s*["']SHA-?256["']|SHA256_Init|SHA256\(|sha256_hex)/i,
+      remediation: 'Compliant with NIST FIPS 180-4 standard.'
     },
     {
       id: 'CRYPTO-RULE-DES-WEAK',
       name: 'DES / 3DES Deprecated Cipher',
       category: 'Weak Block Cipher',
-      severity: 'high',
+      severity: 'critical',
       quantum: 'no',
-      regex: /(?:des\.NewCipher|DES_ecb_encrypt|Cipher\.getInstance\(\s*["']DES|CryptoJS\.DES|TripleDES)/i,
+      regex: /(?:des\.NewCipher|DES_ecb_encrypt|Cipher\.getInstance\(\s*["']DES|CryptoJS\.DES|TripleDES|3DES|DES3_Init|DES_ecb)/i,
       remediation: 'Migrate to AES-256-GCM.'
+    },
+    {
+      id: 'CRYPTO-RULE-RC4-BLOWFISH',
+      name: 'RC4 / Blowfish Legacy Cipher',
+      category: 'Weak Block Cipher',
+      severity: 'critical',
+      quantum: 'no',
+      regex: /(?:Cipher\.getInstance\(\s*["'](?:RC4|ARC4|Blowfish)|CryptoJS\.RC4|CryptoJS\.Blowfish|RC4_Init|Blowfish_Init)/i,
+      remediation: 'Replace with AES-256-GCM or ChaCha20-Poly1305.'
     },
     {
       id: 'CRYPTO-RULE-ECDSA-CLASSIC',
@@ -126,16 +153,25 @@ const CryptoEngine = {
       category: 'Post-Quantum Risk',
       severity: 'high',
       quantum: 'yes',
-      regex: /(?:secp256k1|secp256r1|prime256v1|SECP256R1|crypto\.createECDH|EC_KEY_new_by_curve_name)/i,
+      regex: /(?:secp256k1|secp256r1|prime256v1|SECP256R1|crypto\.createECDH|EC_KEY_new_by_curve_name|ECDSA|ECDH|curve25519|ed25519)/i,
       remediation: 'Implement NIST PQC hybrid key exchange (ML-KEM-768).'
     },
     {
+      id: 'CRYPTO-RULE-AES-ECB',
+      name: 'AES Electronic Codebook (ECB) Mode',
+      category: 'Insecure Cipher Mode',
+      severity: 'critical',
+      quantum: 'no',
+      regex: /(?:AES\/ECB|Cipher\.AES_ECB|modes\.ECB|AES-128-ECB|AES-256-ECB)/i,
+      remediation: 'Switch to Authenticated Encryption (AES-256-GCM).'
+    },
+    {
       id: 'CRYPTO-RULE-AES-CBC-PADDING',
-      name: 'AES in CBC Mode with PKCS#7 Padding',
+      name: 'AES in CBC Mode',
       category: 'Padding Oracle Risk',
       severity: 'medium',
       quantum: 'no',
-      regex: /(?:AES\/CBC\/PKCS5Padding|AES\/CBC\/PKCS7Padding|modes\.CBC|Cipher\.AES_CBC)/i,
+      regex: /(?:AES\/CBC\/PKCS5Padding|AES\/CBC\/PKCS7Padding|modes\.CBC|Cipher\.AES_CBC|AES-128-CBC|AES-256-CBC)/i,
       remediation: 'Switch to Authenticated Encryption (AES-GCM).'
     },
     {
@@ -144,8 +180,35 @@ const CryptoEngine = {
       category: 'Modern Symmetric Cipher',
       severity: 'info',
       quantum: 'safe',
-      regex: /(?:AES-256-GCM|AES\/GCM\/NoPadding|modes\.GCM|aes-256-gcm)/i,
+      regex: /(?:AES-256-GCM|AES\/GCM\/NoPadding|modes\.GCM|aes-256-gcm|createCipheriv\(\s*['"]aes-256-gcm['"])/i,
       remediation: 'Compliant with FIPS 140-3.'
+    },
+    {
+      id: 'CRYPTO-RULE-HARDCODED-SECRET',
+      name: 'Hardcoded Private Key / Secret',
+      category: 'Secret Management',
+      severity: 'critical',
+      quantum: 'no',
+      regex: /(?:-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----|api[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"]|secret[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"]|private[_-]?key\s*=\s*['"][a-zA-Z0-9_\-]{16,}['"])/i,
+      remediation: 'Inject secrets dynamically via KMS or environment variables.'
+    },
+    {
+      id: 'CRYPTO-RULE-NON-CSPRNG',
+      name: 'Non-Cryptographic PRNG Usage',
+      category: 'Insecure Randomness',
+      severity: 'high',
+      quantum: 'no',
+      regex: /(?:Math\.random\(\)|random\.random\(\)|rand\(\)\s*%/i,
+      remediation: 'Use cryptographically secure PRNG (crypto.getRandomValues / os.urandom).'
+    },
+    {
+      id: 'CRYPTO-RULE-TLS-DISABLED',
+      name: 'TLS Certificate Verification Disabled',
+      category: 'Transport Layer Security',
+      severity: 'critical',
+      quantum: 'no',
+      regex: /(?:NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['"]?0['"]?|verify\s*=\s*False|InsecureSkipVerify\s*:\s*true|--insecure|-k\b)/i,
+      remediation: 'Re-enable TLS certificate verification to prevent MitM attacks.'
     }
   ],
 
