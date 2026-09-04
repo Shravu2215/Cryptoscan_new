@@ -1,9 +1,9 @@
-﻿/**
+/**
  * CryptoScan Auth Module
  * Handles JWT token storage, user session, and route protection.
  */
 
-const AUTH_KEY = 'cs_auth_token';
+const AUTH_KEY = 'cs_token';
 const USER_KEY = 'cs_user';
 
 const Auth = {
@@ -15,7 +15,7 @@ const Auth = {
 
   /** Get stored JWT */
   getToken() {
-    return localStorage.getItem(AUTH_KEY);
+    return localStorage.getItem(AUTH_KEY) || localStorage.getItem('cs_auth_token');
   },
 
   /** Get stored user object */
@@ -27,16 +27,51 @@ const Auth = {
     }
   },
 
+  API_BASE: 'http://localhost:3000',
+
+  /** Call backend login endpoint and store returned JWT */
+  async login(email, password) {
+    const res = await fetch(`${this.API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+    this.saveSession(data.token, data.user);
+    return data;
+  },
+
+  /** Call backend signup endpoint, then login to retrieve real JWT */
+  async signup(name, email, password) {
+    const res = await fetch(`${this.API_BASE}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Signup failed');
+    }
+    // Perform login after successful signup to get real JWT
+    return await this.login(email, password);
+  },
+
   /** True if a token exists (basic check) */
   isLoggedIn() {
     const token = this.getToken();
     if (!token) return false;
     // Decode expiry from JWT payload (no signature check needed client-side)
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp && Date.now() / 1000 > payload.exp) {
-        this.clearSession();
-        return false;
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload.exp && Date.now() / 1000 > payload.exp) {
+          this.clearSession();
+          return false;
+        }
       }
     } catch {}
     return true;
@@ -45,6 +80,7 @@ const Auth = {
   /** Clear session and redirect to login */
   clearSession() {
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('cs_auth_token');
     localStorage.removeItem(USER_KEY);
   },
 

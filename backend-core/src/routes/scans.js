@@ -352,10 +352,12 @@ router.get('/:scanId/verify', requireAuth, async (req, res) => {
     } catch (e) {
       console.warn('Blockchain read skipped:', e.message);
       blockchainError = e.message;
+      hashMatches = false;
+      signatureValid = false;
     }
 
     return res.json({
-      verified: hashMatches,
+      verified: hashMatches && !blockchainError,
       onChainHash,
       offChainHash: recomputedHash,
       signatureValid,

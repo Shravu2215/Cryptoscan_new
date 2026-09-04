@@ -424,7 +424,7 @@ function setLoading(loading) {
     : 'Create Account';
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const name     = document.getElementById('name').value.trim();
@@ -449,32 +449,21 @@ form.addEventListener('submit', (e) => {
   try {
     const displayName = company ? `${name} (${company})` : name;
 
-    // Local-only registration — no backend required
-    const storedUsers = JSON.parse(localStorage.getItem('cs_users') || '[]');
-
-    // Check if email already exists
-    if (storedUsers.find(u => u.email === email)) {
-      showAlert('error', 'An account with this email already exists. Please sign in.');
-      setLoading(false);
-      return;
-    }
-
-    // Save new user
-    storedUsers.push({ email, password, name: displayName, role: 'user', createdAt: Date.now() });
-    localStorage.setItem('cs_users', JSON.stringify(storedUsers));
+    // Call backend API for registration and login
+    await Auth.signup(displayName, email, password);
 
     // Success
     showAlert('success');
-    submitBtn.innerHTML = '✓ Account created!';
+    submitBtn.innerHTML = '✓ Account created! Redirecting...';
     submitBtn.style.background = 'linear-gradient(135deg, #14532d, #15803d)';
 
     setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 1800);
+      window.location.href = 'dashboard.html';
+    }, 1200);
 
   } catch (err) {
-    console.error(err);
-    showAlert('error', 'Something went wrong. Please try again.');
+    console.error('Signup error:', err);
+    showAlert('error', err.message || 'Account creation failed. Please try again.');
     setLoading(false);
   }
 });

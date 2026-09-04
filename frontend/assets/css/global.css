@@ -112,8 +112,11 @@ a {
 }
 
 .app-sidebar {
-  width: var(--sidebar-width);
-  flex-shrink: 0;
+  width: 240px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
   background-color: rgba(11, 16, 38, 0.8);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-subtle);
@@ -128,7 +131,8 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
+  min-height: 100vh;
+  margin-left: 240px;
 }
 
 .app-topbar {
@@ -157,6 +161,9 @@ a {
 /* Desktop Collapsed State */
 body.sidebar-collapsed .app-sidebar {
   width: 72px;
+}
+body.sidebar-collapsed .app-main {
+  margin-left: 72px;
 }
 
 body.sidebar-collapsed .sb-label,
@@ -188,6 +195,10 @@ body.sidebar-collapsed .sb-nav-item {
 
   body.sidebar-open .app-sidebar {
     transform: translateX(0);
+  }
+
+  .app-main {
+    margin-left: 0;
   }
 
   .app-topbar {

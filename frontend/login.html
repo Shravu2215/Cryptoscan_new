@@ -421,7 +421,7 @@ function setLoading(loading) {
     : 'Sign In';
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   hideError();
 
@@ -435,20 +435,9 @@ form.addEventListener('submit', (e) => {
 
   setLoading(true);
 
-  // Local-only auth — no backend required
   try {
-    // Check if a registered user exists in localStorage
-    const storedUsers = JSON.parse(localStorage.getItem('cs_users') || '[]');
-    const match = storedUsers.find(u => u.email === email && u.password === password);
-
-    // Also accept any email/password combo if no users registered yet (demo mode)
-    const user = match || { email, name: email.split('@')[0], role: 'user' };
-
-    // Save session
-    const sessionData = { email: user.email, name: user.name || email.split('@')[0], role: user.role || 'user' };
-    localStorage.setItem('cs_user', JSON.stringify(sessionData));
-    localStorage.setItem('cs_token', 'local_' + Date.now());
-    localStorage.setItem('cs_logged_in', 'true');
+    // Call backend API for real JWT authentication
+    await Auth.login(email, password);
 
     // Animate button to success
     submitBtn.innerHTML = '✓ Signed in! Redirecting...';
@@ -459,8 +448,8 @@ form.addEventListener('submit', (e) => {
     }, 600);
 
   } catch (err) {
-    console.error(err);
-    showError('Something went wrong. Please try again.');
+    console.error('Login error:', err);
+    showError(err.message || 'Authentication failed. Please check your credentials.');
     setLoading(false);
   }
 });
