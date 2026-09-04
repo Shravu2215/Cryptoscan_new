@@ -35,6 +35,7 @@ scratch/
 # Build outputs & caches
 dist/
 build/
+public/
 .next/
 out/
 coverage/
