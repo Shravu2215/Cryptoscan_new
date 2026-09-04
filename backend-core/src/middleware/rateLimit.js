@@ -34,9 +34,12 @@ const apiLimiter = rateLimit({
 });
 
 // Tight limit on credential-guessing surfaces.
+// In production: 20 attempts / 15 min. In dev: 200 attempts / 5 min (so you
+// don't get locked out while testing).
+const isDev = process.env.NODE_ENV !== 'production';
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
+  windowMs: isDev ? 5 * 60 * 1000 : 15 * 60 * 1000,
+  limit: isDev ? 200 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   store,

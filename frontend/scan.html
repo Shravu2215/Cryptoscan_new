@@ -628,7 +628,7 @@ async function importGitHubRepository() {
     return;
   }
 
-  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' || window.location.protocol === 'file:') ? 'http://localhost:3000' : 'https://cryptoscan-backend.onrender.com';
+  const API_BASE = window.location.port === '3000' || window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
   githubImportButton.disabled = true;
   githubImportButton.textContent = 'Importing...';
 
@@ -702,7 +702,7 @@ async function startRealScan() {
     window.location.href = 'login.html';
     return;
   }
-  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' || window.location.protocol === 'file:') ? 'http://localhost:3000' : 'https://cryptoscan-backend.onrender.com';
+  const API_BASE = window.location.port === '3000' || window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
   try {
     let repo;
@@ -776,7 +776,11 @@ async function startRealScan() {
     document.getElementById('live-components').textContent = finalData.components || allFindings.filter(f => f.algorithm && f.algorithm !== 'UNKNOWN').length;
     
     // Save to global storage
-    CryptoEngine.processRealBackendFindings(repo, scanData.scanId, allFindings);
+    const repoInfo = {
+      id: repo.id || selectedRepoId || 'repo-1',
+      name: repo.name || currentRepoName || 'Scanned Repository'
+    };
+    CryptoEngine.processRealBackendFindings(repoInfo, scanData.scanId, allFindings);
     
     // Populate State 4
     populateCompletionState(finalData, allFindings);

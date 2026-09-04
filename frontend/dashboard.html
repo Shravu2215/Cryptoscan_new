@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="engine.js"></script>
+<script src="assets/js/engine.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -354,8 +354,11 @@ tbody tr:hover { background: var(--bg-card-hover); }
 <main class="main">
   <header class="topbar">
     <div class="tb-left">
-      <h1 class="tb-title">Dashboard</h1>
-      <p class="tb-sub">Overview of your cryptographic security posture</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h1 class="tb-title" id="hdr-repo-name">Dashboard</h1>
+        <span id="hdr-status-badge" style="display:none; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px;"></span>
+      </div>
+      <p class="tb-sub" id="hdr-repo-meta">Overview of your cryptographic security posture</p>
     </div>
     <div class="tb-right">
       <button class="btn-sec" onclick="CryptoEngine.clearAllData();location.reload();" title="Reset all platform scan data">
@@ -414,8 +417,12 @@ tbody tr:hover { background: var(--bg-card-hover); }
 
   <div class="content">
 
-    <!-- Security Summary -->
-    <div class="stats-grid" style="grid-template-columns: repeat(7, 1fr);">
+    <!-- 6 Stat Cards -->
+    <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr);"><style>
+.scard.clickable{cursor:pointer;transition:border-color .2s,transform .2s;}
+.scard.clickable:hover{border-color:var(--text-m);transform:translateY(-2px);}
+.sc-trend{font-size:11px;color:var(--text-s);margin-top:4px;}
+</style>
       <div class="scard scard-primary">
         <div class="sc-lbl">Overall Risk</div>
         <div class="sc-val" id="stat-risk-score" style="font-size:20px;">
@@ -467,63 +474,55 @@ tbody tr:hover { background: var(--bg-card-hover); }
       </div>
     </div>
 
+
     <div class="row">
       <div class="col col-2">
-        <!-- Scan Coverage -->
+
+        <!-- Cryptographic Security Overview -->
         <div class="gcard">
           <div class="gc-hd">
-            <div class="gc-ttl">Scan Coverage (Multi-Layer Detection)</div>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <span style="font-size:13px; font-weight:500;">AST Analysis</span>
-              <span style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <span style="font-size:13px; font-weight:500;">Regex Detection</span>
-              <span style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <span style="font-size:13px; font-weight:500;">Secret / Entropy Detection</span>
-              <span style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <span style="font-size:13px; font-weight:500;">Dependency / SCA Analysis</span>
-              <span style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg></span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <span style="font-size:13px; font-weight:500;">Configuration / TLS Analysis</span>
-              <span style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg></span>
+            <div>
+              <div class="gc-ttl">Cryptographic Security Overview</div>
+              <div class="gc-sub">Severity distribution of all findings</div>
             </div>
           </div>
-        </div>
-        
-        <!-- Security Overview -->
-        <div class="gcard">
-          <div class="gc-hd">
-            <div class="gc-ttl">Security Overview</div>
+          <div id="crypto-overview-content" style="display:none;">
+            <div style="width:100%;height:10px;background:var(--border-color);border-radius:5px;display:flex;overflow:hidden;margin-bottom:16px;">
+              <div id="cov-crit" style="background:var(--red);height:100%;transition:width .4s;"></div>
+              <div id="cov-high" style="background:var(--amber);height:100%;transition:width .4s;"></div>
+              <div id="cov-med" style="background:var(--yellow);height:100%;transition:width .4s;"></div>
+              <div id="cov-low" style="background:var(--gray);height:100%;transition:width .4s;"></div>
+              <div id="cov-info" style="background:#334155;height:100%;transition:width .4s;"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div><span style="font-size:12px;">Critical</span></div>
+                <span id="cov-crit-lbl" style="font-size:13px;font-weight:600;color:var(--red);">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></div><span style="font-size:12px;">High</span></div>
+                <span id="cov-high-lbl" style="font-size:13px;font-weight:600;color:var(--amber);">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--yellow);"></div><span style="font-size:12px;">Medium</span></div>
+                <span id="cov-med-lbl" style="font-size:13px;font-weight:600;color:var(--yellow);">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--gray);"></div><span style="font-size:12px;">Low</span></div>
+                <span id="cov-low-lbl" style="font-size:13px;font-weight:600;color:var(--gray);">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:#334155;"></div><span style="font-size:12px;">Informational</span></div>
+                <span id="cov-info-lbl" style="font-size:13px;font-weight:600;color:#64748b;">0</span>
+              </div>
+            </div>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-             <div style="padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-               <div style="font-size:12px; color:var(--text-m); margin-bottom:4px;">Classical Risk</div>
-               <div style="font-size:18px; font-weight:600; color:var(--amber);">High</div>
-             </div>
-             <div style="padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-               <div style="font-size:12px; color:var(--text-m); margin-bottom:4px;">Quantum Risk</div>
-               <div style="font-size:18px; font-weight:600; color:var(--purple);">Critical</div>
-             </div>
-             <div style="padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-               <div style="font-size:12px; color:var(--text-m); margin-bottom:4px;">HNDL Risk</div>
-               <div style="font-size:18px; font-weight:600; color:var(--red);">High</div>
-             </div>
-             <div style="padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-               <div style="font-size:12px; color:var(--text-m); margin-bottom:4px;">Migration Required</div>
-               <div style="font-size:18px; font-weight:600; color:var(--text-h);">4 Algos</div>
-             </div>
+          <div class="empty-state" id="crypto-overview-empty" style="padding:20px 0;">
+            <div class="empty-msg">No scan data available</div>
           </div>
         </div>
 
-        <!-- Recent Scans -->
+        <!-- Recent Scan Activity -->
         <div class="gcard">
           <div class="gc-hd">
             <div>
@@ -531,7 +530,6 @@ tbody tr:hover { background: var(--bg-card-hover); }
             </div>
             <a href="findings.html" class="btn-sec" style="padding:4px 12px; font-size:12px;">View All</a>
           </div>
-          
           <table id="tbl-repos" style="display:none">
             <thead>
               <tr>
@@ -544,59 +542,78 @@ tbody tr:hover { background: var(--bg-card-hover); }
             </thead>
             <tbody id="repos-tbody"></tbody>
           </table>
-          
           <div class="empty-state" id="empty-repos">
             <div class="empty-msg">No scans yet<br><span style="font-size:12px;color:var(--text-s);margin-top:4px;display:block;">Run your first repository scan to see results here.</span></div>
             <button class="btn-p" onclick="window.location.href='scan.html'" style="margin-top:8px">+ New Scan</button>
           </div>
         </div>
+
+        <!-- Scan Coverage -->
+        <div class="gcard">
+          <div class="gc-hd">
+            <div class="gc-ttl">Scan Coverage</div>
+          </div>
+          <div id="scan-cov-content" style="display:none;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color);">
+              <span style="font-size:13px;color:var(--text-m);">Files Scanned</span>
+              <span id="cov-files" style="font-size:14px;font-weight:600;color:var(--text-h);">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color);">
+              <span style="font-size:13px;color:var(--text-m);">Languages Detected</span>
+              <span id="cov-langs" style="font-size:14px;font-weight:600;color:var(--text-h);">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color);">
+              <span style="font-size:13px;color:var(--text-m);">Unique Algorithms Found</span>
+              <span id="cov-algos" style="font-size:14px;font-weight:600;color:var(--text-h);">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color);">
+              <span style="font-size:13px;color:var(--text-m);">Crypto APIs Detected</span>
+              <span id="cov-apis" style="font-size:14px;font-weight:600;color:var(--text-h);">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">
+              <span style="font-size:13px;color:var(--text-m);">Secrets Detected</span>
+              <span id="cov-secrets" style="font-size:14px;font-weight:600;color:var(--red);">-</span>
+            </div>
+          </div>
+          <div class="empty-state" id="scan-cov-empty" style="padding:20px 0;">
+            <div class="empty-msg">No scan data available</div>
+          </div>
+        </div>
+
       </div>
 
       <div class="col col-1">
-        
+
         <!-- Quantum Readiness -->
         <div class="gcard">
           <div class="gc-hd">
             <div class="gc-ttl">Quantum Readiness</div>
           </div>
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
-            <span>Quantum Safe: <strong style="color:var(--green)">21</strong></span>
-            <span>Vulnerable: <strong style="color:var(--purple)">4</strong></span>
-          </div>
-          <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; color:var(--text-m);">
-            <span>Readiness</span>
-            <span>84%</span>
-          </div>
-          <div style="width:100%; height:8px; background:var(--border-color); border-radius:4px; overflow:hidden; display:flex;">
-            <div style="width:84%; background:var(--green);"></div>
-            <div style="width:16%; background:var(--purple);"></div>
-          </div>
-        </div>
-        
-        <!-- Risk Distribution -->
-        <div class="gcard">
-          <div class="gc-hd">
-            <div class="gc-ttl">Risk Distribution</div>
-          </div>
-          
-          <div id="risk-dist-content" style="display:none;">
-            <div class="risk-dist">
-              <div class="risk-bar-container">
-                <div class="risk-bar" id="rb-crit" style="width:0%; background:var(--red);"></div>
-                <div class="risk-bar" id="rb-high" style="width:0%; background:var(--amber);"></div>
-                <div class="risk-bar" id="rb-med" style="width:0%; background:var(--yellow);"></div>
-                <div class="risk-bar" id="rb-low" style="width:0%; background:var(--gray);"></div>
-              </div>
-              <div class="risk-legend">
-                <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Critical</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>High</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Medium</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div>Low</div>
-              </div>
+          <div id="quantum-content" style="display:none;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+              <span>Safe: <strong style="color:var(--green)" id="q-safe">0</strong></span>
+              <span>Vulnerable: <strong style="color:var(--red)" id="q-vuln">0</strong></span>
+              <span>Unknown: <strong style="color:var(--text-m)" id="q-unk">0</strong></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(--text-m);">
+              <span>Quantum Readiness</span>
+              <span id="q-pct">0%</span>
+            </div>
+            <div style="width:100%;height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;display:flex;">
+              <div id="q-bar-safe" style="background:var(--green);height:100%;transition:width .4s;"></div>
+              <div id="q-bar-vuln" style="background:var(--red);height:100%;transition:width .4s;"></div>
+              <div id="q-bar-unk" style="background:#334155;height:100%;transition:width .4s;"></div>
+            </div>
+            <div style="margin-top:14px;padding:12px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:var(--r-sm);">
+              <div style="font-size:11px;color:var(--text-m);margin-bottom:4px;">Quantum Exposure</div>
+              <div id="q-exposure" style="font-size:13px;color:var(--text-b);">Calculating…</div>
+            </div>
+            <div id="hndl-block" style="margin-top:10px;padding:12px;background:var(--red-bg);border:1px solid rgba(239,68,68,0.2);border-radius:var(--r-sm);display:none;">
+              <div style="font-size:11px;color:var(--text-m);margin-bottom:4px;">HNDL Exposure</div>
+              <div id="hndl-val" style="font-size:13px;font-weight:600;color:var(--red);">-</div>
             </div>
           </div>
-          
-          <div class="empty-state" id="empty-risk-dist" style="padding:20px 0;">
+          <div class="empty-state" id="quantum-empty" style="padding:20px 0;">
             <div class="empty-msg">No scan data available</div>
           </div>
         </div>
@@ -606,50 +623,14 @@ tbody tr:hover { background: var(--bg-card-hover); }
           <div class="gc-hd">
             <div class="gc-ttl">Top Cryptographic Risks</div>
           </div>
-          
           <div id="top-risks-content" style="display:none;">
             <div class="risk-list" id="top-risks-list"></div>
           </div>
-          
           <div class="empty-state" id="empty-top-risks" style="padding:20px 0;">
             <div class="empty-msg">No risks detected</div>
           </div>
         </div>
-        
-        <!-- Compliance / Standards -->
-        <div class="gcard">
-          <div class="gc-hd">
-            <div class="gc-ttl">Compliance / Standards</div>
-          </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <span class="badge badge-low" style="background:var(--bg-main);">CycloneDX 1.6 <span style="color:var(--green); margin-left:4px;">✓</span></span>
-            <span class="badge badge-low" style="background:var(--bg-main);">NIST Guidance <span style="color:var(--green); margin-left:4px;">✓</span></span>
-            <span class="badge badge-low" style="background:var(--bg-main);">FIPS 203/204 <span style="color:var(--green); margin-left:4px;">✓</span></span>
-            <span class="badge badge-low" style="background:var(--bg-main);">OWASP ASVS <span style="color:var(--green); margin-left:4px;">✓</span></span>
-          </div>
-        </div>
-        
-        <!-- Detection Accuracy -->
-        <div class="gcard" id="accuracy-card">
-          <div class="gc-hd">
-            <div class="gc-ttl">Detection Accuracy</div>
-          </div>
-          <div style="display:flex; justify-content:space-between; text-align:center;">
-             <div>
-               <div style="font-size:12px; color:var(--text-m);">Precision</div>
-               <div style="font-size:16px; font-weight:600; color:var(--green);">98.4%</div>
-             </div>
-             <div>
-               <div style="font-size:12px; color:var(--text-m);">Recall</div>
-               <div style="font-size:16px; font-weight:600; color:var(--green);">96.2%</div>
-             </div>
-             <div>
-               <div style="font-size:12px; color:var(--text-m);">F1 Score</div>
-               <div style="font-size:16px; font-weight:600; color:var(--green);">97.3%</div>
-             </div>
-          </div>
-        </div>
-        
+
         <!-- Quick Actions -->
         <div class="gcard">
           <div class="gc-hd" style="margin-bottom:16px;">
@@ -658,19 +639,19 @@ tbody tr:hover { background: var(--bg-card-hover); }
           <div class="qa-grid">
             <a class="qa-btn" href="scan.html">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              <div class="qa-ttl">+ Add Repository</div>
+              <div class="qa-ttl">+ New Scan</div>
             </a>
-            <a class="qa-btn" href="scan.html">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <div class="qa-ttl">Start New Scan</div>
+            <a class="qa-btn" href="findings.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <div class="qa-ttl">View Findings</div>
             </a>
             <a class="qa-btn" href="cbom.html">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <div class="qa-ttl">View CBOM</div>
             </a>
-            <a class="qa-btn" href="verification.html">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <div class="qa-ttl">Verify Scan</div>
+            <a class="qa-btn" href="risk-migration.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              <div class="qa-ttl">Risk & Migration</div>
             </a>
           </div>
         </div>
@@ -680,23 +661,23 @@ tbody tr:hover { background: var(--bg-card-hover); }
   </div>
 </main>
 
-<script src="assets/js/engine.js"></script>
+
 <script>
 function updateStat(id, value, hasData) {
   const el = document.getElementById(id);
   const sub = document.getElementById(id + '-sub');
+  if(!el) return;
   if (hasData) {
     el.innerHTML = value;
-    sub.style.display = 'none';
+    if(sub) sub.style.display = 'none';
   } else {
     el.innerHTML = '<span class="empty-val">-</span>';
-    sub.style.display = 'block';
+    if(sub) sub.style.display = 'block';
   }
 }
-
 function renderDashboardData() {
   const data = CryptoEngine.getData();
-  const hasData = data.repositories && data.repositories.length > 0;
+  const hasData = (data.repositories && data.repositories.length > 0) || (data.scans && data.scans.length > 0);
   
   const allFindings = (data.scans || []).flatMap(s => s.findings || []);
   const totalFindings = allFindings.length || data.totalFindings || 0;
@@ -705,65 +686,192 @@ function renderDashboardData() {
   const highCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'high').length;
   const medCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'medium').length;
   const lowCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'low').length;
-  const quantCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable')).length;
+  const infoCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'informational').length;
   
-  updateStat('stat-repos', data.repositories ? data.repositories.length : 0, hasData);
-  updateStat('stat-scans', data.totalScans || 0, hasData);
+  const quantVulnCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable')).length;
+  const quantSafeCount = allFindings.filter(f => (f.quantumStatus || '').toLowerCase() === 'quantum-safe').length;
+  const quantUnkCount = totalFindings - quantVulnCount - quantSafeCount;
+
+  // Header Updates
+  if (hasData) {
+    const latestScan = data.scans && data.scans.length > 0 ? data.scans[0] : null;
+    const repoName = (latestScan && latestScan.repoName) ? latestScan.repoName : (data.repositories && data.repositories.length > 0 ? data.repositories[0].name : 'Repository');
+    document.getElementById('hdr-repo-name').textContent = repoName;
+    
+    let timeStr = 'N/A';
+    if (latestScan && (latestScan.timestamp || latestScan.scanDate)) {
+      timeStr = latestScan.timestamp || new Date(latestScan.scanDate).toLocaleString();
+    } else if (data.repositories && data.repositories.length > 0 && data.repositories[0].lastScan) {
+      timeStr = data.repositories[0].lastScan;
+    }
+    document.getElementById('hdr-repo-meta').innerHTML = `Branch: <span style="color:var(--text-b)">main</span> &nbsp;|&nbsp; Last Scan: <span style="color:var(--text-b)">${timeStr}</span>`;
+    
+    const badge = document.getElementById('hdr-status-badge');
+    badge.style.display = 'inline-block';
+    if (critCount > 0) {
+      badge.textContent = 'Critical Risk';
+      badge.style.backgroundColor = 'var(--red-bg)';
+      badge.style.color = 'var(--red)';
+      badge.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+    } else if (highCount > 0) {
+      badge.textContent = 'Attention Required';
+      badge.style.backgroundColor = 'var(--amber-bg)';
+      badge.style.color = 'var(--amber)';
+      badge.style.border = '1px solid rgba(245, 158, 11, 0.2)';
+    } else {
+      badge.textContent = 'Repository Secure';
+      badge.style.backgroundColor = 'var(--green-bg)';
+      badge.style.color = 'var(--green)';
+      badge.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+    }
+  }
+
+  // Calculate totals
+  let totalFilesScanned = 0;
+  let totalCbomComponents = 0;
+  let langsSet = new Set();
+  let apisSet = new Set();
+  let algosSet = new Set();
+  let secretsCount = 0;
+
+  (data.scans || []).forEach(s => {
+    totalFilesScanned += (s.filesScanned || s.filesDiscovered || (s.findings ? s.findings.length : 0));
+    totalCbomComponents += (s.assetsFound || (s.cbom ? s.cbom.length : 0));
+    if(s.languages) s.languages.forEach(l => langsSet.add(l));
+    if(s.cryptoApis) s.cryptoApis.forEach(a => apisSet.add(a));
+    secretsCount += (s.secretsFound || 0);
+  });
+  
+  allFindings.forEach(f => {
+    if(f.algorithm) algosSet.add(f.algorithm);
+  });
+
+  // Main stat cards (make clickable)
+  updateStat('stat-risk-score', critCount > 0 ? 'CRITICAL' : (highCount > 0 ? 'HIGH' : 'LOW'), hasData);
+  updateStat('stat-files', (totalFilesScanned || 0).toLocaleString(), hasData);
   updateStat('stat-findings', totalFindings, hasData);
   updateStat('stat-critical', critCount, hasData);
   updateStat('stat-high', highCount, hasData); 
-  updateStat('stat-quantum', quantCount, hasData);
+  updateStat('stat-quantum', quantVulnCount, hasData);
+  updateStat('stat-cbom', (totalCbomComponents || 0).toLocaleString(), hasData);
+  
+  // Wrap stats in links for filtering
+  ['stat-critical', 'stat-quantum', 'stat-findings', 'stat-high', 'stat-cbom', 'stat-migration-algos'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el.parentElement) {
+       el.parentElement.classList.add('clickable');
+       el.parentElement.onclick = () => {
+         let p = 'findings.html';
+         if(id === 'stat-critical') p += '?risk=CRITICAL';
+         else if(id === 'stat-high') p += '?risk=HIGH';
+         else if(id === 'stat-quantum') p += '?risk=Quantum-Vuln';
+         else if(id === 'stat-cbom') p = 'cbom.html';
+         else if(id === 'stat-migration-algos') p = 'risk-migration.html';
+         window.location.href = p;
+       };
+    }
+  });
 
-  // Render Table
+  // Table
   const tbl = document.getElementById('tbl-repos');
-  const empty = document.getElementById('empty-repos');
+  const emptyRepos = document.getElementById('empty-repos');
   const tbody = document.getElementById('repos-tbody');
 
-  if (!hasData) {
+  const displayRepos = (data.repositories && data.repositories.length > 0)
+    ? data.repositories
+    : (data.scans || []).map(s => ({
+        name: s.repoName || 'Scanned Repository',
+        lastScan: s.timestamp || 'Just now',
+        status: 'completed'
+      }));
+
+  if (!hasData || displayRepos.length === 0) {
     tbl.style.display = 'none';
-    empty.style.display = 'flex';
+    emptyRepos.style.display = 'flex';
   } else {
     tbl.style.display = 'table';
-    empty.style.display = 'none';
-    tbody.innerHTML = data.repositories.map(r => `
+    emptyRepos.style.display = 'none';
+    tbody.innerHTML = displayRepos.map(r => `
       <tr>
         <td><span style="font-weight:600;color:var(--text-h);">${r.name}</span></td>
-        <td><span style="font-size:12px;color:var(--text-s)">${r.lastScan}</span></td>
+        <td><span style="font-size:12px;color:var(--text-s)">${r.lastScan || 'Just now'}</span></td>
         <td><span class="badge badge-med">Generated</span></td>
         <td><span class="badge badge-crit">Completed</span></td>
         <td><span class="badge badge-low">Not Verified</span></td>
       </tr>
     `).join('');
-    
-    // Real calculations based on actual scans
-    let totalFilesScanned = 0;
-    let totalCbomComponents = 0;
-    
-    (data.scans || []).forEach(s => {
-      totalFilesScanned += (s.filesScanned || 0);
-      totalCbomComponents += (s.assetsFound || 0);
-    });
-
-    updateStat('stat-risk-score', 'Not calculated', false);
-    updateStat('stat-files', totalFilesScanned.toLocaleString(), true);
-    updateStat('stat-cbom', totalCbomComponents.toLocaleString(), true);
   }
   
-  // Risk Distribution
-  const riskContent = document.getElementById('risk-dist-content');
-  const riskEmpty = document.getElementById('empty-risk-dist');
+  // Cryptographic Security Overview (Donut/Bar)
+  const covContent = document.getElementById('crypto-overview-content');
+  const covEmpty = document.getElementById('crypto-overview-empty');
   
   if (hasData && totalFindings > 0) {
-    riskContent.style.display = 'block';
-    riskEmpty.style.display = 'none';
+    covContent.style.display = 'block';
+    covEmpty.style.display = 'none';
     
-    document.getElementById('rb-crit').style.width = (critCount / totalFindings) * 100 + '%';
-    document.getElementById('rb-high').style.width = (highCount / totalFindings) * 100 + '%';
-    document.getElementById('rb-med').style.width = (medCount / totalFindings) * 100 + '%'; 
-    document.getElementById('rb-low').style.width = (lowCount / totalFindings) * 100 + '%';
+    document.getElementById('cov-crit').style.width = (critCount / totalFindings) * 100 + '%';
+    document.getElementById('cov-high').style.width = (highCount / totalFindings) * 100 + '%';
+    document.getElementById('cov-med').style.width = (medCount / totalFindings) * 100 + '%'; 
+    document.getElementById('cov-low').style.width = (lowCount / totalFindings) * 100 + '%';
+    document.getElementById('cov-info').style.width = (infoCount / totalFindings) * 100 + '%';
+
+    document.getElementById('cov-crit-lbl').textContent = critCount;
+    document.getElementById('cov-high-lbl').textContent = highCount;
+    document.getElementById('cov-med-lbl').textContent = medCount;
+    document.getElementById('cov-low-lbl').textContent = lowCount;
+    document.getElementById('cov-info-lbl').textContent = infoCount;
   } else {
-    riskContent.style.display = 'none';
-    riskEmpty.style.display = 'flex';
+    if(covContent) covContent.style.display = 'none';
+    if(covEmpty) covEmpty.style.display = 'flex';
+  }
+
+  // Quantum Readiness
+  const qContent = document.getElementById('quantum-content');
+  const qEmpty = document.getElementById('quantum-empty');
+  
+  if (hasData) {
+    qContent.style.display = 'block';
+    qEmpty.style.display = 'none';
+    
+    document.getElementById('q-safe').textContent = quantSafeCount;
+    document.getElementById('q-vuln').textContent = quantVulnCount;
+    document.getElementById('q-unk').textContent = quantUnkCount;
+    
+    let totalQ = quantSafeCount + quantVulnCount + quantUnkCount;
+    if(totalQ === 0) totalQ = 1; // avoid div/0
+    
+    let qReadyPct = Math.round((quantSafeCount / totalQ) * 100);
+    if (quantSafeCount === 0 && quantVulnCount === 0) qReadyPct = 0;
+
+    document.getElementById('q-pct').textContent = qReadyPct + '%';
+    document.getElementById('q-bar-safe').style.width = (quantSafeCount / totalQ) * 100 + '%';
+    document.getElementById('q-bar-vuln').style.width = (quantVulnCount / totalQ) * 100 + '%';
+    document.getElementById('q-bar-unk').style.width = (quantUnkCount / totalQ) * 100 + '%';
+    
+    // HNDL logic
+    let hasHndl = false;
+    let hndlText = "Not calculated";
+    const hndlBlock = document.getElementById('hndl-block');
+    allFindings.forEach(f => {
+       if((f.snippet || '').toLowerCase().includes('hndl') || (f.category || '').toLowerCase().includes('hndl')) {
+         hasHndl = true;
+       }
+    });
+    
+    if (hasHndl) {
+       hndlText = "Long-term sensitive data found. Migration urgency: HIGH.";
+       hndlBlock.style.display = 'block';
+       document.getElementById('hndl-val').textContent = "Exposure Detected";
+    } else {
+       hndlText = "No HNDL data identified. Routine migration recommended.";
+       hndlBlock.style.display = 'none';
+    }
+    document.getElementById('q-exposure').textContent = hndlText;
+    document.getElementById('stat-migration-algos').textContent = quantVulnCount + ' Algos';
+  } else {
+    if(qContent) qContent.style.display = 'none';
+    if(qEmpty) qEmpty.style.display = 'flex';
   }
   
   // Top Cryptographic Risks
@@ -771,31 +879,34 @@ function renderDashboardData() {
   const risksEmpty = document.getElementById('empty-top-risks');
   const risksList = document.getElementById('top-risks-list');
   
-  const flatFindings = (data.scans || []).flatMap(s => s.findings || []);
-  
-  if (flatFindings.length > 0) {
-    risksContent.style.display = 'block';
-    risksEmpty.style.display = 'none';
+  if (allFindings.length > 0) {
+    if(risksContent) risksContent.style.display = 'block';
+    if(risksEmpty) risksEmpty.style.display = 'none';
     
     const algoMap = {};
-    flatFindings.forEach(f => {
+    allFindings.forEach(f => {
       const algo = f.algorithm || f.ruleId || 'Unknown';
-      if(!algoMap[algo]) algoMap[algo] = { count: 0, severity: f.severity || 'Medium' };
+      if(!algoMap[algo]) algoMap[algo] = { count: 0, severity: f.severity || 'Medium', quant: f.quantumStatus };
       algoMap[algo].count++;
     });
     
-    const sortedAlgos = Object.keys(algoMap).sort((a,b) => algoMap[b].count - algoMap[a].count).slice(0, 4);
+    const sortedAlgos = Object.keys(algoMap).sort((a,b) => algoMap[b].count - algoMap[a].count).slice(0, 5);
     
-    risksList.innerHTML = sortedAlgos.map(algo => {
+    if(risksList) risksList.innerHTML = sortedAlgos.map(algo => {
       const item = algoMap[algo];
       let badgeClass = 'badge-med';
       if(item.severity.toUpperCase() === 'CRITICAL') badgeClass = 'badge-crit';
       if(item.severity.toUpperCase() === 'HIGH') badgeClass = 'badge-high';
       
+      let qTag = '';
+      if(item.quant && item.quant.toLowerCase().includes('vuln')) {
+         qTag = `<span class="badge badge-quant" style="margin-left:8px;font-size:10px;">Quantum-Vuln</span>`;
+      }
+      
       return `
         <div class="risk-item">
           <div>
-            <div class="risk-algo">${algo}</div>
+            <div class="risk-algo">${algo} ${qTag}</div>
             <div class="risk-count">${item.count} affected file${item.count > 1 ? 's' : ''}</div>
           </div>
           <span class="badge ${badgeClass}">${item.severity}</span>
@@ -803,8 +914,25 @@ function renderDashboardData() {
       `;
     }).join('');
   } else {
-    risksContent.style.display = 'none';
-    risksEmpty.style.display = 'flex';
+    if(risksContent) risksContent.style.display = 'none';
+    if(risksEmpty) risksEmpty.style.display = 'flex';
+  }
+
+  // Scan Coverage
+  const scContent = document.getElementById('scan-cov-content');
+  const scEmpty = document.getElementById('scan-cov-empty');
+  if(hasData) {
+    if(scContent) scContent.style.display = 'flex';
+    if(scEmpty) scEmpty.style.display = 'none';
+    
+    document.getElementById('cov-files').textContent = totalFilesScanned.toLocaleString();
+    document.getElementById('cov-langs').textContent = langsSet.size;
+    document.getElementById('cov-apis').textContent = apisSet.size;
+    document.getElementById('cov-secrets').textContent = secretsCount;
+    document.getElementById('cov-algos').textContent = algosSet.size;
+  } else {
+    if(scContent) scContent.style.display = 'none';
+    if(scEmpty) scEmpty.style.display = 'flex';
   }
 }
 
@@ -826,7 +954,7 @@ function syncBadges() {
 window.addEventListener('load', syncBadges);
 window.addEventListener('cryptoscan_data_updated', syncBadges);
 </script>
-<script src="auth.js"></script>
+<script src="assets/js/auth.js"></script>
 </body>
 </html>
 

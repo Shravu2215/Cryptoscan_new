@@ -4,6 +4,8 @@
 #   - ../../../integrity-service  (merkle tree, hybrid signatures, KMS)
 #   - ../../../scanner            (spawned as a python subprocess)
 #   - ../../frontend              (served statically)
+#   - ../../../cbom-service       (cbomGenerator, signedCbomExport, migrationAssessment)
+#   - ../../shared                (preflight, utilities)
 # Build with:  docker build -f backend-core/Dockerfile -t cryptoscan-backend-core .
 FROM node:20-bookworm-slim
 
@@ -20,12 +22,17 @@ WORKDIR /app
 
 # --- Sibling modules backend-core depends on at runtime ---------------------
 COPY blockchain-module/package.json blockchain-module/package-lock.json ./blockchain-module/
-RUN cd blockchain-module && npm ci --omit=dev
+RUN cd blockchain-module && npm install --omit=dev --ignore-scripts
+
+COPY cbom-service/package.json cbom-service/package-lock.json ./cbom-service/
+RUN cd cbom-service && npm install --omit=dev --ignore-scripts
 
 COPY blockchain-module ./blockchain-module
 COPY integrity-service ./integrity-service
 COPY scanner ./scanner
 COPY frontend ./frontend
+COPY shared ./shared
+COPY cbom-service ./cbom-service
 
 # Scanner's own Python dependencies (kept separate from the Node venv-setup
 # script so the image build doesn't depend on network access to npm at
@@ -37,7 +44,7 @@ RUN python3 -m venv scanner/.venv \
 COPY backend-core/package.json backend-core/package-lock.json ./backend-core/
 WORKDIR /app/backend-core
 # postinstall (scanner venv setup) already handled above; skip re-running it.
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
 
 COPY backend-core .
 

@@ -229,15 +229,19 @@ const CryptoEngine = {
     const criticalCount = activeFindings.filter(f => f.severity === 'critical').length;
     const quantumCount = activeFindings.filter(f => f.quantum === 'yes').length;
 
+    const repoName = repo.name || 'Scanned Repository';
+    const uniqueFilesCount = new Set(activeFindings.map(f => f.file)).size || activeFindings.length;
+
     const scanResult = {
       scanId: scanId,
-      repoId: repo.id,
-      repoName: repo.name,
+      repoId: repo.id || 'repo-1',
+      repoName: repoName,
       fileSize: 0,
       timestamp: new Date().toLocaleString(),
+      scanDate: new Date().toISOString(),
       durationSeconds: 1,
-      filesDiscovered: activeFindings.length,
-      filesScanned: activeFindings.length,
+      filesDiscovered: uniqueFilesCount,
+      filesScanned: uniqueFilesCount,
       assetsFound: cbomAssets.length,
       criticalCount: criticalCount,
       quantumCount: quantumCount,
@@ -252,14 +256,14 @@ const CryptoEngine = {
     };
 
     const currentData = this.getData();
-    const existingRepoIdx = currentData.repositories.findIndex(r => r.name === repo.name);
+    const existingRepoIdx = currentData.repositories.findIndex(r => r.name === repoName);
     const repoSummary = {
       id: scanResult.repoId,
-      name: repo.name,
+      name: repoName,
       size: 0,
       lastScan: 'Just now',
       status: 'completed',
-      filesCount: 0,
+      filesCount: uniqueFilesCount,
       findingsCount: activeFindings.length,
       criticalCount: criticalCount,
       quantumCount: quantumCount
