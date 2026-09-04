@@ -785,24 +785,36 @@ function determineReplacement(algo) {
 
 function init() {
   const data = CryptoEngine.getData();
+  const noDataEl = document.getElementById('view-no-data');
+  const activeEl = document.getElementById('view-active');
+  const safeEl = document.getElementById('view-safe');
+  const headerActionsEl = document.getElementById('header-actions');
   
   if (!data.scans || data.scans.length === 0) {
-    document.getElementById('view-no-data').style.display = 'block';
+    if (noDataEl) noDataEl.style.display = 'block';
+    if (activeEl) activeEl.style.display = 'none';
+    if (safeEl) safeEl.style.display = 'none';
+    if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
   
-  allFindings = data.scans.flatMap(s => s.findings);
+  allFindings = data.scans.flatMap(s => s.findings || []);
   
   // Identify at-risk components
   const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
   
   if (atRisk.length === 0) {
-    document.getElementById('view-safe').style.display = 'block';
+    if (safeEl) safeEl.style.display = 'block';
+    if (noDataEl) noDataEl.style.display = 'none';
+    if (activeEl) activeEl.style.display = 'none';
+    if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
   
-  document.getElementById('view-active').style.display = 'flex';
-  document.getElementById('header-actions').style.display = 'flex';
+  if (noDataEl) noDataEl.style.display = 'none';
+  if (safeEl) safeEl.style.display = 'none';
+  if (activeEl) activeEl.style.display = 'flex';
+  if (headerActionsEl) headerActionsEl.style.display = 'flex';
   
   // Group by algorithm to form discrete migration candidates
   const candidateMap = {};

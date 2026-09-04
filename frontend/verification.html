@@ -659,15 +659,20 @@ let merkleRootHex = '';
 
 function init() {
   const data = CryptoEngine.getData();
+  const noDataEl = document.getElementById('view-no-data');
+  const activeEl = document.getElementById('view-active');
+  const headerActionsEl = document.getElementById('header-actions');
   
   if (!data.activeScan) {
-    document.getElementById('view-no-data').style.display = 'block';
+    if (noDataEl) noDataEl.style.display = 'block';
+    if (activeEl) activeEl.style.display = 'none';
+    if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
   
-  activeScan = data.activeScan;
-  document.getElementById('view-active').style.display = 'flex';
-  document.getElementById('header-actions').style.display = 'flex';
+  if (noDataEl) noDataEl.style.display = 'none';
+  if (activeEl) activeEl.style.display = 'flex';
+  if (headerActionsEl) headerActionsEl.style.display = 'flex';
   
   // Populate CBOM Details
   document.getElementById('det-repo').textContent = activeScan.repoName;

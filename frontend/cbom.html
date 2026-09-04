@@ -410,7 +410,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
     </div>
 
     <!-- Active CBOM View -->
-    <div id="view-active" style="display:none; display:flex; flex-direction:column; gap:24px;">
+    <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
       
       <!-- Summary Cards -->
       <div class="stats-grid">
@@ -702,19 +702,21 @@ function getAlgoType(algo) {
 
 function init() {
   const data = CryptoEngine.getData();
+  const noDataEl = document.getElementById('view-no-data');
+  const activeEl = document.getElementById('view-active');
+  const headerActionsEl = document.getElementById('header-actions');
   
   if (!data.scans || data.scans.length === 0) {
-    document.getElementById('view-no-data').style.display = 'block';
+    if (noDataEl) noDataEl.style.display = 'block';
+    if (activeEl) activeEl.style.display = 'none';
+    if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
   
-  document.getElementById('view-active').style.display = 'flex';
-  document.getElementById('header-actions').style.display = 'flex';
-  
   // Transform findings into an inventory representation (CBOM elements)
   inventory = data.scans.flatMap(s => {
-    return s.findings.map(f => {
-      const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
+    return (s.findings || []).map(f => {
+      const algo = f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown');
       return {
         id: f.id || Math.random().toString(36).substr(2, 9),
         algorithm: algo,
@@ -740,6 +742,17 @@ function init() {
     return true;
   });
   
+  if (inventory.length === 0) {
+    if (noDataEl) noDataEl.style.display = 'block';
+    if (activeEl) activeEl.style.display = 'none';
+    if (headerActionsEl) headerActionsEl.style.display = 'none';
+    return;
+  }
+
+  if (noDataEl) noDataEl.style.display = 'none';
+  if (activeEl) activeEl.style.display = 'flex';
+  if (headerActionsEl) headerActionsEl.style.display = 'flex';
+
   populateLibraryFilter();
   updateSummaryStats();
   updateCharts();
