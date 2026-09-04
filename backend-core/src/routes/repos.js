@@ -127,6 +127,7 @@ router.post('/github', requireAuth, async (req, res) => {
     }
 
     extractDir = fs.mkdtempSync(path.join(UPLOAD_DIR, 'github-'));
+    const repositoryPath = extractArchive(archiveBuffer, extractDir);
     const { saveRepo } = require('../utils/devStore');
     let repo;
     try {
