@@ -1,17 +1,4 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" },
-    { "source": "/scan", "destination": "/scan.html" },
-    { "source": "/cbom", "destination": "/cbom.html" },
-    { "source": "/findings", "destination": "/findings.html" },
-    { "source": "/risk-migration", "destination": "/risk-migration.html" },
-    { "source": "/verification", "destination": "/verification.html" },
-    { "source": "/repositories", "destination": "/repositories.html" },
-    { "source": "/settings", "destination": "/settings.html" },
-    { "source": "/profile", "destination": "/profile.html" }
-  ]
+  "trailingSlash": false
 }
