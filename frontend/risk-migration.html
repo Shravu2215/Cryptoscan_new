@@ -322,55 +322,136 @@ tbody tr:hover { background: var(--bg-card-hover); }
 <style>
   /* Risk & Migration Specific Layout */
   
+  /* Improved Header Banner */
   .risk-hero {
+    position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 40px 24px; text-align: center; border-radius: var(--r-lg);
-    background: linear-gradient(180deg, rgba(220,252,231,0.5) 0%, var(--bg-card) 100%);
-    border: 1px solid var(--border-color);
+    padding: 36px 24px; text-align: center; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, #0F0F11 50%, rgba(139,92,246,0.1) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
   }
-  .risk-hero.risk-crit { background: linear-gradient(180deg, rgba(254,226,226,0.6) 0%, var(--bg-card) 100%); }
-  .risk-hero.risk-high { background: linear-gradient(180deg, rgba(254,243,199,0.6) 0%, var(--bg-card) 100%); }
+  .risk-hero.risk-crit {
+    background: linear-gradient(135deg, rgba(239,68,68,0.18) 0%, #0F0F11 60%, rgba(153,27,27,0.25) 100%);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 12px 40px rgba(239,68,68,0.15), inset 0 1px 0 rgba(239,68,68,0.25);
+  }
+  .risk-hero.risk-high {
+    background: linear-gradient(135deg, rgba(245,158,11,0.18) 0%, #0F0F11 60%, rgba(180,83,9,0.25) 100%);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 12px 40px rgba(245,158,11,0.15), inset 0 1px 0 rgba(245,158,11,0.25);
+  }
   
-  .risk-hero-title { font-size: 14px; font-weight: 600; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-  .risk-hero-val { font-size: 48px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; margin-bottom: 16px; }
-  .risk-hero-val.safe { color: var(--green); }
-  .risk-hero-val.crit { color: var(--red); }
-  .risk-hero-val.high { color: var(--amber); }
+  .risk-hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 20px;
+    font-size: 11px; font-weight: 700; color: var(--red);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
+  }
+  .risk-hero-badge-pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--red); box-shadow: 0 0 8px var(--red);
+    animation: pulseDot 1.5s infinite;
+  }
+  @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
   
-  .risk-hero-sub { font-size: 15px; font-weight: 500; color: var(--text-h); margin-bottom: 4px; }
-  .risk-hero-desc { font-size: 13px; color: var(--text-m); max-width: 400px; margin: 0 auto; line-height: 1.5; }
+  .risk-hero-title { font-size: 12px; font-weight: 700; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .risk-hero-val {
+    font-size: 52px; font-weight: 900; line-height: 1;
+    letter-spacing: -0.03em; margin-bottom: 14px; font-family: 'Inter', sans-serif;
+  }
+  .risk-hero-val.crit {
+    background: linear-gradient(135deg, #f87171, #ef4444, #dc2626);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 10px rgba(239, 68, 68, 0.3));
+  }
+  .risk-hero-val.high {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.3));
+  }
+  .risk-hero-val.safe {
+    background: linear-gradient(135deg, #34d399, #10b981, #059669);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
   
-  /* Recommendation Cards */
-  .rec-list { display: flex; flex-direction: column; gap: 16px; }
+  .risk-hero-sub {
+    font-size: 16px; font-weight: 600; color: var(--text-h);
+    margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .risk-hero-sub-count {
+    background: rgba(255, 255, 255, 0.1); padding: 2px 10px;
+    border-radius: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text-h);
+  }
+  .risk-hero-desc { font-size: 13px; color: var(--text-m); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+  
+  /* Improved Recommendation Cards */
+  .rec-list { display: flex; flex-direction: column; gap: 20px; }
   .rec-card {
-    background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-md);
-    padding: 24px; transition: all 0.2s; position: relative; overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+    padding: 24px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   }
-  .rec-card:hover { border-color: var(--text-m); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .rec-card:hover {
+    border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  }
   .rec-card::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border-color);
   }
-  .rec-card.p1::before { background: var(--red); }
-  .rec-card.p2::before { background: var(--amber); }
-  .rec-card.p3::before { background: var(--yellow); }
+  .rec-card.p1::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
+  .rec-card.p2::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
+  .rec-card.p3::before { background: linear-gradient(180deg, #eab308, #ca8a04); }
   
   .rec-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-  .rec-algo { font-size: 18px; font-weight: 700; color: var(--text-h); font-family: 'JetBrains Mono', monospace; }
-  .rec-purpose { font-size: 13px; color: var(--text-m); margin-top: 4px; }
-  .rec-priority { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-  .rec-priority.p1 { background: var(--red-bg); color: var(--red); }
-  .rec-priority.p2 { background: var(--amber-bg); color: var(--amber); }
-  .rec-priority.p3 { background: var(--yellow-bg); color: var(--yellow); }
+  .rec-algo { font-size: 19px; font-weight: 700; color: var(--text-h); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
+  .rec-purpose { font-size: 13px; color: var(--text-m); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
   
-  .rec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .rg-lbl { font-size: 11px; color: var(--text-s); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
-  .rg-val { font-size: 13px; font-weight: 500; color: var(--text-h); }
+  .rec-priority-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .rec-priority-badge.p1 { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+  .rec-priority-badge.p2 { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+  .rec-priority-badge.p3 { background: rgba(234, 179, 8, 0.12); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.25); }
   
-  .rec-replace { display: flex; align-items: center; gap: 12px; background: var(--bg-main); padding: 12px 16px; border-radius: var(--r-sm); border: 1px solid var(--border-color); }
-  .replace-arrow { color: var(--text-s); }
-  .replace-val { font-size: 14px; font-weight: 600; color: var(--green); font-family: 'JetBrains Mono', monospace; }
+  .rec-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
+  }
+  .rg-card {
+    background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .rg-lbl { font-size: 11px; color: var(--text-s); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .rg-val { font-size: 13px; font-weight: 600; color: var(--text-h); }
   
-  .rec-ft { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .rec-replace {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+    padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+  .replace-icon-wrap {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center;
+    color: var(--green); flex-shrink: 0;
+  }
+  .replace-lbl { font-size: 11px; color: var(--text-m); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .replace-val { font-size: 14px; font-weight: 700; color: var(--green); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+  
+  .rec-ft { display: flex; justify-content: flex-end; margin-top: 20px; }
+  .view-details-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: 10px; font-weight: 600; font-size: 13px;
+    background: var(--bg-main); border: 1px solid var(--border-color);
+    color: var(--text-h); cursor: pointer; transition: all 0.2s ease;
+  }
+  .view-details-btn:hover {
+    background: var(--bg-card-hover); border-color: var(--green); color: var(--green);
+  }
 
   /* Migration Order Timeline */
   .timeline { display: flex; flex-direction: column; padding: 16px 0; }
@@ -458,10 +539,16 @@ tbody tr:hover { background: var(--bg-card-hover); }
     <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
       
       <div class="risk-hero" id="hero-card">
+        <div class="risk-hero-badge">
+          <span class="risk-hero-badge-pulse"></span>
+          <span>Quantum Security Posture</span>
+        </div>
         <div class="risk-hero-title">Overall Quantum Risk</div>
         <div class="risk-hero-val" id="hero-risk">LOW</div>
-        <div class="risk-hero-sub"><span id="hero-count">0</span> components require attention</div>
-        <div class="risk-hero-desc">Based on the cryptographic components identified in the latest scan. Immediate action recommended for Critical and Quantum Vulnerable components.</div>
+        <div class="risk-hero-sub">
+          <span class="risk-hero-sub-count" id="hero-count">0</span> components require attention
+        </div>
+        <div class="risk-hero-desc">Based on cryptographic assets identified in the latest scan. Immediate action recommended for Critical and Quantum-Vulnerable components.</div>
       </div>
       
       <!-- Summary Cards -->
@@ -1013,41 +1100,53 @@ function computeHndlAndAgility() {
 function renderRecommendations() {
   const container = document.getElementById('recommendations-list');
   container.innerHTML = migrationCandidates.map((c, idx) => {
-    const qStr = c.quantumVulnerable ? 'Vulnerable' : 'Safe';
+    const priorityLabel = c.priority === 1 ? 'Priority 1 • Action Needed' : c.priority === 2 ? 'Priority 2 • High Priority' : 'Priority 3 • Standard Upgrade';
     
     return `
       <div class="rec-card p${c.priority}">
         <div class="rec-hd">
           <div>
             <div class="rec-algo">${c.algorithm}</div>
-            <div class="rec-purpose">${c.purpose}</div>
+            <div class="rec-purpose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--text-s);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${c.purpose}
+            </div>
           </div>
-          <div class="rec-priority p${c.priority}">Priority ${c.priority}</div>
+          <div class="rec-priority-badge p${c.priority}">${priorityLabel}</div>
         </div>
         
         <div class="rec-grid">
-          <div>
+          <div class="rg-card">
             <div class="rg-lbl">Current Risk</div>
-            <div class="rg-val"><span class="badge ${getBadgeClass(c.severity)}" style="padding:2px 6px;">${c.severity}</span></div>
+            <div class="rg-val"><span class="badge ${getBadgeClass(c.severity)}" style="padding:3px 8px;">${c.severity}</span></div>
           </div>
-          <div>
-            <div class="rg-lbl">Quantum Risk</div>
-            <div class="rg-val" style="color:${c.quantumVulnerable?'var(--red)':'var(--green)'}; font-weight:600;">${qStr}</div>
+          <div class="rg-card">
+            <div class="rg-lbl">Quantum Exposure</div>
+            <div class="rg-val" style="color:${c.quantumVulnerable?'var(--red)':'var(--green)'}; font-weight:700;">
+              ${c.quantumVulnerable ? '⚠️ Vulnerable' : '🛡️ Safe'}
+            </div>
           </div>
-          <div>
+          <div class="rg-card">
             <div class="rg-lbl">Affected Files</div>
-            <div class="rg-val">${c.fileCount}</div>
+            <div class="rg-val" style="font-family:'JetBrains Mono',monospace;">${c.fileCount} location${c.fileCount === 1 ? '' : 's'}</div>
           </div>
         </div>
         
         <div class="rec-replace">
-          <div style="font-size:12px; color:var(--text-m); font-weight:600; text-transform:uppercase;">Recommend Replacement</div>
-          <div class="replace-arrow">→</div>
-          <div class="replace-val">${c.replacement || 'None specified'}</div>
+          <div class="replace-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </div>
+          <div>
+            <div class="replace-lbl">Recommended NIST PQC Replacement</div>
+            <div class="replace-val">${c.replacement || 'None specified'}</div>
+          </div>
         </div>
         
         <div class="rec-ft">
-          <button class="btn-sec view-details-btn" data-idx="${idx}">View Details</button>
+          <button class="btn-sec view-details-btn" data-idx="${idx}">
+            View Details & Remediation
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
     `;
