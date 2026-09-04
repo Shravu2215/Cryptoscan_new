@@ -118,23 +118,25 @@ def scan_repo(repo_path, scan_id=None):
                 continue
             
             # 1. SCA Manifest Layer
-            if fn.lower() in {"package.json", "requirements.txt", "pom.xml"} or (fn.lower().startswith("requirements") and fn.lower().endswith(".txt")):
+            if fn.lower() in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"} or (fn.lower().startswith("requirements") and fn.lower().endswith(".txt")):
                 findings.extend(sca.analyze(path, source))
 
-            # 2. Infra / Config Layer
-            if ext in {".tf", ".conf", ".yaml", ".yml"} or fn.lower() in {"nginx.conf", "httpd.conf", "apache2.conf"}:
+            # 2. Infra / Config / Cert Layer
+            if ext in {".tf", ".conf", ".yaml", ".yml", ".ini", ".env", ".properties", ".xml"} or fn.lower() in {"nginx.conf", "httpd.conf", "apache2.conf", "dockerfile"} or fn.startswith("Dockerfile"):
                 findings.extend(infra.analyze(path, source))
+                findings.extend(rx.analyze(path, source))
+                findings.extend(ent.analyze(path, source))
 
             # 3. Source Code / Regex / Entropy Layers
             if ext == ".py":
                 findings.extend(py.analyze(path, source))
+                findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
-            elif ext in {".js", ".mjs", ".cjs", ".jsx"}:
+            elif ext in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
                 findings.extend(js.analyze(path, source))
+                findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
-            elif (ext in {".yml", ".yaml", ".json", ".ini", ".conf", ".env"}
-                  or fn.startswith(".env")
-                  or fn == "Dockerfile" or fn.startswith("Dockerfile.")):
+            elif ext in {".java", ".c", ".cpp", ".cc", ".h", ".hpp", ".cs", ".go", ".php", ".rb", ".rs", ".kt", ".swift", ".sql", ".sh", ".bash", ".pem", ".key", ".crt", ".pfx", ".p12"}:
                 findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
                 
