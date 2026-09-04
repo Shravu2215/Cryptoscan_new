@@ -1,17 +1,115 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" },
-    { "source": "/scan", "destination": "/scan.html" },
-    { "source": "/cbom", "destination": "/cbom.html" },
-    { "source": "/findings", "destination": "/findings.html" },
-    { "source": "/risk-migration", "destination": "/risk-migration.html" },
-    { "source": "/verification", "destination": "/verification.html" },
-    { "source": "/repositories", "destination": "/repositories.html" },
-    { "source": "/settings", "destination": "/settings.html" },
-    { "source": "/profile", "destination": "/profile.html" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/frontend/assets/$1"
+    },
+    {
+      "src": "/(.*\\.png|.*\\.jpg|.*\\.svg|.*\\.css|.*\\.js)",
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/frontend/login.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/frontend/login.html"
+    },
+    {
+      "src": "/signup",
+      "dest": "/frontend/signup.html"
+    },
+    {
+      "src": "/signup.html",
+      "dest": "/frontend/signup.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/frontend/dashboard.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/frontend/dashboard.html"
+    },
+    {
+      "src": "/scan",
+      "dest": "/frontend/scan.html"
+    },
+    {
+      "src": "/scan.html",
+      "dest": "/frontend/scan.html"
+    },
+    {
+      "src": "/cbom",
+      "dest": "/frontend/cbom.html"
+    },
+    {
+      "src": "/cbom.html",
+      "dest": "/frontend/cbom.html"
+    },
+    {
+      "src": "/findings",
+      "dest": "/frontend/findings.html"
+    },
+    {
+      "src": "/findings.html",
+      "dest": "/frontend/findings.html"
+    },
+    {
+      "src": "/risk-migration",
+      "dest": "/frontend/risk-migration.html"
+    },
+    {
+      "src": "/risk-migration.html",
+      "dest": "/frontend/risk-migration.html"
+    },
+    {
+      "src": "/verification",
+      "dest": "/frontend/verification.html"
+    },
+    {
+      "src": "/verification.html",
+      "dest": "/frontend/verification.html"
+    },
+    {
+      "src": "/repositories",
+      "dest": "/frontend/repositories.html"
+    },
+    {
+      "src": "/repositories.html",
+      "dest": "/frontend/repositories.html"
+    },
+    {
+      "src": "/settings",
+      "dest": "/frontend/settings.html"
+    },
+    {
+      "src": "/settings.html",
+      "dest": "/frontend/settings.html"
+    },
+    {
+      "src": "/profile",
+      "dest": "/frontend/profile.html"
+    },
+    {
+      "src": "/profile.html",
+      "dest": "/frontend/profile.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
   ]
 }
