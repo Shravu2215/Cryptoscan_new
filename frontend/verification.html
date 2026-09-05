@@ -563,8 +563,12 @@ body {
         <svg id="hero-icon" class="vh-icon unverified" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
         <div class="vh-title" id="hero-title">NOT VERIFIED</div>
         <div class="vh-desc" id="hero-desc">Verification required</div>
-        <div style="margin-top:20px;">
+        <div style="margin-top:20px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
           <button id="btn-verify" class="btn-p" onclick="startVerification()" style="padding: 12px 24px; font-size: 14px;">Verify Scan Integrity</button>
+          <button id="btn-full-report" class="btn-sec" onclick="generateFullReport()" style="padding: 12px 24px; font-size: 14px; display:inline-flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Generate Full Report (PDF)
+          </button>
         </div>
       </div>
 
@@ -753,7 +757,11 @@ body {
 
 <script src="assets/js/engine.js"></script>
 <script>
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3000' : 'https://cryptoscan-new-backend.onrender.com';
+const API_BASE = (window.location.port === '3000') 
+  ? window.location.origin 
+  : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+      ? 'http://' + window.location.hostname + ':3000' 
+      : '');
 function getToken() {
   return localStorage.getItem('cs_token') || localStorage.getItem('cs_auth_token') || '';
 }
@@ -761,6 +769,7 @@ function getToken() {
 let activeScan = null;
 let currentHashHex = '';
 let merkleRootHex = '';
+let lastVerifyResult = null;
 let currentMerkleView = 'tree';
 window.selectedNodeHash = '';
 window.currentMerkleData = null;
@@ -1103,11 +1112,7 @@ async function startVerification() {
     // Call /scan/:scanId/anchor
     const anchorRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/anchor`, {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify({
-        repoName: activeScan.repoName,
-        findings: activeScan.findings || activeScan.cbom || []
-      })
+      headers: headers
     }).catch(() => null);
 
     if (anchorRes && anchorRes.ok) {
@@ -1122,15 +1127,9 @@ async function startVerification() {
 
     if (verifyRes && verifyRes.ok) {
       verifyResult = await verifyRes.json().catch(() => null);
-    }
-
-    const finalTxHash = (verifyResult && verifyResult.txHash) || (anchorResult && anchorResult.txHash);
-    const isVerified = (verifyResult && verifyResult.verified !== false) || (anchorResult && anchorResult.verified !== false);
-
-    if (finalTxHash && finalTxHash !== '0x' && isVerified) {
-      verifyResult = verifyResult || anchorResult;
-      verifyResult.txHash = finalTxHash;
-      apiSuccess = true;
+      if (verifyResult && verifyResult.verified !== undefined && verifyResult.txHash && verifyResult.txHash !== '0x') {
+        apiSuccess = true;
+      }
     }
   } catch(e) {
     console.error('API Verification error:', e);

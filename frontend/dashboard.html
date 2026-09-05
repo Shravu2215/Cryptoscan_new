@@ -1143,7 +1143,9 @@
       const data = CryptoEngine.getData();
       const hasData = (data.repositories && data.repositories.length > 0) || (data.scans && data.scans.length > 0);
 
-      const allFindings = (data.scans || []).flatMap(s => s.findings || []);
+      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+      const allFindings = targetScans.flatMap(s => s.findings || []);
       const totalFindings = allFindings.length || data.totalFindings || 0;
 
       const critCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'critical').length;
@@ -1152,13 +1154,13 @@
       const lowCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'low').length;
       const infoCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'informational').length;
 
-      const quantVulnCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable')).length;
+      const quantVulnCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln') || Boolean(f.isQuantumVulnerable)).length;
       const quantSafeCount = allFindings.filter(f => (f.quantumStatus || '').toLowerCase() === 'quantum-safe').length;
       const quantUnkCount = totalFindings - quantVulnCount - quantSafeCount;
 
       // Header Updates
       if (hasData) {
-        const latestScan = data.scans && data.scans.length > 0 ? data.scans[0] : null;
+        const latestScan = currentScan;
         const repoName = (latestScan && latestScan.repoName) ? latestScan.repoName : (data.repositories && data.repositories.length > 0 ? data.repositories[0].name : 'Repository');
         document.getElementById('hdr-repo-name').textContent = repoName;
 
@@ -1191,19 +1193,16 @@
       }
 
       // Calculate totals
-      let totalFilesScanned = 0;
-      let totalCbomComponents = 0;
+      let totalFilesScanned = currentScan.filesScanned || currentScan.filesDiscovered || (new Set(allFindings.map(f => f.file || f.filePath)).size) || 0;
+      let totalCbomComponents = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || (new Set(allFindings.map(f => f.algorithm)).size) || 0;
       let langsSet = new Set();
       let apisSet = new Set();
       let algosSet = new Set();
-      let secretsCount = 0;
+      let secretsCount = currentScan.secretsFound || 0;
 
-      (data.scans || []).forEach(s => {
-        totalFilesScanned += (s.filesScanned || s.filesDiscovered || (s.findings ? s.findings.length : 0));
-        totalCbomComponents += (s.assetsFound || (s.cbom ? s.cbom.length : 0));
+      targetScans.forEach(s => {
         if (s.languages) s.languages.forEach(l => langsSet.add(l));
         if (s.cryptoApis) s.cryptoApis.forEach(a => apisSet.add(a));
-        secretsCount += (s.secretsFound || 0);
       });
 
       allFindings.forEach(f => {

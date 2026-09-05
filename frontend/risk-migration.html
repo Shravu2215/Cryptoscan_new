@@ -558,8 +558,8 @@ tbody tr:hover { background: var(--bg-card-hover); }
           <div class="sc-val" id="stat-risk">0</div>
         </div>
         <div class="scard">
-          <div class="sc-lbl">Vulnerable Algorithms</div>
-          <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
+          <div class="sc-lbl">Total Findings</div>
+          <div class="sc-val" id="stat-total" style="color:var(--text-h)">0</div>
         </div>
         <div class="scard">
           <div class="sc-lbl">Critical</div>
@@ -568,6 +568,10 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div class="scard">
           <div class="sc-lbl">High</div>
           <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
+        </div>
+        <div class="scard">
+          <div class="sc-lbl">Quantum Vulnerable</div>
+          <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
         </div>
         <div class="scard scard-primary" style="background:linear-gradient(135deg, var(--text-h), var(--bg-sidebar));">
           <div class="sc-lbl" style="color:rgba(255,255,255,0.7)">Migration Candidates</div>
@@ -583,8 +587,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
           </div>
           <div>
             <div class="hndl-title">HNDL Aggregate Analysis (Mosca's Inequality)</div>
-            <div class="hndl-sub">Harvest Now, Decrypt Later — data collected today that quantum computers can decrypt in future</div>
-            <div class="hndl-sub" id="hndl-mosca-formula" style="margin-top:6px; font-weight:600; color:var(--text-h); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; font-family:'JetBrains Mono',monospace; display:inline-block;">X (1.5y migration) + Y (10.0y lifetime) &gt; Z (7.0y threat)</div>
+            <div class="hndl-sub">X (migration) + Y (data lifetime) &gt; Z (quantum threat)</div>
           </div>
         </div>
         <div class="hndl-grid">
@@ -774,6 +777,24 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div class="prop-lbl">Affected Files</div>
         <div class="prop-val" id="drw-files-count">0</div>
       </div>
+      <div class="prop-item">
+        <div class="prop-lbl">Migration Effort</div>
+        <div class="prop-val" id="drw-migration-effort">-</div>
+      </div>
+      <div class="prop-item">
+        <div class="prop-lbl">Latency/Size Impact</div>
+        <div class="prop-val" id="drw-latency-impact">-</div>
+      </div>
+    </div>
+    
+    <div class="explanation-box" style="margin-top:16px;">
+      <h4>Mosca's Inequality (X + Y &gt; Z)</h4>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
+        <div><strong>X (Migration Time):</strong> <span id="drw-mosca-x">-</span> years</div>
+        <div><strong>Y (Data Lifetime):</strong> <span id="drw-mosca-y">-</span> years</div>
+        <div><strong>Z (Threat Horizon):</strong> <span id="drw-mosca-z">-</span> years</div>
+      </div>
+      <div style="margin-top:8px; font-size:13px; font-weight:600;" id="drw-mosca-result"></div>
     </div>
     
     <div class="explanation-box" style="margin-top:16px;">
@@ -805,22 +826,12 @@ tbody tr:hover { background: var(--bg-card-hover); }
     const container = document.getElementById('simulation-container');
     const target = document.getElementById('drw-replacement').textContent;
     const files = document.getElementById('drw-files-count').textContent;
-
-    let effort = "2-4 weeks";
-    let perf = "Ciphertext: +1,088 bytes | Latency: +1.8ms (1.4x CPU)";
-    if (target.includes('DSA') || target.includes('Dilithium')) {
-      effort = "4-8 weeks";
-      perf = "Signature: +2,420 bytes | Latency: +3.5ms (2.1x CPU)";
-    } else if (target.includes('AES')) {
-      effort = "1-2 weeks";
-      perf = "Overhead: +16 bytes | Latency: +0.1ms (1.0x CPU)";
-    }
     
     container.innerHTML = `
       <div style="text-align:center; padding: 24px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="width:32px;height:32px;margin-bottom:12px;animation: spin 1s linear infinite;"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
         <div style="font-size:13px; color:var(--text-h); font-weight:600;">Running PQC Simulation...</div>
-        <div style="font-size:12px; color:var(--text-m); margin-top:4px;">Calculating latency, size overhead & migration effort</div>
+        <div style="font-size:12px; color:var(--text-m); margin-top:4px;">Analyzing dependencies & test coverage</div>
       </div>
     `;
     
@@ -829,7 +840,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div style="width:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border-color);">
             <div style="font-size:13px; font-weight:600; color:var(--green);">Simulation Complete</div>
-            <div style="font-size:12px; color:var(--text-m);">Est. Effort: <strong>${effort}</strong></div>
+            <div style="font-size:12px; color:var(--text-m);">Est. Effort: <strong>Not Assessed</strong></div>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-b);">
@@ -841,13 +852,13 @@ tbody tr:hover { background: var(--bg-card-hover); }
               <span>API signature changes required in ${files} file(s)</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-b);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span>Performance Overhead: <strong>${perf}</strong></span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span>Unit test impact: Not Assessed</span>
             </div>
           </div>
         </div>
       `;
-    }, 1200);
+    }, 1500);
   }
 </script>
 <style>
@@ -859,8 +870,12 @@ tbody tr:hover { background: var(--bg-card-hover); }
 let allFindings = [];
 let migrationCandidates = [];
 
-function getSeverity(f) { return (f.severity || 'SAFE').toUpperCase(); }
-function isQuantum(f) { return f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable'); }
+function getSeverity(f) { return ((f && f.severity) || 'SAFE').toUpperCase(); }
+function isQuantum(f) {
+  if (!f) return false;
+  const qs = (f.quantumStatus || '').toLowerCase();
+  return f.quantum === 'yes' || qs.includes('vuln') || Boolean(f.isQuantumVulnerable);
+}
 
 function getBadgeClass(sev) {
   if(sev === 'CRITICAL') return 'badge-crit';
@@ -878,6 +893,9 @@ function determineReplacement(algo) {
   }
   if (a.includes('sha-1') || a.includes('md5')) return 'SHA-256 or SHA-3';
   if (a.includes('des') || a.includes('rc4') || a.includes('blowfish')) return 'AES-GCM (256-bit)';
+  if (a.includes('bcrypt') || a.includes('argon2') || a.includes('scrypt')) return 'Argon2id (RFC 9106)';
+  if (a.includes('node-forge') || a.includes('crypto-js')) return 'Web Crypto API / Node crypto / @noble/ciphers';
+  if (a.includes('pyjwt') || a.includes('jwt')) return 'EdDSA / ES256 with standard claims';
   return 'Modern NIST standard';
 }
 
@@ -896,7 +914,25 @@ function init() {
     return;
   }
   
-  allFindings = data.scans.flatMap(s => s.findings || []);
+  const repoCritMap = {};
+  (data.repositories || []).forEach(r => {
+    if (r.id) repoCritMap[r.id] = (r.businessCriticality || 'MEDIUM').toUpperCase();
+    if (r.name) repoCritMap[r.name] = (r.businessCriticality || 'MEDIUM').toUpperCase();
+  });
+  (data.scans || []).forEach(s => {
+    if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality.toUpperCase();
+    if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality.toUpperCase();
+  });
+
+  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+  const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+
+  allFindings = targetScans.flatMap(s => (s.findings || []).map(f => ({
+    ...f,
+    repoId: s.repoId,
+    repoName: s.repoName,
+    businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || 'MEDIUM'
+  })));
   
   // Identify at-risk components
   const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
@@ -916,6 +952,8 @@ function init() {
   
   // Group by algorithm to form discrete migration candidates
   const candidateMap = {};
+  const critWeights = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+
   atRisk.forEach(f => {
     const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
     if (!candidateMap[algo]) {
@@ -925,11 +963,25 @@ function init() {
         severity: getSeverity(f),
         quantumVulnerable: isQuantum(f),
         affectedFiles: new Set(),
+        maxCriticality: 'MEDIUM',
+        maxCritWeight: 2,
         rationale: f.remediation || f.snippet || 'Component is considered insecure or vulnerable to quantum attacks.',
         replacement: determineReplacement(algo)
       };
     }
     candidateMap[algo].affectedFiles.add(f.file || 'unknown');
+
+    const fCrit = (f.businessCriticality || 'MEDIUM').toUpperCase();
+    const cWeight = critWeights[fCrit] || 2;
+    if (cWeight > (candidateMap[algo].maxCritWeight || 0)) {
+      candidateMap[algo].maxCritWeight = cWeight;
+      candidateMap[algo].maxCriticality = fCrit;
+    }
+    
+    // Store first finding to extract HNDL / score details
+    if (!candidateMap[algo].rawFinding) {
+      candidateMap[algo].rawFinding = f;
+    }
     
     // Escalate severity if multiple findings have different severities
     const s1 = candidateMap[algo].severity;
@@ -941,14 +993,14 @@ function init() {
   });
   
   migrationCandidates = Object.values(candidateMap).map(c => {
-    // Calculate Priority driven by risk severity:
-    // P1: Critical, High, or Quantum Vulnerable
-    // P2: Medium
+    // Calculate Priority driven by risk severity and repo business criticality:
+    // P1: Critical Repo, Critical Finding, High Finding, or Quantum Vulnerable
+    // P2: High Repo or Medium Finding
     // P3: Low/Safe
     let priority = 3;
-    if (c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
+    if (c.maxCriticality === 'CRITICAL' || c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
       priority = 1;
-    } else if (c.severity === 'MEDIUM') {
+    } else if (c.maxCriticality === 'HIGH' || c.severity === 'MEDIUM') {
       priority = 2;
     } else {
       priority = 3;
@@ -961,13 +1013,20 @@ function init() {
     };
   });
   
-  // Sort by priority (1 first), then by severity, then file count
+  // Sort by repo criticality first (Critical repos ahead of Low repos), then priority, then severity, then file count
   const riskWeights = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4, 'SAFE': 5 };
-  migrationCandidates.sort((a,b) => {
+  migrationCandidates.sort((a, b) => {
+    // 1. Repo Business Criticality: Tier 1 (Critical) repos first!
+    if ((b.maxCritWeight || 2) !== (a.maxCritWeight || 2)) {
+      return (b.maxCritWeight || 2) - (a.maxCritWeight || 2);
+    }
+    // 2. Component Priority
     if (a.priority !== b.priority) return a.priority - b.priority;
+    // 3. Risk severity
     const wA = riskWeights[a.severity] || 4;
     const wB = riskWeights[b.severity] || 4;
     if (wA !== wB) return wA - wB;
+    // 4. File count
     return b.fileCount - a.fileCount;
   });
   
@@ -992,9 +1051,9 @@ function init() {
 
 function updateDashboard(atRisk) {
   // Overall Risk Hero
-  const hasCrit = migrationCandidates.some(c => c.severity === 'CRITICAL');
-  const hasHigh = migrationCandidates.some(c => c.severity === 'HIGH');
-  const hasQuant = migrationCandidates.some(c => c.quantumVulnerable);
+  const hasCrit = allFindings.some(f => getSeverity(f) === 'CRITICAL');
+  const hasHigh = allFindings.some(f => getSeverity(f) === 'HIGH');
+  const hasQuant = allFindings.some(f => isQuantum(f));
   
   const hero = document.getElementById('hero-card');
   const heroRisk = document.getElementById('hero-risk');
@@ -1005,25 +1064,35 @@ function updateDashboard(atRisk) {
   else { overall = 'MEDIUM'; heroRisk.className = 'risk-hero-val high'; } // fallback styling
   
   heroRisk.textContent = overall;
-  // hero-count = unique algorithm groups that need migration
   document.getElementById('hero-count').textContent = migrationCandidates.length;
   
-  // Summary Stats — all counts are over migrationCandidates (unique algorithm groups)
-  document.getElementById('stat-risk').textContent = migrationCandidates.length;
-  document.getElementById('stat-quant').textContent = migrationCandidates.filter(c => c.quantumVulnerable).length;
-  document.getElementById('stat-crit').textContent = migrationCandidates.filter(c => c.severity === 'CRITICAL').length;
-  document.getElementById('stat-high').textContent = migrationCandidates.filter(c => c.severity === 'HIGH').length;
+  const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
+  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+  const componentsAtRisk = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || migrationCandidates.length;
+
+  const critCount = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
+  const highCount = allFindings.filter(f => getSeverity(f) === 'HIGH').length;
+  const medCount = allFindings.filter(f => getSeverity(f) === 'MEDIUM').length;
+  const lowCount = allFindings.filter(f => getSeverity(f) === 'LOW' || getSeverity(f) === 'INFORMATIONAL').length;
+  const quantCount = allFindings.filter(f => isQuantum(f)).length;
+
+  // Summary Stats matching Dashboard, CBOM & Findings exactly
+  document.getElementById('stat-risk').textContent = componentsAtRisk;
+  if (document.getElementById('stat-total')) document.getElementById('stat-total').textContent = allFindings.length;
+  document.getElementById('stat-crit').textContent = critCount;
+  document.getElementById('stat-high').textContent = highCount;
+  document.getElementById('stat-quant').textContent = quantCount;
   document.getElementById('stat-candidates').textContent = migrationCandidates.length;
   
-  // Distribution Chart — proportional over all migration candidates
-  const tot = migrationCandidates.length || 1;
-  document.getElementById('rb-crit').style.width = (migrationCandidates.filter(c=>c.severity==='CRITICAL').length/tot)*100 + '%';
-  document.getElementById('rb-high').style.width = (migrationCandidates.filter(c=>c.severity==='HIGH').length/tot)*100 + '%';
-  document.getElementById('rb-med').style.width = (migrationCandidates.filter(c=>c.severity==='MEDIUM').length/tot)*100 + '%';
-  document.getElementById('rb-low').style.width = (migrationCandidates.filter(c=>c.severity==='LOW').length/tot)*100 + '%';
+  // Distribution Chart — proportional over all findings (identical to Dashboard & Findings)
+  const tot = allFindings.length || 1;
+  document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
+  document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
+  document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
+  document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
   
   // Quantum Exposure
-  const qVuln = allFindings.filter(f => isQuantum(f)).length;
+  const qVuln = quantCount;
   const qSafe = allFindings.length - qVuln;
   document.getElementById('qe-vuln').textContent = qVuln;
   document.getElementById('qe-safe').textContent = qSafe;
@@ -1064,20 +1133,6 @@ function computeHndlAndAgility() {
   // Score range across all findings
   const scoreMin = Math.max(0, hndlPct - 20);
   const scoreMax = Math.min(100, hndlPct + 15);
-
-  // Compute Mosca's Inequality: X (migration time) + Y (data lifetime) > Z (quantum threat = 7y)
-  const locCount = allFindings.length;
-  const hardcodedCountEstimate = allFindings.filter(f => (f.snippet || f.title || '').toLowerCase().includes('hardcoded')).length;
-  const X = parseFloat((1.0 + Math.min(3.0, (locCount - 1) * 0.2) + (hardcodedCountEstimate * 0.5)).toFixed(1));
-  const Y = 10.0;
-  const Z = 7.0;
-  const moscaHolds = (X + Y) > Z;
-
-  const formulaEl = document.getElementById('hndl-mosca-formula');
-  if (formulaEl) {
-    formulaEl.textContent = `Formula: X (${X}y migration) + Y (${Y}y lifetime) ${moscaHolds ? '>' : '≤'} Z (${Z}y threat) → ${moscaHolds ? 'HIGH RISK' : 'LOW RISK'}`;
-    formulaEl.style.color = moscaHolds ? 'var(--red)' : 'var(--green)';
-  }
 
   document.getElementById('hndl-overall').textContent = hndlLabel;
   document.getElementById('hndl-overall').style.color = hndlColor;
@@ -1154,6 +1209,16 @@ function renderRecommendations() {
           <div class="rg-card">
             <div class="rg-lbl">Affected Files</div>
             <div class="rg-val" style="font-family:'JetBrains Mono',monospace;">${c.fileCount} location${c.fileCount === 1 ? '' : 's'}</div>
+          </div>
+          <div class="rg-card" style="margin-top: 12px; grid-column: 1 / -1; display:flex; justify-content: space-between;">
+            <div>
+              <div class="rg-lbl">Migration Effort</div>
+              <div class="rg-val">${c.rawFinding && c.rawFinding.cryptoAgilityScore < 40 ? 'High' : (c.rawFinding && c.rawFinding.cryptoAgilityScore < 80 ? 'Medium' : 'Low')}</div>
+            </div>
+            <div>
+              <div class="rg-lbl">Latency/Size Impact</div>
+              <div class="rg-val">${c.purpose === 'digital_signature' && (c.algorithm.includes('RSA') || c.algorithm.includes('EC')) ? 'High' : (c.purpose === 'key_exchange' ? 'Medium' : 'Low')}</div>
+            </div>
           </div>
         </div>
         
@@ -1240,6 +1305,26 @@ function openDrawerObj(c) {
   const fileCount = (c.fileCount !== undefined && c.fileCount !== null) ? c.fileCount : (c.affectedFiles ? (c.affectedFiles.size || c.affectedFiles.length || 0) : 0);
   document.getElementById('drw-files-count').textContent = fileCount;
   document.getElementById('drw-rationale').textContent = c.rationale || 'Component is considered insecure or vulnerable to quantum attacks.';
+  
+  // Task 1: Mosca's Inequality and Task 8: Migration Impact
+  const f = c.rawFinding || {};
+  const isHardcoded = (f.cryptoAgilityScore !== undefined ? f.cryptoAgilityScore < 50 : true);
+  const moscaX = f.hndl && f.hndl.migrationTimeYears ? f.hndl.migrationTimeYears : (fileCount > 5 ? 2 : 1) + (isHardcoded ? 2 : 1);
+  const moscaY = f.dataLifetimeYears || 10;
+  const moscaZ = f.hndl && f.hndl.crqcHorizonYears ? f.hndl.crqcHorizonYears : 7;
+  const isMet = (moscaX + moscaY) > moscaZ;
+  
+  document.getElementById('drw-mosca-x').textContent = moscaX;
+  document.getElementById('drw-mosca-y').textContent = moscaY;
+  document.getElementById('drw-mosca-z').textContent = moscaZ;
+  const resEl = document.getElementById('drw-mosca-result');
+  resEl.textContent = isMet ? "🚨 Inequality Met: Data will be vulnerable before migration completes!" : "✅ Safe: Migration can complete before threat horizon.";
+  resEl.style.color = isMet ? "var(--red)" : "var(--green)";
+  
+  const migrationEffort = (f.cryptoAgilityScore < 40) ? 'High' : (f.cryptoAgilityScore < 80 ? 'Medium' : 'Low');
+  const latencyImpact = (c.purpose === 'digital_signature' && (c.algorithm.includes('RSA') || c.algorithm.includes('EC'))) ? 'High' : (c.purpose === 'key_exchange' ? 'Medium' : 'Low');
+  document.getElementById('drw-migration-effort').textContent = migrationEffort;
+  document.getElementById('drw-latency-impact').textContent = latencyImpact;
   
   document.getElementById('ig-algo').textContent = c.algorithm || 'Current Algorithm';
   document.getElementById('ig-files').textContent = `${fileCount} Affected Files`;

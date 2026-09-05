@@ -421,20 +421,24 @@ tbody tr:hover { background: var(--bg-card-hover); }
           <div class="sc-val" id="stat-components">0</div>
         </div>
         <div class="scard">
-          <div class="sc-lbl">Algorithms</div>
-          <div class="sc-val" id="stat-algorithms">0</div>
+          <div class="sc-lbl">Total Findings</div>
+          <div class="sc-val" id="stat-total" style="color:var(--text-h)">0</div>
         </div>
         <div class="scard">
-          <div class="sc-lbl">Libraries</div>
-          <div class="sc-val" id="stat-libraries">0</div>
+          <div class="sc-lbl">Critical Risk</div>
+          <div class="sc-val" id="stat-critical" style="color:var(--red)">0</div>
+        </div>
+        <div class="scard">
+          <div class="sc-lbl">High Risk</div>
+          <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
         </div>
         <div class="scard">
           <div class="sc-lbl">Quantum Vulnerable</div>
           <div class="sc-val" id="stat-quantum" style="color:var(--purple)">0</div>
         </div>
         <div class="scard">
-          <div class="sc-lbl">Critical Risk</div>
-          <div class="sc-val" id="stat-critical" style="color:var(--red)">0</div>
+          <div class="sc-lbl">Algorithms</div>
+          <div class="sc-val" id="stat-algorithms">0</div>
         </div>
       </div>
 
@@ -784,31 +788,49 @@ function populateLibraryFilter() {
 }
 
 function updateSummaryStats() {
-  const algos = new Set(inventory.map(c => c.algorithm));
+  const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
+  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+  const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+  const allFindings = targetScans.flatMap(s => s.findings || []);
+
+  const totalComps = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || (new Set(allFindings.map(f => f.algorithm)).size) || inventory.length;
+  const critCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'CRITICAL').length;
+  const highCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'HIGH').length;
+  const quantCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln') || Boolean(f.isQuantumVulnerable)).length;
   
-  document.getElementById('stat-components').textContent = inventory.length;
+  const algos = new Set(allFindings.map(f => f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown')));
+  const libs = new Set(allFindings.map(f => f.library).filter(Boolean));
+  
+  document.getElementById('stat-components').textContent = totalComps;
+  if (document.getElementById('stat-total')) document.getElementById('stat-total').textContent = allFindings.length;
+  document.getElementById('stat-critical').textContent = critCount;
+  if (document.getElementById('stat-high')) document.getElementById('stat-high').textContent = highCount;
+  document.getElementById('stat-quantum').textContent = quantCount;
   document.getElementById('stat-algorithms').textContent = algos.size;
-  
-  const libs = new Set(inventory.map(c => c.library));
-  document.getElementById('stat-libraries').textContent = libs.size;
-  
-  document.getElementById('stat-quantum').textContent = inventory.filter(c => c.quantumVulnerable).length;
-  document.getElementById('stat-critical').textContent = inventory.filter(c => c.risk === 'CRITICAL').length;
+  if (document.getElementById('stat-libraries')) document.getElementById('stat-libraries').textContent = libs.size;
 }
 
 function updateCharts() {
+  const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
+  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+  const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+  const allFindings = targetScans.flatMap(s => s.findings || []);
+
   const types = {};
-  const risks = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, SAFE: 0 };
   const libs = {};
-  let qVuln = 0; let qSafe = 0;
   
   inventory.forEach(c => {
     types[c.type] = (types[c.type] || 0) + 1;
-    risks[c.risk] = (risks[c.risk] || 0) + 1;
     libs[c.library] = (libs[c.library] || 0) + 1;
-    if (c.quantumVulnerable) qVuln++; else qSafe++;
   });
-  
+
+  const critCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'CRITICAL').length;
+  const highCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'HIGH').length;
+  const medCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'MEDIUM').length;
+  const lowCount = allFindings.filter(f => (f.severity || '').toUpperCase() === 'LOW' || (f.severity || '').toUpperCase() === 'INFORMATIONAL').length;
+  const quantCount = allFindings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln') || Boolean(f.isQuantumVulnerable)).length;
+  const qSafe = allFindings.length - quantCount;
+
   // Types Chart (Usage)
   const maxType = Math.max(...Object.values(types), 1);
   document.getElementById('chart-types').innerHTML = Object.keys(types).sort((a,b)=>types[b]-types[a]).map(t => `
@@ -824,13 +846,13 @@ function updateCharts() {
   // Also replicate to Cryptographic Usage list on sidebar
   document.getElementById('usage-list').innerHTML = document.getElementById('chart-types').innerHTML;
   
-  // Risks
-  const tot = inventory.length || 1;
-  document.getElementById('rb-crit').style.width = (risks['CRITICAL']/tot)*100 + '%';
-  document.getElementById('rb-high').style.width = (risks['HIGH']/tot)*100 + '%';
-  document.getElementById('rb-med').style.width = (risks['MEDIUM']/tot)*100 + '%';
-  document.getElementById('rb-low').style.width = (risks['LOW']/tot)*100 + '%';
-  document.getElementById('rb-safe').style.width = (risks['SAFE']/tot)*100 + '%';
+  // Risks Distribution
+  const tot = allFindings.length || 1;
+  document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
+  document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
+  document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
+  document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
+  document.getElementById('rb-safe').style.width = '0%';
   
   // Libraries
   const sortedLibs = Object.keys(libs).sort((a,b)=>libs[b]-libs[a]).slice(0, 5);
@@ -846,7 +868,7 @@ function updateCharts() {
     <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
       <div style="display:flex; align-items:center; gap:8px;">
         <div style="width:12px; height:12px; border-radius:50%; background:var(--green);"></div>
-        <div style="font-size:13px; font-weight:500;">Quantum Safe</div>
+        <div style="font-size:13px; font-weight:500;">Quantum Safe / Routine</div>
       </div>
       <div style="font-size:14px; font-weight:600;">${qSafe}</div>
     </div>
@@ -855,7 +877,7 @@ function updateCharts() {
         <div style="width:12px; height:12px; border-radius:50%; background:var(--purple);"></div>
         <div style="font-size:13px; font-weight:500;">Vulnerable</div>
       </div>
-      <div style="font-size:14px; font-weight:600;">${qVuln}</div>
+      <div style="font-size:14px; font-weight:600;">${quantCount}</div>
     </div>
   `;
 }

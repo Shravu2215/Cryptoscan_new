@@ -1565,7 +1565,9 @@
         return;
       }
 
-      allFindings = data.scans.flatMap(s => {
+      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+      allFindings = targetScans.flatMap(s => {
         return (s.findings || []).map(f => ({
           ...f,
           repoName: s.repoName
@@ -1632,7 +1634,9 @@
       return (f.severity || '').toUpperCase();
     }
     function isQuantum(f) {
-      return f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable');
+      if (!f) return false;
+      const qs = (f.quantumStatus || '').toLowerCase();
+      return f.quantum === 'yes' || qs.includes('vuln') || Boolean(f.isQuantumVulnerable);
     }
     function getBadgeClass(sev) {
       if (sev === 'CRITICAL') return 'badge-crit';

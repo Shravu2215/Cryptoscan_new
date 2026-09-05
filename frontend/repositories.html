@@ -709,7 +709,7 @@
           style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
           <div class="card-hd" style="margin:0;">All Repositories</div>
           <div class="filters">
-            <input type="text" class="inp-filter" id="global-search" placeholder="Search repositories..." onkeyup="renderTable()" style="width: 200px; background: var(--bg-card); color: var(--text-h);" />
+            <input type="text" class="inp-filter" id="global-search" placeholder="Search repositories..." oninput="renderTable()" onkeyup="renderTable()" style="width: 200px; background: var(--bg-card); color: var(--text-h);" />
             <select class="inp-filter" id="filter-risk" onchange="renderTable()" style="background: var(--bg-card); color: var(--text-h);">
               <option value="ALL">All Risk Levels</option>
               <option value="CRITICAL">Critical</option>
@@ -801,7 +801,20 @@
     let scans = [];
 
     function init() {
-      scans = CryptoEngine.getData().scans || [];
+      const data = CryptoEngine.getData();
+      scans = data.scans || [];
+      if (scans.length === 0 && data.repositories && data.repositories.length > 0) {
+        scans = data.repositories.map(r => ({
+          repoId: r.id,
+          repoName: r.name,
+          businessCriticality: r.businessCriticality || 'MEDIUM',
+          language: r.language || 'Multi-language',
+          timestamp: r.lastScan || new Date().toISOString(),
+          findings: r.findings || [],
+          cbom: r.cbom || [],
+          quantumCount: r.quantumCount || 0
+        }));
+      }
       updateMetrics();
       renderTable();
       renderChart();
@@ -842,7 +855,7 @@
         if (s.quantumCount > 0) hasQuantum = true;
 
         if (hasRisk) atRisk++;
-        if (hasQuantum) quantum++;
+        if (hasQuantum || (s.quantumCount > 0)) quantum++;
       });
 
       setMetric('m-total', total, true);
@@ -854,7 +867,7 @@
 
     function getHighestRisk(findings) {
       if (!findings || findings.length === 0) return { label: 'No Risk', class: 'safe' };
-      let sevMap = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+      const sevMap = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
       let highest = 0;
       let highestStr = 'LOW';
 
@@ -919,7 +932,7 @@
           const isQuant = s.quantumCount > 0 || findings.some(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'));
           const quantBadge = isQuant ? '<span class="badge badge-quant">Vulnerable</span>' : '<span class="badge badge-safe">Safe</span>';
           const cbomStatus = (s.cbom && s.cbom.length > 0) || s.assetsFound > 0 ? '<span class="badge badge-safe">Generated</span>' : '<span class="badge badge-low">Not Generated</span>';
-          const criticality = s.businessCriticality || 'MEDIUM';
+          const criticality = (s.businessCriticality || 'MEDIUM').toUpperCase();
 
           let displayDate = 'Just now';
           if (s.timestamp) {
@@ -936,7 +949,7 @@
             </div>
           </td>
           <td>
-            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600; background:var(--bg-card); color:var(--text-h);" onchange="updateRepoCriticality('${repoName}', this.value)">
+            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600; background:var(--bg-card); color:var(--text-h);" onchange="updateRepoCriticality('${s.repoId || repoName}', this.value)">
               <option value="CRITICAL" ${criticality==='CRITICAL'?'selected':''}>CRITICAL</option>
               <option value="HIGH" ${criticality==='HIGH'?'selected':''}>HIGH</option>
               <option value="MEDIUM" ${criticality==='MEDIUM'?'selected':''}>MEDIUM</option>
@@ -959,11 +972,32 @@
       }
     }
 
-    function updateRepoCriticality(repoName, val) {
-      const data = CryptoEngine.getData();
-      if (data && data.scans) {
-        data.scans.forEach(s => {
-          if ((s.repoName || s.name) === repoName) s.businessCriticality = val;
+    async function updateRepoCriticality(repoId, newCrit) {
+      try {
+        const token = localStorage.getItem('cs_token');
+        await fetch(`http://localhost:3000/repos/${encodeURIComponent(repoId)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ businessCriticality: newCrit })
+        });
+      } catch (e) {
+        console.warn('Backend update failed:', e);
+      }
+
+      if (typeof CryptoEngine !== 'undefined') {
+        const data = CryptoEngine.getData();
+        (data.scans || []).forEach(s => {
+          if (s.repoId === repoId || s.repoName === repoId || s.name === repoId) {
+            s.businessCriticality = newCrit;
+          }
+        });
+        (data.repositories || []).forEach(r => {
+          if (r.id === repoId || r.name === repoId) {
+            r.businessCriticality = newCrit;
+          }
         });
         CryptoEngine.saveData(data);
       }
@@ -1044,6 +1078,8 @@
     }
 
     window.onload = init;
+    window.addEventListener('load', init);
+    window.addEventListener('cryptoscan_data_updated', init);
   </script>
   <script src="assets/js/shell.js"></script>
 </body>
