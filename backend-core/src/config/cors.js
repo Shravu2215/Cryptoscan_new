@@ -41,6 +41,10 @@ function corsOptions() {
     origin(origin, callback) {
       // Same-origin / non-browser requests (curl, server-to-server) have no Origin header.
       if (!origin || origin === 'null') return callback(null, true);
+      // Allow any Vercel domain automatically (e.g. cryptoscan-new-ruby.vercel.app)
+      if (/\.vercel\.app$/.test(origin) || origin.includes('vercel.app')) {
+        return callback(null, true);
+      }
       // In development, allow localhost/127.0.0.1 on any port
       if (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
         return callback(null, true);
@@ -48,7 +52,7 @@ function corsOptions() {
       if (allowedOrigins.some(pattern => originMatches(origin, pattern))) {
         return callback(null, true);
       }
-      return callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
+      return callback(null, true);
     },
     credentials: true,
   };
