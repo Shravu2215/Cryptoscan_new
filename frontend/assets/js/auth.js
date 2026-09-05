@@ -27,7 +27,12 @@ const Auth = {
     }
   },
 
-  API_BASE: 'http://localhost:3000',
+  get API_BASE() {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3000';
+    }
+    return 'https://cryptoscan-new-backend.onrender.com';
+  },
 
   /** Call backend login endpoint and store returned JWT */
   async login(email, password) {
