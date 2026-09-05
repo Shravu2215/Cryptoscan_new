@@ -1377,8 +1377,18 @@ function renderBlockchainHistory(data) {
   `;
 }
 
-window.addEventListener('load', init);
-window.addEventListener('cryptoscan_data_updated', init);
+window.addEventListener('load', () => {
+  init();
+  if (activeScan) {
+    startVerification();
+  }
+});
+window.addEventListener('cryptoscan_data_updated', () => {
+  init();
+  if (activeScan) {
+    startVerification();
+  }
+});
 </script>
 </div>
 <script src="assets/js/shell.js"></script>

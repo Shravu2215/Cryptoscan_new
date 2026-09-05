@@ -66,6 +66,11 @@ function extractComponents(contentInput) {
 }
 
 async function anchorScan(scanId, contentBuffer, options = {}) {
+  if (Buffer.isBuffer(scanId) || (typeof scanId === 'object' && scanId !== null && scanId.components)) {
+    options = contentBuffer || {};
+    contentBuffer = scanId;
+    scanId = options.scanId || 'scan-default';
+  }
   const deployedPath = path.join(__dirname, '..', 'deployed-contract.json');
   const chainMode = (options && options.chainMode) || process.env.CHAIN_MODE || 'permissioned';
   const isPermissioned = chainMode === 'permissioned';
