@@ -406,7 +406,7 @@ class PythonAnalyzer:
                        "randint", "choice", "getrandbits", "randrange", "sample", "seed", "random"):
             out.extend(self._check_rng_context(node, file_path, source_lines, fname))
 
-        return out
+        return [f for f in out if f is not None]
 
     def _check_hazmat_cipher(self, node, file_path, table, source_lines) -> List[Finding]:
         """cryptography lib: Cipher(algorithms.AES(key), modes.ECB()) etc."""
@@ -682,7 +682,10 @@ class PythonAnalyzer:
 
     @staticmethod
     def _mk_finding(file_path, line, col, language, rule_id, rule_name, category, profile,
-                     snippet, specificity=1, generic=False, tags=None, library="") -> Finding:
+                     snippet, specificity=1, generic=False, tags=None, library="") -> Optional[Finding]:
+        s_strip = (snippet or "").strip()
+        if s_strip.startswith('"""') or s_strip.startswith("'''") or s_strip.startswith("#"):
+            return None
         return Finding(
             file=file_path, line=line, column=col, language=language, rule_id=rule_id,
             rule_name=rule_name, category=category, algorithm=profile["algorithm"],

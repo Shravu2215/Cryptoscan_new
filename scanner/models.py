@@ -85,6 +85,8 @@ class Finding:
             self.call_site = f"{self.file}:{self.line}:{self.column}"
         if self.confidence is None:
             self.confidence = Confidence.LIKELY
+        if self.quantum_risk == QuantumRisk.QUANTUM_BROKEN or (isinstance(self.quantum_risk, str) and self.quantum_risk in ("Quantum-Broken", QuantumRisk.QUANTUM_BROKEN.value)):
+            self.severity = Severity.CRITICAL
 
     @property
     def fingerprint(self) -> str:
