@@ -11,6 +11,24 @@ app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'cbom-findings-service' }));
 
+const { execSync } = require('child_process');
+let commitHash = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT || '';
+if (!commitHash) {
+  try {
+    commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch (_) {
+    commitHash = 'dev';
+  }
+}
+
+app.get('/version', (req, res) => res.json({
+  service: 'cbom-findings-service',
+  version: '2.1.0',
+  commit: commitHash,
+  scanner_version: '2.1.0',
+  timestamp: new Date().toISOString()
+}));
+
 app.use('/', scanRoutes);
 
 app.use((req, res) => {

@@ -301,6 +301,16 @@ class ConfigInfraAnalyzer:
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         """Analyze infra/config source file."""
+        ext = os.path.splitext(file_path)[1].lower()
+        fn = os.path.basename(file_path).lower()
+        is_sca = fn in {"requirements.txt", "package.json", "pom.xml", "build.gradle", "go.mod", "cargo.toml"} or fn.startswith("requirements")
+        DOC_EXTS = {".md", ".markdown", ".rst", ".doc", ".docx", ".pdf", ".rtf", ".csv", ".log", ".txt", ".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg"}
+        DOC_NAMES = {"readme", "license", "changelog", "contributing", "blind_test_checklist", "checklist"}
+        in_doc_dir = any(part in file_path.replace("\\", "/").lower().split("/") for part in ["docs", "doc", "documentation", "man", "guides"])
+
+        if (ext in DOC_EXTS and not is_sca) or fn in DOC_NAMES or any(fn.startswith(d + ".") for d in DOC_NAMES) or in_doc_dir:
+            return []
+
         if _is_web_server_config(file_path):
             return _analyze_web_server(file_path, source)
         if _is_terraform_file(file_path):

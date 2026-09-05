@@ -9,6 +9,7 @@ ec.generate_private_key), `random` used for security-sensitive values, and
 `==`/`!=` secret comparisons that should use hmac.compare_digest.
 """
 import ast
+import os
 from typing import List, Optional
 
 from .models import Finding, Severity, QuantumRisk
@@ -162,6 +163,11 @@ class PythonAnalyzer:
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         findings: List[Finding] = []
+        ext = os.path.splitext(file_path)[1].lower()
+        fn = os.path.basename(file_path).lower()
+        if ext in {".md", ".markdown", ".rst", ".doc", ".docx", ".txt", ".pdf", ".rtf", ".csv", ".log", ".html", ".htm"} or fn in {"readme", "license", "changelog"} or "docs" in file_path.replace("\\", "/").split("/"):
+            return findings
+
         try:
             tree = ast.parse(source, filename=file_path)
         except SyntaxError:
@@ -238,8 +244,14 @@ class PythonAnalyzer:
         # -- PyCryptodome Crypto.Cipher.<ALGO>.new(...) ------------------------
         first_p = fname.split(".")[0]
         last_p = fname.split(".")[-1]
-        if (fname.endswith(".new") or first_p in ("AES", "DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish", "Crypto", "Cryptodome")
-                or last_p in ("AES", "DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish")):
+        SYMMETRIC_ALGOS = {"AES", "DES", "DES3", "TDES", "3DES", "RC2", "RC4", "ARC4", "BLOWFISH"}
+        first_p_upper = first_p.upper()
+        last_p_upper = last_p.upper()
+        is_symmetric_call = (
+            any(p in SYMMETRIC_ALGOS for p in fname.upper().split("."))
+            or (fname.endswith(".new") and not (fname.startswith("hmac") or fname.startswith("random") or fname.startswith("secrets") or first_p_upper in {"RSA", "DSA", "EC", "FERNET"}))
+        )
+        if is_symmetric_call and first_p_upper not in {"RSA", "DSA", "EC", "ECDSA", "ECDH", "HMAC", "FERNET"}:
             out.extend(self._check_cipher_new(node, fname, file_path, table, source_lines))
 
         # -- Cryptography hazmat: Cipher(algorithms.X(key), modes.Y()) ---------
@@ -327,15 +339,24 @@ class PythonAnalyzer:
                                           specificity=2, library="cryptography"))
         elif is_rsa_gen:
             bits = None
-            if node.args:
-                lit = _resolve(node.args[0], table)
-                if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
+            for arg in node.args:
+                lit = _resolve(arg, table)
+                if isinstance(lit, ast.Constant) and isinstance(lit.value, int) and lit.value in (512, 1024, 2048, 3072, 4096, 8192):
                     bits = lit.value
-            for kw in node.keywords:
-                if kw.arg == "key_size":
-                    lit = _resolve(kw.value, table)
-                    if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
-                        bits = lit.value
+                    break
+            if bits is None:
+                for kw in node.keywords:
+                    if kw.arg in ("key_size", "bits", "size", "keybits", "length"):
+                        lit = _resolve(kw.value, table)
+                        if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
+                            bits = lit.value
+                            break
+            if bits is None:
+                import re
+                m_bits = re.search(r'\b(8192|4096|3072|2048|1024|512)\b', snippet)
+                if m_bits:
+                    bits = int(m_bits.group(1))
+
             profile = rules.rsa_profile(bits)
             lib = "pycryptodome" if ("RSA.generate" in fname or "newkeys" in fname) else "cryptography"
             out.append(self._mk_finding(file_path, line, col, "python", "rsa-key-generation",
@@ -343,15 +364,18 @@ class PythonAnalyzer:
                                           specificity=2, tags=profile.get("tags", []), library=lib))
         elif is_dsa_gen:
             bits = None
-            if node.args:
-                lit = _resolve(node.args[0], table)
-                if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
+            for arg in node.args:
+                lit = _resolve(arg, table)
+                if isinstance(lit, ast.Constant) and isinstance(lit.value, int) and lit.value in (512, 1024, 2048, 3072, 4096, 8192):
                     bits = lit.value
-            for kw in node.keywords:
-                if kw.arg == "key_size":
-                    lit = _resolve(kw.value, table)
-                    if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
-                        bits = lit.value
+                    break
+            if bits is None:
+                for kw in node.keywords:
+                    if kw.arg in ("key_size", "bits", "size", "keybits", "length"):
+                        lit = _resolve(kw.value, table)
+                        if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
+                            bits = lit.value
+                            break
             profile = dict(
                 algorithm=f"DSA-{bits}" if bits else "DSA",
                 severity=Severity.HIGH if (bits and bits < 2048) else Severity.MEDIUM,
@@ -477,12 +501,19 @@ class PythonAnalyzer:
         out = []
         line, col = node.lineno, node.col_offset
         snippet = _line_src(source_lines, line)
-        algo = fname.split(".")[0]
-        if algo in ("Crypto", "Cryptodome"):
-            dotted = fname.split(".")
-            algo = dotted[-2] if len(dotted) >= 2 else "AES"
 
-        if algo in ("DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish"):
+        CIPHER_NAMES = {"DES", "DES3", "TDES", "3DES", "RC2", "RC4", "ARC4", "BLOWFISH", "AES"}
+        parts = [p.upper() for p in fname.split(".")]
+        algo = "AES"
+        for p in reversed(parts):
+            if p in CIPHER_NAMES:
+                algo = p
+                break
+        if algo == "3DES":
+            algo = "DES3"
+
+        lib = "cryptography" if any(k in fname.lower() for k in ("hazmat", "cryptography", "algorithms", "ciphers")) else "pycryptodome"
+        if algo in ("DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "BLOWFISH"):
             mode = None
             mode_node = node.args[1] if len(node.args) >= 2 else None
             for kw in node.keywords:
@@ -493,7 +524,7 @@ class PythonAnalyzer:
             profile = rules.symmetric_profile(algo, mode or "")
             out.append(self._mk_finding(file_path, line, col, "python", f"{algo.lower()}-deprecated-cipher",
                                           f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                          specificity=3, library="pycryptodome"))
+                                          specificity=3, library=lib))
             return out
 
         if algo != "AES":
@@ -540,18 +571,18 @@ class PythonAnalyzer:
             hp = dict(rules.HARDCODED_KEY)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-hardcoded-key",
                                           f"AES-{key_bits}-{mode or '?'} hardcoded-key", "hardcoded-secret",
-                                          hp, snippet, specificity=4, library="pycryptodome"))
+                                          hp, snippet, specificity=4, library=lib))
 
         if iv_node is not None and iv_static and mode in ("CBC", "CTR", "CFB", "OFB", "GCM"):
             ivp = dict(rules.STATIC_IV)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-static-iv-reuse",
                                           f"AES-{key_bits}-{mode} static-iv-reuse", "symmetric-cipher",
-                                          ivp, snippet, specificity=4, library="pycryptodome"))
+                                          ivp, snippet, specificity=4, library=lib))
 
         if mode == "ECB":
             out.append(self._mk_finding(file_path, line, col, "python", "aes-ecb-mode",
                                           f"AES-{key_bits}-ECB", "symmetric-cipher", profile, snippet,
-                                          specificity=3, library="pycryptodome"))
+                                          specificity=3, library=lib))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
             missing_aead = dict(profile)
             if red_flags:
@@ -562,15 +593,15 @@ class PythonAnalyzer:
                 )
             out.append(self._mk_finding(file_path, line, col, "python", "aes-missing-aead",
                                           f"AES-{key_bits}-{mode} missing-aead", "symmetric-cipher",
-                                          missing_aead, snippet, specificity=2, generic=(not red_flags), library="pycryptodome"))
+                                          missing_aead, snippet, specificity=2, generic=(not red_flags), library=lib))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-aead-mode",
                                           f"AES-{key_bits}-{mode}", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True, library="pycryptodome"))
+                                          specificity=1, generic=True, library=lib))
         else:
             out.append(self._mk_finding(file_path, line, col, "python", "aes-encryption",
                                           f"AES encryption", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True, library="pycryptodome"))
+                                          specificity=1, generic=True, library=lib))
         return out
 
     def _check_rng_context(self, node, file_path, source_lines, fname: str = "") -> List[Finding]:

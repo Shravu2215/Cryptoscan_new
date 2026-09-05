@@ -80,7 +80,7 @@ router.post('/:repoId', requireAuth, async (req, res) => {
               algorithm: f.algorithm || 'UNKNOWN',
               library: f.library || 'Standard API',
               usage: f.category || null,
-              keySize: f.key_size || (f.algorithm.includes('1024') ? 1024 : f.algorithm.includes('2048') ? 2048 : (f.algorithm.includes('56') || (f.algorithm.includes('DES') && !f.algorithm.includes('3DES'))) ? 56 : f.algorithm.includes('256') ? 256 : f.algorithm.includes('128') ? 128 : null),
+              keySize: f.key_size || (f.algorithm.includes('8192') ? 8192 : f.algorithm.includes('4096') ? 4096 : f.algorithm.includes('3072') ? 3072 : f.algorithm.includes('2048') ? 2048 : f.algorithm.includes('1024') ? 1024 : f.algorithm.includes('512') ? 512 : (f.algorithm.includes('56') || (f.algorithm.includes('DES') && !f.algorithm.includes('3DES'))) ? 56 : f.algorithm.includes('256') ? 256 : f.algorithm.includes('128') ? 128 : null),
               quantumStatus: ['Quantum-Broken', 'Quantum-Weakened'].includes(f.quantum_risk)
                 ? 'Quantum Vulnerable' : 'Quantum Safe',
               severity: (f.severity || 'Informational').toUpperCase(),

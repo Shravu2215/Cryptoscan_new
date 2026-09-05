@@ -135,7 +135,7 @@ const CryptoEngine = {
       category: 'Weak Block Cipher',
       severity: 'critical',
       quantum: 'no',
-      regex: /(?:des\.NewCipher|DES_ecb_encrypt|Cipher\.getInstance\(\s*["']DES|CryptoJS\.DES|TripleDES|3DES|DES3_Init|DES_ecb)/i,
+      regex: /(?:DES3?\.new\(|des\.NewCipher\(|DES_ecb_encrypt\(|Cipher\.getInstance\(\s*['"](?:3?DES|TripleDES)|CryptoJS\.(?:3?DES|TripleDES)|DES3?_Init|DES_ecb)/i,
       remediation: 'Migrate to AES-256-GCM.'
     },
     {

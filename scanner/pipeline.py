@@ -73,6 +73,7 @@ def _infer_library(f) -> str:
 def _infer_key_size(f):
     alg = (f.algorithm or "").upper()
     rule_id = getattr(f, "rule_id", "") or ""
+    snippet = getattr(f, "code_snippet", "") or ""
     import re
     m = re.search(r'\b(8192|4096|3072|2048|1024|512|256|192|128|56|112)\b', alg)
     if m:
@@ -80,6 +81,9 @@ def _infer_key_size(f):
     m2 = re.search(r'\b(8192|4096|3072|2048|1024|512|256|192|128|56|112)\b', rule_id)
     if m2:
         return int(m2.group(1))
+    m3 = re.search(r'\b(8192|4096|3072|2048|1024|512)\b', snippet)
+    if m3 and ("RSA" in alg or "RSA" in rule_id or "rsa" in rule_id):
+        return int(m3.group(1))
     if "DES" in alg and "3DES" not in alg:
         return 56
     if "3DES" in alg:
@@ -124,10 +128,23 @@ def scan_repo(repo_path, scan_id=None):
         for fn in files:
             path = os.path.join(root, fn)
             ext = os.path.splitext(fn)[1].lower()
+            fn_lower = fn.lower()
 
-            # Skip documentation, markdown, and text files
-            if ext in {".md", ".markdown", ".rst", ".doc", ".docx"} or fn.lower().endswith((".md", ".markdown", ".rst")):
-                continue
+            # Identify SCA manifests
+            is_sca_manifest = (
+                fn_lower in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"}
+                or (fn_lower.startswith("requirements") and fn_lower.endswith(".txt"))
+            )
+
+            # Exclusion filter for documentation, text, and non-source files
+            DOC_EXTS = {".md", ".markdown", ".rst", ".doc", ".docx", ".pdf", ".rtf", ".csv", ".log", ".txt", ".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg"}
+            DOC_NAMES = {"readme", "license", "changelog", "contributing", "blind_test_checklist", "checklist"}
+            rel_p = os.path.relpath(path, target_dir).replace("\\", "/").lower()
+            in_doc_dir = any(part in rel_p.split("/") for part in ["docs", "doc", "documentation", "man", "guides"])
+
+            if (ext in DOC_EXTS and not is_sca_manifest) or fn_lower in DOC_NAMES or any(fn_lower.startswith(d + ".") for d in DOC_NAMES) or in_doc_dir:
+                if not is_sca_manifest:
+                    continue
 
             # 0. Binary / Compiled-Artifact Layer
             if ext in {".jar", ".class", ".so", ".dll", ".pyc", ".wasm", ".exe", ".dylib", ".o", ".a", ".lib"}:
