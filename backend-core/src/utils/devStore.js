@@ -3,11 +3,13 @@
 const devRepos = new Map();
 const devScans = new Map();
 const devFindings = new Map();
+const devAnchors = new Map();
 
 module.exports = {
   devRepos,
   devScans,
   devFindings,
+  devAnchors,
 
   saveRepo(repo) {
     devRepos.set(repo.id, repo);
@@ -34,5 +36,14 @@ module.exports = {
 
   getFindings(scanId) {
     return devFindings.get(scanId) || [];
+  },
+
+  saveAnchor(scanId, anchor) {
+    devAnchors.set(scanId, anchor);
+    return anchor;
+  },
+
+  getAnchor(scanId) {
+    return devAnchors.get(scanId);
   }
 };
