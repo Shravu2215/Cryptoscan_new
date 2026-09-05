@@ -391,29 +391,40 @@
       font-weight: 600;
     }
 
-    .badge.crit {
+    .badge.crit, .badge-crit {
       background: var(--red-bg);
       color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
-    .badge.high {
+    .badge.high, .badge-high {
       background: var(--amber-bg);
       color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
     }
 
-    .badge.med {
+    .badge.med, .badge-med {
       background: var(--yellow-bg);
       color: var(--yellow);
+      border: 1px solid rgba(234, 179, 8, 0.2);
     }
 
-    .badge.low {
+    .badge.low, .badge-low {
       background: var(--gray-bg);
       color: var(--gray);
+      border: 1px solid rgba(148, 163, 184, 0.2);
     }
 
-    .badge.safe {
+    .badge.safe, .badge-safe {
       background: var(--green-bg);
       color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge.quant, .badge-quant {
+      background: var(--purple-bg);
+      color: var(--purple);
+      border: 1px solid rgba(139, 92, 246, 0.2);
     }
 
     .badge.done {
@@ -698,7 +709,8 @@
           style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
           <div class="card-hd" style="margin:0;">All Repositories</div>
           <div class="filters">
-            <select class="inp-filter" id="filter-risk" onchange="renderTable()">
+            <input type="text" class="inp-filter" id="global-search" placeholder="Search repositories..." onkeyup="renderTable()" style="width: 200px; background: var(--bg-card); color: var(--text-h);" />
+            <select class="inp-filter" id="filter-risk" onchange="renderTable()" style="background: var(--bg-card); color: var(--text-h);">
               <option value="ALL">All Risk Levels</option>
               <option value="CRITICAL">Critical</option>
               <option value="HIGH">High</option>
@@ -810,20 +822,25 @@
     }
 
     function updateMetrics() {
-      if (scans.length === 0) return;
+      if (!scans || scans.length === 0) return;
 
       const total = scans.length;
-      let active = 0; // Assume 0 since we save them only when complete in engine
+      let active = 0;
       let atRisk = 0;
       let quantum = 0;
 
       scans.forEach(s => {
         let hasRisk = false;
         let hasQuantum = false;
-        s.findings.forEach(f => {
-          if (['CRITICAL', 'HIGH'].includes(f.severity)) hasRisk = true;
-          if (f.isQuantumVulnerable) hasQuantum = true;
+        const findings = s.findings || [];
+        findings.forEach(f => {
+          const sev = (f.severity || '').toUpperCase();
+          if (['CRITICAL', 'HIGH'].includes(sev)) hasRisk = true;
+          if (f.isQuantumVulnerable || f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln')) hasQuantum = true;
         });
+        if (s.criticalCount > 0) hasRisk = true;
+        if (s.quantumCount > 0) hasQuantum = true;
+
         if (hasRisk) atRisk++;
         if (hasQuantum) quantum++;
       });
@@ -842,9 +859,10 @@
       let highestStr = 'LOW';
 
       findings.forEach(f => {
-        if (sevMap[f.severity] > highest) {
-          highest = sevMap[f.severity];
-          highestStr = f.severity;
+        const s = (f.severity || 'LOW').toUpperCase();
+        if ((sevMap[s] || 1) > highest) {
+          highest = sevMap[s] || 1;
+          highestStr = s;
         }
       });
 
@@ -858,15 +876,22 @@
       const tbody = document.getElementById('repo-body');
       const empty = document.getElementById('repo-empty');
       const table = document.getElementById('repo-table');
-      const searchQ = document.getElementById('global-search').value.toLowerCase();
-      const riskF = document.getElementById('filter-risk').value;
-      const statusF = document.getElementById('filter-status').value;
+      const searchEl = document.getElementById('global-search');
+      const searchQ = searchEl ? searchEl.value.toLowerCase().trim() : '';
+      const riskFEl = document.getElementById('filter-risk');
+      const riskF = riskFEl ? riskFEl.value : 'ALL';
+      const statusFEl = document.getElementById('filter-status');
+      const statusF = statusFEl ? statusFEl.value : 'ALL';
+
+      if (!tbody || !empty || !table) return;
 
       tbody.innerHTML = '';
 
-      let filtered = scans.filter(s => {
-        const risk = getHighestRisk(s.findings).label.toUpperCase().replace(' ', ''); // NORISK vs CRITICAL
-        const matchSearch = s.repoName.toLowerCase().includes(searchQ);
+      let filtered = (scans || []).filter(s => {
+        const repoName = s.repoName || s.name || 'Scanned Repository';
+        const findings = s.findings || [];
+        const risk = getHighestRisk(findings).label.toUpperCase().replace(' ', ''); // NORISK vs CRITICAL
+        const matchSearch = repoName.toLowerCase().includes(searchQ);
 
         let riskMatch = true;
         if (riskF !== 'ALL') {
@@ -875,7 +900,7 @@
         }
 
         let statusMatch = true;
-        if (statusF !== 'ALL' && statusF !== 'COMPLETED') statusMatch = false; // We only store completed
+        if (statusF !== 'ALL' && statusF !== 'COMPLETED') statusMatch = false;
 
         return matchSearch && riskMatch && statusMatch;
       });
@@ -888,37 +913,45 @@
         empty.classList.add('hide');
 
         filtered.forEach(s => {
-          const risk = getHighestRisk(s.findings);
-          const isQuant = s.quantumCount > 0 || s.findings.some(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'));
+          const repoName = s.repoName || s.name || 'Scanned Repository';
+          const findings = s.findings || [];
+          const risk = getHighestRisk(findings);
+          const isQuant = s.quantumCount > 0 || findings.some(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'));
           const quantBadge = isQuant ? '<span class="badge badge-quant">Vulnerable</span>' : '<span class="badge badge-safe">Safe</span>';
-          const cbomStatus = s.cbom && s.cbom.length > 0 ? '<span class="badge badge-safe">Generated</span>' : '<span class="badge badge-low">Not Generated</span>';
+          const cbomStatus = (s.cbom && s.cbom.length > 0) || s.assetsFound > 0 ? '<span class="badge badge-safe">Generated</span>' : '<span class="badge badge-low">Not Generated</span>';
           const criticality = s.businessCriticality || 'MEDIUM';
+
+          let displayDate = 'Just now';
+          if (s.timestamp) {
+            const d = new Date(s.timestamp);
+            displayDate = d.toString() !== 'Invalid Date' ? d.toLocaleDateString() : s.timestamp;
+          }
 
           const row = document.createElement('tr');
           row.innerHTML = `
           <td>
             <div style="display:flex;align-items:center;gap:8px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;color:var(--text-m);"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-              <span style="font-weight:500;color:var(--text-h);">${s.repoName}</span>
+              <span style="font-weight:500;color:var(--text-h);">${repoName}</span>
             </div>
           </td>
           <td>
-            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600;" onchange="updateRepoCriticality('${s.repoName}', this.value)">
+            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600; background:var(--bg-card); color:var(--text-h);" onchange="updateRepoCriticality('${repoName}', this.value)">
               <option value="CRITICAL" ${criticality==='CRITICAL'?'selected':''}>CRITICAL</option>
               <option value="HIGH" ${criticality==='HIGH'?'selected':''}>HIGH</option>
               <option value="MEDIUM" ${criticality==='MEDIUM'?'selected':''}>MEDIUM</option>
               <option value="LOW" ${criticality==='LOW'?'selected':''}>LOW</option>
             </select>
           </td>
-          <td><span style="color:var(--text-m);">${s.language || 'Unknown'}</span></td>
-          <td><span style="color:var(--text-m);">${new Date(s.timestamp).toLocaleDateString()}</span></td>
-          <td style="font-weight:600;">${s.findings.length}</td>
+          <td><span style="color:var(--text-m);">${s.language || 'Python'}</span></td>
+          <td><span style="color:var(--text-m);">${displayDate}</span></td>
+          <td style="font-weight:600;">${findings.length}</td>
           <td><span class="badge ${risk.class}">${risk.label}</span></td>
           <td>${quantBadge}</td>
           <td>${cbomStatus}</td>
           <td><span class="badge badge-low">Not Verified</span></td>
           <td>
-            <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(s.repoName)}'">View</button>
+            <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'">View</button>
           </td>
         `;
           tbody.appendChild(row);
@@ -930,7 +963,7 @@
       const data = CryptoEngine.getData();
       if (data && data.scans) {
         data.scans.forEach(s => {
-          if (s.repoName === repoName) s.businessCriticality = val;
+          if ((s.repoName || s.name) === repoName) s.businessCriticality = val;
         });
         CryptoEngine.saveData(data);
       }
@@ -942,14 +975,15 @@
       const chart = document.getElementById('risk-chart');
       const leg = document.getElementById('risk-legend');
 
-      if (scans.length === 0) return;
+      if (!cont || !empty || !chart || !leg) return;
+      if (!scans || scans.length === 0) return;
 
       cont.classList.remove('hide');
       empty.classList.add('hide');
 
       let c = 0, h = 0, m = 0, l = 0, safe = 0;
       scans.forEach(s => {
-        let r = getHighestRisk(s.findings).class;
+        let r = getHighestRisk(s.findings || []).class;
         if (r === 'crit') c++;
         else if (r === 'high') h++;
         else if (r === 'med') m++;
@@ -978,22 +1012,31 @@
       const feed = document.getElementById('act-feed');
       const empty = document.getElementById('act-empty');
 
-      if (scans.length === 0) {
+      if (!feed || !empty) return;
+
+      if (!scans || scans.length === 0) {
         empty.classList.remove('hide');
         return;
       }
 
-      // Reverse so newest is first
+      empty.classList.add('hide');
       const rev = [...scans].reverse().slice(0, 5);
       feed.innerHTML = '';
 
       rev.forEach(s => {
+        const repoName = s.repoName || s.name || 'Scanned Repository';
+        let displayDate = 'Just now';
+        if (s.timestamp) {
+          const d = new Date(s.timestamp);
+          displayDate = d.toString() !== 'Invalid Date' ? d.toLocaleString() : s.timestamp;
+        }
+
         feed.innerHTML += `
       <div class="act-item">
         <div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
         <div class="act-details">
-          <div class="act-title">Scan completed for <span style="font-weight:600;">${s.repoName}</span></div>
-          <div class="act-time">${new Date(s.timestamp).toLocaleString()}</div>
+          <div class="act-title">Scan completed for <span style="font-weight:600;">${repoName}</span></div>
+          <div class="act-time">${displayDate}</div>
         </div>
       </div>
     `;
