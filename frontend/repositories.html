@@ -720,6 +720,7 @@
             <thead>
               <tr>
                 <th>Repository</th>
+                <th>Criticality</th>
                 <th>Language</th>
                 <th>Last Scan</th>
                 <th>Findings</th>
@@ -891,6 +892,7 @@
           const isQuant = s.quantumCount > 0 || s.findings.some(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'));
           const quantBadge = isQuant ? '<span class="badge badge-quant">Vulnerable</span>' : '<span class="badge badge-safe">Safe</span>';
           const cbomStatus = s.cbom && s.cbom.length > 0 ? '<span class="badge badge-safe">Generated</span>' : '<span class="badge badge-low">Not Generated</span>';
+          const criticality = s.businessCriticality || 'MEDIUM';
 
           const row = document.createElement('tr');
           row.innerHTML = `
@@ -899,6 +901,14 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;color:var(--text-m);"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
               <span style="font-weight:500;color:var(--text-h);">${s.repoName}</span>
             </div>
+          </td>
+          <td>
+            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600;" onchange="updateRepoCriticality('${s.repoName}', this.value)">
+              <option value="CRITICAL" ${criticality==='CRITICAL'?'selected':''}>CRITICAL</option>
+              <option value="HIGH" ${criticality==='HIGH'?'selected':''}>HIGH</option>
+              <option value="MEDIUM" ${criticality==='MEDIUM'?'selected':''}>MEDIUM</option>
+              <option value="LOW" ${criticality==='LOW'?'selected':''}>LOW</option>
+            </select>
           </td>
           <td><span style="color:var(--text-m);">${s.language || 'Unknown'}</span></td>
           <td><span style="color:var(--text-m);">${new Date(s.timestamp).toLocaleDateString()}</span></td>
@@ -913,6 +923,16 @@
         `;
           tbody.appendChild(row);
         });
+      }
+    }
+
+    function updateRepoCriticality(repoName, val) {
+      const data = CryptoEngine.getData();
+      if (data && data.scans) {
+        data.scans.forEach(s => {
+          if (s.repoName === repoName) s.businessCriticality = val;
+        });
+        CryptoEngine.saveData(data);
       }
     }
 

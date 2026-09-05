@@ -452,6 +452,7 @@ class SCAAnalyzer:
                 generic=False,
                 confidence=Confidence.LIKELY,
                 tags=["sca", ecosystem, lib_name],
+                version=str(version or ""),
             )
             findings.append(finding)
 

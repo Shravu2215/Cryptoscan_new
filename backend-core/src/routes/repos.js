@@ -136,6 +136,7 @@ router.post('/github', requireAuth, async (req, res) => {
           name: metadata.full_name || `${github.owner}/${github.repo}`,
           filePath: repositoryPath,
           uploadedBy: req.user.id,
+          businessCriticality: req.body.businessCriticality || 'MEDIUM',
         },
       });
     } catch (dbErr) {
@@ -145,6 +146,7 @@ router.post('/github', requireAuth, async (req, res) => {
         name: metadata.full_name || `${github.owner}/${github.repo}`,
         filePath: repositoryPath,
         uploadedBy: req.user.id,
+        businessCriticality: req.body.businessCriticality || 'MEDIUM',
         createdAt: new Date()
       };
     }
@@ -173,6 +175,7 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
           name: req.body.name || req.file.originalname,
           filePath: req.file.path,
           uploadedBy: req.user.id,
+          businessCriticality: req.body.businessCriticality || 'MEDIUM',
         },
       });
     } catch (dbErr) {
@@ -182,6 +185,7 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
         name: req.body.name || req.file.originalname,
         filePath: req.file.path,
         uploadedBy: req.user.id,
+        businessCriticality: req.body.businessCriticality || 'MEDIUM',
         createdAt: new Date()
       };
     }

@@ -16,8 +16,17 @@ const HNDL_CONFIG = { crqcHorizonYears: 7, migrationTimeYears: 3, defaultDataLif
 
 const DEFAULT_BUSINESS_MULTIPLIERS = {
   Critical: 1.25,
+  CRITICAL: 1.25,
+  High: 1.25,
+  HIGH: 1.25,
   Important: 1.10,
-  Standard: 1.0
+  IMPORTANT: 1.10,
+  Medium: 1.0,
+  MEDIUM: 1.0,
+  Standard: 1.0,
+  STANDARD: 1.0,
+  Low: 0.8,
+  LOW: 0.8
 };
 
 function normalizeBusinessImportance(importance) {
@@ -131,6 +140,8 @@ const USAGE_CRITICALITY = {
   mac: 60,
   random_generation: 70,
   integrity_hashing: 55,
+  cloud_kms_managed: 25,
+  hardware_key_custody: 20,
   unknown: 50,
 };
 
@@ -200,7 +211,10 @@ function scoreFinding(finding, purpose, contextOrLifetime) {
     usageCriticality * WEIGHTS.usageCriticality +
     quantumExposure * WEIGHTS.quantumExposure;
 
-  const preBusinessRiskScore = Math.round(Math.min(100, Math.max(0, raw)));
+  const exposureMultiplier = (finding && (finding.exposure === 'external-facing' || finding.exposure === 'external')) ? 1.15 : 1.0;
+  const rawWithExposure = raw * exposureMultiplier;
+
+  const preBusinessRiskScore = Math.round(Math.min(100, Math.max(0, rawWithExposure)));
   const { finalScore, appliedMultiplier, businessImportance: normImportance } = applyBusinessContext(preBusinessRiskScore, businessImportance);
   const score = finalScore;
 

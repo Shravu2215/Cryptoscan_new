@@ -1071,6 +1071,19 @@
             </div>
           </div>
 
+          <!-- Systems & Modules at Risk -->
+          <div class="gcard">
+            <div class="gc-hd">
+              <div class="gc-ttl">Systems & Modules at Risk</div>
+            </div>
+            <div id="systems-risks-content" style="display:none;">
+              <div class="risk-list" id="systems-risks-list"></div>
+            </div>
+            <div class="empty-state" id="empty-systems-risks" style="padding:20px 0;">
+              <div class="empty-msg">No system rollup data</div>
+            </div>
+          </div>
+
           <!-- Quick Actions -->
           <div class="gcard">
             <div class="gc-hd" style="margin-bottom:16px;">
@@ -1367,6 +1380,50 @@
       } else {
         if (risksContent) risksContent.style.display = 'none';
         if (risksEmpty) risksEmpty.style.display = 'flex';
+      }
+
+      // Systems & Modules at Risk
+      const sysContent = document.getElementById('systems-risks-content');
+      const sysEmpty = document.getElementById('empty-systems-risks');
+      const sysList = document.getElementById('systems-risks-list');
+
+      if (allFindings.length > 0) {
+        if (sysContent) sysContent.style.display = 'block';
+        if (sysEmpty) sysEmpty.style.display = 'none';
+
+        const sysMap = {};
+        allFindings.forEach(f => {
+          const file = f.file || f.filePath || '';
+          const parts = file.replace(/\\/g, '/').split('/');
+          const sysName = parts.length > 1 ? parts[0] + '/' : 'core/';
+          if (!sysMap[sysName]) sysMap[sysName] = { count: 0, severity: f.severity || 'Medium', quant: 0 };
+          sysMap[sysName].count++;
+          if ((f.severity || '').toUpperCase() === 'CRITICAL') sysMap[sysName].severity = 'CRITICAL';
+          else if ((f.severity || '').toUpperCase() === 'HIGH' && sysMap[sysName].severity !== 'CRITICAL') sysMap[sysName].severity = 'HIGH';
+          if (f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable')) sysMap[sysName].quant++;
+        });
+
+        const sortedSys = Object.keys(sysMap).sort((a, b) => sysMap[b].count - sysMap[a].count).slice(0, 5);
+
+        if (sysList) sysList.innerHTML = sortedSys.map(sys => {
+          const item = sysMap[sys];
+          let badgeClass = 'badge-med';
+          if (item.severity.toUpperCase() === 'CRITICAL') badgeClass = 'badge-crit';
+          if (item.severity.toUpperCase() === 'HIGH') badgeClass = 'badge-high';
+
+          return `
+        <div class="risk-item" style="cursor:pointer;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(sys)}'">
+          <div>
+            <div class="risk-algo">${sys}</div>
+            <div class="risk-count">${item.count} finding(s) • ${item.quant} quantum-vulnerable</div>
+          </div>
+          <span class="badge ${badgeClass}">${item.severity}</span>
+        </div>
+      `;
+        }).join('');
+      } else {
+        if (sysContent) sysContent.style.display = 'none';
+        if (sysEmpty) sysEmpty.style.display = 'flex';
       }
 
       // Scan Coverage

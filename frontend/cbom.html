@@ -222,6 +222,8 @@ tbody tr:hover { background: var(--bg-card-hover); }
 .badge-med { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234, 179, 8, 0.2); }
 .badge-low { background: var(--gray-bg); color: var(--gray); border-color: rgba(113, 113, 122, 0.2); }
 .badge-quant { background: var(--purple-bg); color: var(--purple); border-color: rgba(139, 92, 246, 0.2); }
+.badge-external { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+.badge-internal { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border-color: rgba(148, 163, 184, 0.2); }
 
 /* Empty States */
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; gap: 12px; }
@@ -502,6 +504,11 @@ tbody tr:hover { background: var(--bg-card-hover); }
                 <option value="LOW">Low</option>
                 <option value="SAFE">No Risk</option>
               </select>
+              <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
+                <option value="ALL">All Exposure</option>
+                <option value="external-facing">External-Facing</option>
+                <option value="internal">Internal</option>
+              </select>
               <select id="filter-lib" class="filter-sel" onchange="handleFilterChange()">
                 <option value="ALL">All Libraries</option>
               </select>
@@ -519,8 +526,10 @@ tbody tr:hover { background: var(--bg-card-hover); }
                     <th>Algorithm</th>
                     <th>Type</th>
                     <th>Purpose</th>
+                    <th>Exposure</th>
                     <th>File</th>
                     <th>Library</th>
+                    <th>Version</th>
                     <th>Key Size</th>
                     <th>Risk</th>
                   </tr>
@@ -722,9 +731,11 @@ function init() {
         algorithm: algo,
         type: getAlgoType(algo),
         purpose: f.usage || f.category || 'Data Protection',
+        exposure: f.exposure || 'internal',
         file: f.file || 'unknown',
         line: f.line || '',
         library: f.library || 'Standard/Unknown',
+        version: f.version || f.libraryVersion || '—',
         keySize: f.keySize || '—',
         risk: (f.severity || 'SAFE').toUpperCase(),
         quantumVulnerable: f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable'),
@@ -853,6 +864,7 @@ function handleFilterChange() {
   const search = document.getElementById('filter-search').value.toLowerCase();
   const type = document.getElementById('filter-type').value;
   const risk = document.getElementById('filter-risk').value;
+  const exposure = document.getElementById('filter-exposure') ? document.getElementById('filter-exposure').value : 'ALL';
   const lib = document.getElementById('filter-lib').value;
   const quant = document.getElementById('filter-quant').value;
   
@@ -863,13 +875,14 @@ function handleFilterChange() {
       c.file.toLowerCase().includes(search);
     const matchType = type === 'ALL' || c.type === type;
     const matchRisk = risk === 'ALL' || c.risk === risk;
+    const matchExposure = exposure === 'ALL' || (c.exposure || 'internal') === exposure;
     const matchLib = lib === 'ALL' || c.library === lib;
     
     let matchQuant = true;
     if (quant === 'Vulnerable') matchQuant = c.quantumVulnerable;
     else if (quant === 'Not Vulnerable') matchQuant = !c.quantumVulnerable;
     
-    return matchSearch && matchType && matchRisk && matchLib && matchQuant;
+    return matchSearch && matchType && matchRisk && matchExposure && matchLib && matchQuant;
   });
   
   currentPage = 1;
@@ -880,6 +893,7 @@ function clearFilters() {
   document.getElementById('filter-search').value = '';
   document.getElementById('filter-type').value = 'ALL';
   document.getElementById('filter-risk').value = 'ALL';
+  if (document.getElementById('filter-exposure')) document.getElementById('filter-exposure').value = 'ALL';
   document.getElementById('filter-lib').value = 'ALL';
   document.getElementById('filter-quant').value = 'ALL';
   handleFilterChange();
@@ -914,13 +928,18 @@ function renderTable() {
   const pageData = filteredInventory.slice(start, start + itemsPerPage);
   
   tbody.innerHTML = pageData.map((c, i) => {
+    const exp = c.exposure || 'internal';
+    const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
+    const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
     return `
       <tr class="cbom-row" style="cursor:pointer;" data-index="${i}">
         <td><span style="font-weight:600;color:var(--text-h)">${c.algorithm}</span></td>
         <td>${c.type}</td>
         <td>${c.purpose}</td>
+        <td><span class="badge ${expClass}">${expLabel}</span></td>
         <td><span class="code-font" style="color:var(--text-m);">${c.file}</span></td>
         <td>${c.library}</td>
+        <td><span class="code-font">${c.version}</span></td>
         <td><span class="code-font">${c.keySize}</span></td>
         <td><span class="badge ${getBadgeClass(c.risk)}">${c.risk}</span></td>
       </tr>
@@ -997,6 +1016,7 @@ function generateCycloneDX() {
       properties: [
         { name: "crypto:type", value: c.type },
         { name: "crypto:purpose", value: c.purpose },
+        { name: "crypto:exposure", value: c.exposure || "internal" },
         { name: "crypto:keySize", value: c.keySize },
         { name: "crypto:quantumVulnerable", value: c.quantumVulnerable.toString() },
         { name: "crypto:risk", value: c.risk },

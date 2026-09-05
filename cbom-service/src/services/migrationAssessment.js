@@ -216,6 +216,45 @@ function assessFinding(finding) {
     riskAfter = Math.max(15, scoreResult.hndlScore - 50);
   }
 
+const PQC_IMPACT_SPECS = {
+  'ML-KEM (Kyber)': {
+    ciphertextOverheadBytes: 1088,
+    classicalSizeOverheadFactor: 4.25,
+    cpuCostMultiplier: 1.4,
+    latencyImpactMs: 1.8,
+    estimatedEffort: '2-4 weeks'
+  },
+  'ML-DSA (Dilithium)': {
+    signatureOverheadBytes: 2420,
+    classicalSizeOverheadFactor: 9.45,
+    cpuCostMultiplier: 2.1,
+    latencyImpactMs: 3.5,
+    estimatedEffort: '4-8 weeks'
+  },
+  'SLH-DSA (SPHINCS+)': {
+    signatureOverheadBytes: 7856,
+    classicalSizeOverheadFactor: 30.6,
+    cpuCostMultiplier: 4.5,
+    latencyImpactMs: 12.0,
+    estimatedEffort: '6-10 weeks'
+  },
+  'AES-256-GCM': {
+    ciphertextOverheadBytes: 16,
+    classicalSizeOverheadFactor: 1.0,
+    cpuCostMultiplier: 1.0,
+    latencyImpactMs: 0.1,
+    estimatedEffort: '1-2 weeks'
+  }
+};
+
+  const performanceImpact = PQC_IMPACT_SPECS[recommendedPqc] || {
+    ciphertextOverheadBytes: 1024,
+    classicalSizeOverheadFactor: 3.5,
+    cpuCostMultiplier: 1.5,
+    latencyImpactMs: 2.0,
+    estimatedEffort: '2-6 weeks'
+  };
+
   return {
     findingId: finding.id || null,
     file: finding.file || finding.filePath || null,
@@ -229,6 +268,7 @@ function assessFinding(finding) {
     businessImportance: scoreResult.businessImportance,
     hndlRiskScore: scoreResult.hndlScore,
     cryptoAgilityScore,
+    performanceImpact,
     steps,
     blockers,
     riskBefore,

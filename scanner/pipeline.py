@@ -21,7 +21,10 @@ from scanner.regex_analyzer import RegexAnalyzer
 from scanner.entropy_analyzer import EntropyAnalyzer
 from scanner.confidence import promote_confirmed
 from scanner.sca_analyzer import SCAAnalyzer
-from scanner.config_infra_analyzer import ConfigInfraAnalyzer
+from scanner.config_infra_analyzer import ConfigInfraAnalyzer, detect_exposure
+from scanner.container_analyzer import ContainerAnalyzer
+from scanner.binary_analyzer import BinaryAnalyzer
+from scanner.certificate_analyzer import CertificateAnalyzer
 from scanner.sca_correlation import correlate_sca_with_source
 from scanner.suppression import load_suppressions, apply_suppressions
 
@@ -97,6 +100,9 @@ def scan_repo(repo_path, scan_id=None):
     ent = EntropyAnalyzer()
     sca = SCAAnalyzer()
     infra = ConfigInfraAnalyzer()
+    cnt = ContainerAnalyzer()
+    bin_analyzer = BinaryAnalyzer()
+    cert_analyzer = CertificateAnalyzer()
     findings = []
     
     for root, dirs, files in os.walk(target_dir):
@@ -110,12 +116,25 @@ def scan_repo(repo_path, scan_id=None):
             if ext in {".md", ".markdown", ".rst", ".doc", ".docx"} or fn.lower().endswith((".md", ".markdown", ".rst")):
                 continue
 
+            # 0. Binary / Compiled-Artifact Layer
+            if ext in {".jar", ".class", ".so", ".dll", ".pyc", ".wasm", ".exe", ".dylib", ".o", ".a", ".lib"}:
+                findings.extend(bin_analyzer.analyze(path))
+                continue
+
             try:
                 with open(path, "r", encoding="utf-8", errors="ignore") as fh:
                     source = fh.read()
             except OSError:
                 continue
+
+            # Certificate & Key Layer
+            if ext in {".pem", ".crt", ".cer", ".cert", ".key", ".pfx", ".p12"} or "-----BEGIN " in source:
+                findings.extend(cert_analyzer.analyze(path, source))
             
+            # Always run container layer check for Dockerfiles, Compose, and K8s manifests
+            if fn.lower().startswith("dockerfile") or "compose" in fn.lower() or ext in {".yaml", ".yml"}:
+                findings.extend(cnt.analyze(path, source))
+
             # 1. SCA Manifest Layer
             if fn.lower() in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"} or (fn.lower().startswith("requirements") and fn.lower().endswith(".txt")):
                 findings.extend(sca.analyze(path, source))
@@ -164,6 +183,7 @@ def scan_repo(repo_path, scan_id=None):
             "raw_call": getattr(f, 'code_snippet', ''),
             "confidence": f.confidence.value,
             "detection_method": f.detection_method,
+            "exposure": getattr(f, 'exposure', None) or detect_exposure(rel_path),
             "suppressed": f.suppressed,
             "suppression_reason": f.suppression_reason,
         })

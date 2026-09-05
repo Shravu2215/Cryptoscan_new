@@ -25,13 +25,14 @@ model User {
 }
 
 model Repo {
-  id              String        @id @default(uuid())
-  name            String
-  filePath        String        // path on disk where uploaded repo/zip is stored
-  uploadedBy      String
-  user            User          @relation(fields: [uploadedBy], references: [id])
-  businessContext String?       @default("STANDARD") // CRITICAL, IMPORTANT, STANDARD
-  createdAt       DateTime      @default(now())
+  id                  String        @id @default(uuid())
+  name                String
+  filePath            String        // path on disk where uploaded repo/zip is stored
+  uploadedBy          String
+  user                User          @relation(fields: [uploadedBy], references: [id])
+  businessContext     String?       @default("STANDARD") // CRITICAL, IMPORTANT, STANDARD
+  businessCriticality String        @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  createdAt           DateTime      @default(now())
 
   scans        Scan[]
   cbomVersions CbomVersion[]

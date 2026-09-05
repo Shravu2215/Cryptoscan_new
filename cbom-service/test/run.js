@@ -71,6 +71,13 @@ async function main() {
   res = await fetch(`${base}/scan/does_not_exist/findings`);
   assert(res.status === 404, 'unknown scanId returns 404');
 
+  console.log('5. Mosca\'s Inequality (X + Y > Z)');
+  const { calculateMoscaInequality } = require('../src/services/hndlEngine');
+  const moscaResult = calculateMoscaInequality(2.5, 10.0, 7.0);
+  assert(moscaResult.moscaInequalityHolds === true, 'X (2.5) + Y (10) > Z (7) holds true');
+  assert(moscaResult.moscaRisk === 'HIGH', 'Mosca risk is HIGH when X + Y > Z');
+  assert(moscaResult.formulaReadout.includes('2.5y migration') && moscaResult.formulaReadout.includes('10y lifetime'), 'Formula readout includes X, Y, Z numbers');
+
   server.close();
   console.log('\nAll checks passed.');
 }

@@ -21,6 +21,7 @@ function enrichFinding(raw, businessImportance) {
     line: raw.line,
     primitive: raw.primitive,
     primitiveFamily: family,
+    version: raw.version || '',
     keySize: raw.keySize ?? null,
     mode: raw.mode ?? null,
     purpose: { value: purpose, confidence, source },
@@ -78,6 +79,7 @@ function buildCbom(scan) {
       componentsByKey.set(key, {
         type: 'cryptographic-asset',
         name: primitive,
+        version: f.version || '',
         'bom-ref': `crypto-asset/${primitive.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`,
         cryptoProperties: {
           assetType: 'algorithm',

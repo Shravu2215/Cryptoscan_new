@@ -58,6 +58,10 @@ const USAGE_TYPE_TO_PURPOSE = {
   token_key_generation: 'random_generation',
   hash: 'integrity_hashing',
   hashing: 'integrity_hashing',
+  cloud_kms_managed: 'cloud_kms_managed',
+  hardware_key_custody: 'hardware_key_custody',
+  kms: 'cloud_kms_managed',
+  hsm: 'hardware_key_custody',
 };
 
 function detectPurpose(finding) {
@@ -162,4 +166,29 @@ function getMigrationGuidance(primitiveFamily, purpose, component = {}) {
   return { ...result, hybridByDefault: isHybridByDefault(primitiveFamily, purpose), cryptoAgilityScore: calculateCryptoAgilityScore(primitiveFamily, purpose, component) };
 }
 
-module.exports = { detectPurpose, getMigrationGuidance, calculateCryptoAgilityScore, PQC_MIGRATION_TABLE, isHybridByDefault };
+const SENSITIVITY_PATTERNS = {
+  HEALTH: { keywords: ['health', 'hipaa', 'patient', 'medical', 'diagnosis', 'ehr', 'prescription'], defaultLifetimeYears: 20.0 },
+  PII: { keywords: ['ssn', 'social_security', 'dob', 'birthdate', 'passport', 'national_id', 'email', 'phone', 'user_address'], defaultLifetimeYears: 15.0 },
+  FINANCIAL: { keywords: ['credit_card', 'card_number', 'cvv', 'iban', 'bank_account', 'pan', 'payment_token', 'billing'], defaultLifetimeYears: 12.0 },
+  AUTH: { keywords: ['password', 'passwd', 'auth_token', 'api_key', 'jwt', 'secret_key', 'session_id'], defaultLifetimeYears: 5.0 }
+};
+
+function detectDataSensitivity(finding = {}) {
+  const text = [
+    finding.snippet,
+    finding.message,
+    finding.code_snippet,
+    finding.raw_call,
+    finding.usage,
+    finding.file
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  for (const [sens, config] of Object.entries(SENSITIVITY_PATTERNS)) {
+    if (config.keywords.some(kw => text.includes(kw))) {
+      return { sensitivity: sens, recommendedLifetimeYears: config.defaultLifetimeYears };
+    }
+  }
+  return { sensitivity: 'GENERAL', recommendedLifetimeYears: 7.0 };
+}
+
+module.exports = { detectPurpose, detectDataSensitivity, getMigrationGuidance, calculateCryptoAgilityScore, PQC_MIGRATION_TABLE, isHybridByDefault };

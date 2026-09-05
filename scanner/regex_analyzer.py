@@ -413,20 +413,62 @@ def _analyze_ini_conf(file_path: str, source: str) -> List[Finding]:
 # Main Analyzer Class
 # ---------------------------------------------------------------------------
 
+_KMS_HSM_PATTERNS = [
+    (re.compile(r'\b(?:boto3\.client\([\'"]kms[\'"]\)|aws_kms_key|aws_kms_alias)\b', re.IGNORECASE), "AWS KMS", "AWS Key Management Service (KMS) integration detected."),
+    (re.compile(r'\b(?:KeyClient|SecretClient|azure_key_vault|vault\.azure\.net)\b', re.IGNORECASE), "Azure Key Vault", "Azure Key Vault HSM/KMS integration detected."),
+    (re.compile(r'\b(?:KeyManagementServiceClient|google_kms_crypto_key|cloudkms\.googleapis\.com)\b', re.IGNORECASE), "GCP Cloud KMS", "Google Cloud KMS integration detected."),
+    (re.compile(r'\b(?:PyKCS11|pkcs11|libsofthsm2\.so|libCryptoki|C_Initialize|C_OpenSession)\b', re.IGNORECASE), "PKCS#11 HSM", "Hardware Security Module (HSM) PKCS#11 interface detected."),
+    (re.compile(r'\b(?:tpm2-tools|tss2|tpm2_createprimary|tpm2_evictcontrol)\b', re.IGNORECASE), "TPM 2.0", "Trusted Platform Module (TPM 2.0) hardware interface detected."),
+]
+
+def _analyze_kms_hsm(file_path: str, source: str) -> List[Finding]:
+    findings: List[Finding] = []
+    lines = source.splitlines()
+    total_lines = len(lines)
+
+    for line_no, raw_line in enumerate(lines, 1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#") or stripped.startswith("//"):
+            continue
+
+        for pattern, name, desc in _KMS_HSM_PATTERNS:
+            if pattern.search(raw_line):
+                findings.append(Finding(
+                    file=file_path,
+                    line=_validate_line_bounds(line_no, total_lines),
+                    column=0,
+                    language="config",
+                    rule_id=f"kms-hsm-{name.lower().replace(' ', '-')}",
+                    rule_name=f"{name} Hardware/Cloud Custody",
+                    category="Cloud KMS / HSM",
+                    algorithm=name,
+                    severity=Severity.INFO,
+                    quantum_risk=QuantumRisk.SAFE,
+                    message=desc,
+                    recommendation="Hardware-backed / Cloud KMS key custody verified. Ensure key rotation policies and PQC migration readiness are enabled on KMS keys.",
+                    code_snippet=stripped[:100],
+                    confidence=Confidence.CONFIRMED,
+                    tags=["kms", "hsm", "hardware-custody"],
+                ))
+                break
+
+    return findings
+
 class RegexAnalyzer:
     """
     Structural config-file detection layer.
-    Pure offline analyzer for Dockerfiles, YAML, JSON, .env, .ini, .conf, .toml.
+    Pure offline analyzer for Dockerfiles, YAML, JSON, .env, .ini, .conf, .toml, and KMS/HSM code references.
     """
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         """Analyze a single config or infrastructure file."""
+        kms_findings = _analyze_kms_hsm(file_path, source)
         if _is_dockerfile(file_path):
-            return _analyze_dockerfile(file_path, source)
+            return _analyze_dockerfile(file_path, source) + kms_findings
         if _is_env_file(file_path):
-            return _analyze_env_file(file_path, source)
+            return _analyze_env_file(file_path, source) + kms_findings
         if _is_yaml_file(file_path) or _is_json_config(file_path):
-            return _analyze_yaml_json(file_path, source)
+            return _analyze_yaml_json(file_path, source) + kms_findings
         if _is_ini_conf(file_path):
-            return _analyze_ini_conf(file_path, source)
-        return []
+            return _analyze_ini_conf(file_path, source) + kms_findings
+        return kms_findings

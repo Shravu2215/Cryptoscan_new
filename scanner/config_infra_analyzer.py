@@ -274,6 +274,23 @@ def _analyze_k8s_manifests(file_path: str, source: str) -> List[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# Exposure Detection Helper
+# ---------------------------------------------------------------------------
+
+EXTERNAL_PATH_PATTERNS = re.compile(r'(?:routes|api|controllers|views|endpoints|public|server|gateway|proxy|ingress|loadbalancer|web)\b', re.IGNORECASE)
+EXTERNAL_INFRA_PATTERNS = re.compile(r'(?:LoadBalancer|NodePort|Ingress|0\.0\.0\.0\/0|listen\s+(?:80|443|0\.0\.0\.0)|ServerName)\b', re.IGNORECASE)
+
+def detect_exposure(file_path: str, source: str = "") -> str:
+    """Classifies finding exposure as 'external-facing' or 'internal' based on real signals."""
+    norm_path = file_path.replace("\\", "/")
+    if EXTERNAL_PATH_PATTERNS.search(norm_path):
+        return "external-facing"
+    if source and EXTERNAL_INFRA_PATTERNS.search(source):
+        return "external-facing"
+    return "internal"
+
+
+# ---------------------------------------------------------------------------
 # Config & Infra Analyzer Class
 # ---------------------------------------------------------------------------
 

@@ -76,6 +76,8 @@ class Finding:
     confidence: Confidence = field(default=None)
     suppressed: bool = False
     suppression_reason: str = ""
+    exposure: str = "internal"        # "external-facing" | "internal"
+    version: str = ""
 
     def __post_init__(self):
         if not self.call_site:
@@ -92,6 +94,14 @@ class Finding:
     @property
     def detection_method(self) -> str:
         """Infers the detection layer from language and rule_id."""
+        if getattr(self, "_detection_method_override", None):
+            return self._detection_method_override
+        if self.language == "container" or "container" in self.rule_id:
+            return "container"
+        if self.language == "binary" or "binary" in self.rule_id:
+            return "binary"
+        if self.language == "certificate" or "certificate" in self.rule_id:
+            return "certificate"
         if self.language in {"python", "javascript"} and not self.rule_id.startswith("entropy-"):
             return "ast"
         if self.rule_id.startswith("entropy-"):
@@ -113,4 +123,6 @@ class Finding:
         d["suppression_reason"] = self.suppression_reason
         d["fingerprint"] = self.fingerprint
         d["detection_method"] = self.detection_method
+        d["exposure"] = self.exposure
+        d["version"] = self.version
         return d
