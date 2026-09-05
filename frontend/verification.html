@@ -16,7 +16,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-    /* Dark theme variables */
+  /* Dark theme variables */
   --bg-main: #050505;
   --bg-sidebar: #050505;
   --bg-card: #0F0F11;
@@ -34,14 +34,14 @@
   --green-bg: rgba(16, 185, 129, 0.1);
   --red: #ef4444; /* Critical */
   --red-bg: rgba(239, 68, 68, 0.1);
-  --amber: #f59e0b; /* High */
+  --amber: #f59e0b; /* High/Warning */
   --amber-bg: rgba(245, 158, 11, 0.1);
   --yellow: #eab308; /* Medium */
   --yellow-bg: rgba(234, 179, 8, 0.1);
   --gray: #94a3b8; /* Low */
   --gray-bg: rgba(148, 163, 184, 0.1);
   
-  --purple: #8b5cf6; /* Quantum */
+  --purple: #8b5cf6; /* Quantum / Merkle */
   --purple-bg: rgba(139, 92, 246, 0.1);
 
   --r-sm: 8px;
@@ -51,20 +51,19 @@
   --sb-w: 240px;
   --t: .2s ease;
 }
-    :root.light-mode {
-      --bg-main: #f8fafc;
-      --bg-sidebar: #ffffff;
-      --bg-card: #ffffff;
-      --bg-card-hover: #f1f5f9;
-      --border-color: #e2e8f0;
-      --border-light: #e2e8f0;
+:root.light-mode {
+  --bg-main: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-light: #e2e8f0;
 
-      --text-h: #0f172a;
-      --text-b: #334155;
-      --text-m: #475569;
-      --text-s: #64748b;
-    }
-
+  --text-h: #0f172a;
+  --text-b: #334155;
+  --text-m: #475569;
+  --text-s: #64748b;
+}
 
 html { font-size: 14px; }
 body {
@@ -121,10 +120,6 @@ body {
   border: 1px solid rgba(21, 128, 61, 0.2);
 }
 .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
-.nav-badge {
-  margin-left: auto; background: var(--border-color);
-  color: var(--text-h); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
-}
 
 /* Main Content Area */
 .main {
@@ -153,12 +148,17 @@ body {
 .btn-p:hover { opacity: 0.9; }
 
 .btn-sec {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
   background: transparent; border: 1px solid var(--border-color);
-  border-radius: var(--r-sm); font-size: 13px; font-weight: 500; color: var(--text-b);
+  border-radius: var(--r-sm); font-size: 12px; font-weight: 500; color: var(--text-b);
   cursor: pointer; text-decoration: none; transition: all var(--t);
 }
 .btn-sec:hover { background: var(--bg-card); border-color: var(--text-s); }
+.btn-sec.active {
+  background: var(--purple-bg);
+  border-color: var(--purple);
+  color: var(--purple);
+}
 
 /* Dashboard Grid */
 .content { padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
@@ -175,278 +175,359 @@ body {
 .gc-ttl { font-size: 14px; font-weight: 600; color: var(--text-h); }
 .gc-sub { font-size: 12px; color: var(--text-m); margin-top: 4px; }
 
-/* Stats Grid */
-.stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
-.scard {
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--r-md); padding: 16px;
+/* Plain-Language Explanation Banner */
+.explain-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--purple);
+  border-radius: var(--r-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
-.scard-primary {
-  background: linear-gradient(135deg, #991b1b, #dc2626);
-  color: #ffffff;
-  border: none;
+.eb-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--purple);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
-.scard-primary .sc-lbl, .scard-primary .empty-sub { color: rgba(255,255,255,0.8); }
-.scard-primary .sc-val, .scard-primary .empty-val { color: #ffffff; }
+.eb-icon svg { width: 24px; height: 24px; }
+.eb-content { display: flex; flex-direction: column; gap: 4px; }
+.eb-title { font-size: 14px; font-weight: 600; color: var(--text-h); }
+.eb-text { font-size: 13px; color: var(--text-m); line-height: 1.5; }
+.eb-text strong { color: var(--text-h); font-weight: 600; }
 
-.sc-lbl { font-size: 12px; color: var(--text-m); font-weight: 500; margin-bottom: 8px; }
-.sc-val { font-size: 24px; font-weight: 600; color: var(--text-h); font-family: 'JetBrains Mono', monospace; line-height: 1; }
-.empty-val { font-size: 24px; font-weight: 600; color: var(--text-s); }
-.empty-sub { font-size: 11px; color: var(--text-s); margin-top: 4px; }
-
-/* Risk Distribution */
-.risk-dist { display: flex; flex-direction: column; gap: 12px; }
-.risk-bar-container { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; display: flex; overflow: hidden; }
-.risk-bar { height: 100%; }
-.risk-legend { display: flex; justify-content: space-between; font-size: 12px; }
-.legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-b); }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-/* Tables */
-table { width: 100%; border-collapse: collapse; }
-thead th {
-  padding: 12px 16px; font-size: 11px; font-weight: 500;
-  color: var(--text-m); text-align: left; border-bottom: 1px solid var(--border-color);
-}
-tbody td {
-  padding: 16px; font-size: 13px; color: var(--text-b);
-  border-bottom: 1px solid var(--border-color);
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: var(--bg-card-hover); }
-
-/* Badges */
-.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; border: 1px solid transparent; }
-.badge-crit { background: var(--red-bg); color: var(--red); border-color: rgba(239, 68, 68, 0.2); }
-.badge-high { background: var(--amber-bg); color: var(--amber); border-color: rgba(245, 158, 11, 0.2); }
-.badge-med { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234, 179, 8, 0.2); }
-.badge-low { background: var(--gray-bg); color: var(--gray); border-color: rgba(113, 113, 122, 0.2); }
-.badge-quant { background: var(--purple-bg); color: var(--purple); border-color: rgba(139, 92, 246, 0.2); }
-
-/* Empty States */
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; gap: 12px; }
-.empty-msg { font-size: 13px; color: var(--text-m); }
-
-/* Top Risks List */
-.risk-list { display: flex; flex-direction: column; gap: 12px; }
-.risk-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm); }
-.risk-algo { font-size: 13px; font-weight: 500; color: var(--text-h); font-family: 'JetBrains Mono', monospace; }
-.risk-count { font-size: 12px; color: var(--text-s); }
-
-/* Quick Actions */
-.qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.qa-btn { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm); text-align: left; cursor: pointer; transition: all var(--t); text-decoration: none; }
-.qa-btn:hover { border-color: var(--text-m); }
-.qa-btn svg { width: 20px; height: 20px; color: var(--text-h); }
-.qa-ttl { font-size: 13px; font-weight: 500; color: var(--text-h); }
-
-/* Profile Avatar */
-.profile-avatar-wrap { position: relative; display: flex; align-items: center; }
-.profile-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(135deg, #991b1b, #ef4444);
-  border: 2px solid rgba(239,68,68,0.2);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .2s ease;
-  box-shadow: 0 2px 8px rgba(239,68,68,0.15);
-  padding: 0;
-}
-.profile-avatar:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(239,68,68,0.25);
-  border-color: rgba(239,68,68,0.4);
-}
-.profile-initials {
-  font-size: 13px; font-weight: 700; color: white;
-  letter-spacing: 0.02em; line-height: 1;
-  font-family: 'Inter', sans-serif;
-  pointer-events: none;
-}
-.profile-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0;
-  width: 260px; background: var(--bg-card);
-  border: 1px solid var(--border-color); border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
-  opacity: 0; visibility: hidden;
-  transform: translateY(-6px) scale(0.97);
-  transition: all .2s ease;
-  z-index: 999;
+/* Hero Card */
+.verify-hero {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
   overflow: hidden;
 }
-.profile-dropdown.open {
-  opacity: 1; visibility: visible;
-  transform: translateY(0) scale(1);
+.verify-hero.status-verified {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 15, 17, 0.95));
+  border-color: rgba(16, 185, 129, 0.3);
 }
-.pd-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px;
+.verify-hero.status-failed {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 15, 17, 0.95));
+  border-color: rgba(239, 68, 68, 0.3);
 }
-.pd-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, #991b1b, #ef4444);
+.verify-hero.status-incomplete {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 15, 17, 0.95));
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.vh-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  margin-bottom: 16px;
 }
-.pd-avatar span {
-  font-size: 15px; font-weight: 700; color: white;
-  font-family: 'Inter', sans-serif;
+.vh-icon svg { width: 32px; height: 32px; }
+.vh-icon.verified { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+.vh-icon.failed { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+.vh-icon.incomplete { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+.vh-icon.unverified { background: var(--border-color); color: var(--text-m); }
+
+.vh-title { font-size: 22px; font-weight: 700; color: var(--text-h); letter-spacing: -0.02em; }
+.vh-desc { font-size: 13px; color: var(--text-m); max-width: 600px; margin-top: 8px; line-height: 1.5; }
+
+/* Pipeline Progress */
+.pipeline {
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative; padding: 0 16px; margin: 12px 0 24px;
 }
-.pd-info { overflow: hidden; }
-.pd-name {
-  font-size: 14px; font-weight: 600; color: var(--text-h);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.pl-line {
+  position: absolute; top: 18px; left: 40px; right: 40px;
+  height: 2px; background: var(--border-color); z-index: 1;
 }
-.pd-email {
-  font-size: 12px; color: var(--text-m); margin-top: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.pl-progress {
+  position: absolute; top: 18px; left: 40px;
+  height: 2px; background: var(--purple); z-index: 2;
+  transition: width 0.4s ease; width: 0%;
 }
-.pd-divider { height: 1px; background: var(--border-color); margin: 0; }
-.pd-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  font-size: 13px; font-weight: 500; color: var(--text-b);
-  text-decoration: none; transition: all .15s ease;
+.pl-step {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  position: relative; z-index: 3;
+}
+.pl-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg-card); border: 2px solid var(--border-color);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--text-m); transition: all var(--t);
+}
+.pl-step.active .pl-icon { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+.pl-step.done .pl-icon { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.pl-step.fail .pl-icon { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.pl-lbl { font-size: 11px; font-weight: 600; color: var(--text-s); }
+.pl-step.active .pl-lbl { color: var(--purple); }
+.pl-step.done .pl-lbl { color: var(--green); }
+.pl-step.fail .pl-lbl { color: var(--red); }
+
+/* Details & Hash Cards */
+.dl-list { display: flex; flex-direction: column; gap: 12px; }
+.dl-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.dl-lbl { color: var(--text-m); }
+.dl-val { font-weight: 600; color: var(--text-h); }
+
+.hash-box {
+  background: var(--bg-main); border: 1px solid var(--border-color);
+  border-radius: var(--r-md); padding: 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; word-break: break-all;
+  color: var(--text-h); position: relative; margin-bottom: 16px;
+}
+.hash-box.match { border-color: rgba(16, 185, 129, 0.4); background: var(--green-bg); }
+.hash-box.mismatch { border-color: rgba(239, 68, 68, 0.4); background: var(--red-bg); }
+.hash-box.amber-box { border-color: rgba(245, 158, 11, 0.4); background: var(--amber-bg); }
+
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  color: var(--text-m); font-size: 11px; font-weight: 500;
+  padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all var(--t);
+}
+.copy-btn:hover { color: var(--text-h); border-color: var(--text-s); }
+
+.status-badge {
+  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.sb-none { background: var(--border-color); color: var(--text-m); }
+.sb-valid { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+.sb-invalid { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+.sb-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+.comp-row { display: flex; justify-content: space-between; align-items: center; }
+.comp-lbl { font-size: 12px; color: var(--text-m); }
+.comp-res { font-size: 13px; font-weight: 700; color: var(--text-h); }
+.comp-res.match { color: var(--green); }
+.comp-res.mismatch { color: var(--red); }
+.comp-res.amber-res { color: var(--amber); }
+
+/* Merkle Tree Section & Visualizer */
+.merkle-panel {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--r-lg); padding: 24px;
+}
+.merkle-root-box {
+  background: var(--bg-main); border: 1px solid var(--border-color);
+  border-radius: var(--r-md); padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.merkle-root-lbl { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.merkle-root-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text-h); word-break: break-all; }
+
+/* Tree Diagram Container */
+.merkle-tree-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  padding: 32px 16px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-md);
+  margin-top: 16px;
+  min-height: 340px;
+}
+.merkle-tree-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.merkle-tree-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  position: relative;
+  z-index: 2;
+  align-items: center;
+  min-width: max-content;
+  margin: 0 auto;
+}
+.merkle-tree-level {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+}
+.mt-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  min-width: 160px;
+  max-width: 220px;
   cursor: pointer;
+  transition: all var(--t);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  user-select: none;
+  position: relative;
 }
-.pd-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
-.pd-item:hover { background: var(--bg-card-hover); color: var(--red); }
-.pd-logout { color: var(--red); }
-.pd-logout:hover { background: var(--red-bg); color: #f87171; }
+.mt-node:hover {
+  border-color: var(--purple);
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+}
+.mt-node.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+.mt-node.is-root {
+  border: 2px solid var(--green);
+  background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(15,15,17,0.95));
+  box-shadow: 0 0 16px rgba(16,185,129,0.25);
+  min-width: 200px;
+}
+.mt-node-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mt-node-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mt-node-badge.badge-root {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(16,185,129,0.3);
+}
+.mt-node-badge.badge-combined {
+  background: var(--purple-bg);
+  color: var(--purple);
+}
+.mt-node-badge.badge-leaf {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-b);
+}
+.mt-node-hash {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-h);
+  word-break: break-all;
+}
+.mt-node-meta {
+  font-size: 11px;
+  color: var(--text-m);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
+/* Secondary List View Layout */
+.merkle-depth-label { font-size: 11px; font-weight: 600; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 12px; }
+.merkle-leaves { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.merkle-leaf {
+  background: var(--bg-main); border: 1px solid var(--border-color);
+  border-radius: var(--r-sm); padding: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-b);
+  cursor: pointer; transition: all var(--t);
+}
+.merkle-leaf:hover { border-color: var(--purple); background: var(--bg-card); }
+.merkle-leaf.selected { border-color: var(--green); background: var(--green-bg); }
+
+/* Blockchain History */
+.bh-item {
+  display: flex; align-items: center; gap: 16px; padding: 16px;
+  background: var(--bg-main); border: 1px solid var(--border-color);
+  border-radius: var(--r-md); margin-top: 12px;
+}
+.bh-icon-wrap {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.bh-algo { font-size: 13px; font-weight: 600; color: var(--text-h); }
+.bh-meta { font-size: 11px; color: var(--text-m); margin-top: 2px; }
+.bh-status { margin-left: auto; }
+
+/* Loader Spinner */
+.loader-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff; border-radius: 50%; display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
-<style>
-  /* Verify Specific Layout */
-  .verify-hero {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 32px 24px; text-align: center; border-radius: var(--r-lg);
-    background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 24px;
-    transition: all 0.3s ease;
-  }
-  .verify-hero.status-unverified { border-top: 4px solid var(--amber); }
-  .verify-hero.status-verified { border-top: 4px solid var(--green); background: linear-gradient(180deg, rgba(220,252,231,0.3) 0%, var(--bg-card) 100%); }
-  .verify-hero.status-failed { border-top: 4px solid var(--red); background: linear-gradient(180deg, rgba(254,226,226,0.3) 0%, var(--bg-card) 100%); }
-  .verify-hero.status-incomplete { border-top: 4px solid var(--amber); background: linear-gradient(180deg, rgba(254,243,199,0.3) 0%, var(--bg-card) 100%); }
-  
-  .vh-icon { width: 48px; height: 48px; margin-bottom: 12px; }
-  .vh-icon.unverified { color: var(--text-m); }
-  .vh-icon.verified { color: var(--green); }
-  .vh-icon.failed { color: var(--red); }
-  .vh-icon.incomplete { color: var(--amber); }
-  
-  .vh-title { font-size: 24px; font-weight: 700; color: var(--text-h); margin-bottom: 8px; }
-  .vh-desc { font-size: 14px; color: var(--text-m); }
-  
-  /* Pipeline */
-  .pipeline {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 24px; background: var(--bg-main); border-radius: var(--r-md); border: 1px solid var(--border-color);
-    position: relative; margin-bottom: 24px; overflow: hidden;
-  }
-  .pl-line {
-    position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: var(--border-color); z-index: 1;
-  }
-  .pl-progress {
-    position: absolute; top: 40px; left: 40px; height: 2px; background: var(--green); z-index: 2; width: 0%;
-    transition: width 0.5s ease;
-  }
-  
-  .pl-step {
-    display: flex; flex-direction: column; align-items: center; z-index: 3; position: relative; width: 80px; text-align: center;
-  }
-  .pl-icon {
-    width: 32px; height: 32px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color);
-    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--text-m);
-    margin-bottom: 8px; transition: all 0.3s;
-  }
-  .pl-step.active .pl-icon { border-color: var(--green); color: var(--green); box-shadow: 0 0 0 4px rgba(34,197,94,0.1); }
-  .pl-step.done .pl-icon { background: var(--green); border-color: var(--green); color: white; }
-  .pl-step.fail .pl-icon { background: var(--red); border-color: var(--red); color: white; }
-  .pl-step.warn .pl-icon { background: var(--amber); border-color: var(--amber); color: white; }
-  
-  .pl-lbl { font-size: 11px; font-weight: 600; color: var(--text-s); text-transform: uppercase; }
-  .pl-step.active .pl-lbl, .pl-step.done .pl-lbl { color: var(--text-h); }
-  
-  /* Details List */
-  .dl-list { display: flex; flex-direction: column; }
-  .dl-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
-  .dl-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .dl-lbl { font-size: 13px; color: var(--text-s); font-weight: 500; }
-  .dl-val { font-size: 13px; color: var(--text-h); font-weight: 600; text-align: right; }
-  
-  /* Hash Box */
-  .hash-box {
-    background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm);
-    padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-h);
-    word-break: break-all; margin-bottom: 12px; position: relative; line-height: 1.5;
-  }
-  .hash-box.match { border-color: var(--green); background: rgba(34,197,94,0.05); }
-  .hash-box.mismatch { border-color: var(--red); background: rgba(239,68,68,0.05); }
-  
-  .copy-btn {
-    position: absolute; top: 8px; right: 8px; background: var(--bg-card); border: 1px solid var(--border-color);
-    padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; color: var(--text-m);
-  }
-  .copy-btn:hover { background: var(--bg-main); color: var(--text-h); }
-  
-  /* Comparison */
-  .comp-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .comp-lbl { font-size: 12px; font-weight: 600; color: var(--text-s); text-transform: uppercase; }
-  .comp-res { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
-  .comp-res.match { color: var(--green); }
-  .comp-res.mismatch { color: var(--red); }
-  .comp-res.warn { color: var(--amber); }
-  
-  .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-  .sb-valid { background: var(--green-bg); color: var(--green); }
-  .sb-invalid { background: var(--red-bg); color: var(--red); }
-  .sb-none { background: var(--bg-main); color: var(--text-m); border: 1px solid var(--border-color); }
-  .sb-warn { background: var(--amber-bg); color: var(--amber); }
-  
-  .loader-spinner {
-    border: 2px solid rgba(0,0,0,0.1); border-left-color: var(--green); border-radius: 50%;
-    width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block;
-  }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-  /* Merkle Tree */
-  .merkle-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-lg); padding: 24px; }
-  .merkle-root-box {
-    background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(16,185,129,0.07));
-    border: 1px solid rgba(139,92,246,0.3); border-radius: var(--r-md); padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
-  }
-  .merkle-root-lbl { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-  .merkle-root-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-h); word-break: break-all; }
-  .merkle-leaves { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .merkle-leaf {
-    background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm);
-    padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-m);
-    cursor: pointer; transition: all var(--t); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .merkle-leaf:hover { border-color: var(--purple); color: var(--text-h); background: rgba(139,92,246,0.05); }
-  .merkle-leaf.selected { border-color: var(--purple); background: rgba(139,92,246,0.1); color: var(--purple); }
-  .merkle-depth-label { font-size: 11px; color: var(--text-s); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
-
-  /* Blockchain History */
-  .bh-item { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
-  .bh-item:last-child { border-bottom: none; }
-  .bh-icon-wrap { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-  .bh-algo { font-size: 13px; font-weight: 600; color: var(--text-h); margin-bottom: 4px; }
-  .bh-meta { font-size: 12px; color: var(--text-m); font-family: 'JetBrains Mono', monospace; }
-  .bh-status { margin-left: auto; flex-shrink: 0; }
-</style>
-  <link rel="stylesheet" href="assets/css/global.css">
 </head>
 <body>
-<div class="app-layout">
 
-<aside class="app-sidebar" id="app-sidebar"></aside>
-
-<div class="app-main">
-  <header class="app-topbar" id="app-topbar"></header>
-  <main class="app-page-container">
+<!-- Sidebar -->
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="sb-name">CryptoScan <span>Engine</span></div>
+  </div>
   
+  <nav class="sb-nav">
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="repositories.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Repositories
+    </a>
+    <a href="scan.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Scanner Pipeline
+    </a>
+    
+    <div class="sb-nav-divider"></div>
+    
+    <a href="cbom.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      CBOM Explorer
+    </a>
+    <a href="findings.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Findings & Cryptanalysis
+    </a>
+    <a href="risk-migration.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      PQC Migration Plan
+    </a>
+    <a href="verification.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Blockchain Verification
+    </a>
+  </nav>
+</aside>
 
+<!-- Main Workspace -->
+<div class="main">
+<header class="topbar">
+  <div class="tb-left">
+    <h1 class="tb-title">Blockchain & Merkle Verification</h1>
+    <div class="tb-sub">Cryptographic integrity check against Merkle tree and public ledger</div>
+  </div>
+  <div class="tb-right" id="header-actions">
+    <button class="btn-sec" onclick="startVerification()">Re-run Integrity Check</button>
+  </div>
+</header>
+
+<main>
   <div class="content">
     
     <!-- Empty State -->
@@ -464,13 +545,26 @@ tbody tr:hover { background: var(--bg-card-hover); }
     <!-- Active View -->
     <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
       
+      <!-- Plain-Language Explanation Banner -->
+      <div class="explain-banner">
+        <div class="eb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="eb-content">
+          <div class="eb-title">What is Verification & Blockchain Anchoring?</div>
+          <div class="eb-text">
+            Every security finding in your repository receives a unique cryptographic fingerprint. These fingerprints are combined level-by-level into a single master fingerprint called a <strong>Merkle Root</strong>. By storing or checking this master fingerprint against a public blockchain, you can prove that your scan results are genuine and have not been altered or tampered with.
+          </div>
+        </div>
+      </div>
+
       <!-- Primary Status -->
       <div class="verify-hero status-unverified" id="hero-card">
         <svg id="hero-icon" class="vh-icon unverified" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
         <div class="vh-title" id="hero-title">NOT VERIFIED</div>
         <div class="vh-desc" id="hero-desc">Verification required</div>
         <div style="margin-top:20px;">
-          <button id="btn-verify" class="btn-p" onclick="startVerification()" style="padding: 12px 24px; font-size: 14px;">Verify Scan</button>
+          <button id="btn-verify" class="btn-p" onclick="startVerification()" style="padding: 12px 24px; font-size: 14px;">Verify Scan Integrity</button>
         </div>
       </div>
 
@@ -586,32 +680,59 @@ tbody tr:hover { background: var(--bg-card-hover); }
         
       </div>
 
-      <!-- Merkle Tree Integrity Visual -->
+      <!-- Merkle Tree Structural Visualizer Panel -->
       <div class="merkle-panel" id="merkle-panel" style="display:none;">
-        <div class="gc-hd" style="margin-bottom:0;">
+        <div class="gc-hd" style="margin-bottom:0; flex-wrap:wrap; gap:16px;">
           <div>
             <div class="gc-ttl">Merkle Tree Structural Visualizer</div>
-            <div class="gc-sub">Each CBOM component is hashed into a leaf node. Leaves are recursively combined into a single cryptographic Merkle Root.</div>
+            <div class="gc-sub">Each finding fingerprint is hashed into a leaf node. Pairs are combined recursively up to the top ROOT hash.</div>
           </div>
-          <span class="status-badge sb-none" id="merkle-status">Not Built</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; gap:6px; background:var(--bg-main); padding:4px; border-radius:var(--r-sm); border:1px solid var(--border-color);">
+              <button class="btn-sec active" id="btn-tree-view" onclick="switchMerkleView('tree')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 3v6m0 0L8 5m4 4l4-4M5 13v6m0 0l-2-2m2 2l2-2m12-4v6m0 0l-2-2m2 2l2-2M12 9v12"/></svg>
+                Tree View
+              </button>
+              <button class="btn-sec" id="btn-list-view" onclick="switchMerkleView('list')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                List View
+              </button>
+            </div>
+            <span class="status-badge sb-none" id="merkle-status">Not Built</span>
+          </div>
         </div>
 
         <div class="merkle-root-box" style="margin-top:20px;">
           <div style="flex:1; overflow:hidden;">
-            <div class="merkle-root-lbl">🔑 Canonical Merkle Root</div>
+            <div class="merkle-root-lbl">🔑 Master Fingerprint (Merkle Root)</div>
             <div class="merkle-root-val" id="merkle-root">—</div>
           </div>
           <button class="copy-btn" style="position:static; margin-left:16px;" onclick="copyMerkleRoot()">Copy Root</button>
         </div>
 
-        <div class="merkle-depth-label">Leaf Nodes — click any leaf to inspect component hash</div>
-        <div class="merkle-leaves" id="merkle-leaves"></div>
+        <!-- Tree View Diagram -->
+        <div class="merkle-tree-container" id="merkle-tree-diagram">
+          <svg class="merkle-tree-svg" id="merkle-tree-svg"></svg>
+          <div class="merkle-tree-levels" id="merkle-tree-levels"></div>
+        </div>
 
-        <div id="merkle-leaf-detail" style="display:none; margin-top:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm); padding:16px;">
-          <div style="font-size:11px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Leaf Node Detail</div>
+        <!-- List View -->
+        <div id="merkle-list-container" style="display:none;">
+          <div class="merkle-depth-label">Leaf Nodes — click any leaf to inspect component hash</div>
+          <div class="merkle-leaves" id="merkle-leaves"></div>
+        </div>
+
+        <!-- Detail Inspection Panel -->
+        <div id="merkle-leaf-detail" style="display:none; margin-top:20px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-md); padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="font-size:12px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.5px;" id="node-detail-title">Node Detail Inspection</div>
+            <button class="copy-btn" id="node-hash-copy" style="position:static;" onclick="copySelectedNodeHash()">Copy Full Hash</button>
+          </div>
           <div class="dl-list">
-            <div class="dl-item"><span class="dl-lbl">Component</span><span class="dl-val" id="leaf-component">—</span></div>
-            <div class="dl-item"><span class="dl-lbl">SHA-256 Leaf Hash</span><span class="dl-val" id="leaf-hash" style="font-family:'JetBrains Mono',monospace; font-size:11px;">—</span></div>
+            <div class="dl-item"><span class="dl-lbl">Node Type & Label</span><span class="dl-val" id="node-detail-label">—</span></div>
+            <div class="dl-item"><span class="dl-lbl">Full SHA-256 Hash</span><span class="dl-val" id="node-detail-hash" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); word-break:break-all;">—</span></div>
+            <div class="dl-item" id="node-detail-file-row" style="display:none;"><span class="dl-lbl">Associated Asset</span><span class="dl-val" id="node-detail-file">—</span></div>
+            <div class="dl-item" id="node-detail-children-row" style="display:none;"><span class="dl-lbl">Child Hashes (Combined)</span><span class="dl-val" id="node-detail-children" style="font-family:'JetBrains Mono',monospace; font-size:11px;">—</span></div>
           </div>
         </div>
       </div>
@@ -640,6 +761,9 @@ function getToken() {
 let activeScan = null;
 let currentHashHex = '';
 let merkleRootHex = '';
+let currentMerkleView = 'tree';
+window.selectedNodeHash = '';
+window.currentMerkleData = null;
 
 function init() {
   const data = CryptoEngine.getData();
@@ -678,41 +802,94 @@ async function sha256(str) {
 async function buildMerkleTreeFromCBOM(items) {
   if (!items || items.length === 0) {
     const emptyHash = await sha256("EMPTY_CBOM_INVENTORY");
-    return { root: emptyHash, leaves: [emptyHash], tree: [[emptyHash]] };
+    const fullHash = emptyHash.startsWith('0x') ? emptyHash : ('0x' + emptyHash);
+    const node = {
+      id: 'leaf-0',
+      level: 0,
+      index: 0,
+      label: 'Empty Inventory',
+      type: 'root',
+      hash: fullHash,
+      children: []
+    };
+    return {
+      root: fullHash,
+      leaves: [node],
+      treeLevels: [[node]],
+      nodesMap: { [node.id]: node }
+    };
   }
 
-  const leaves = await Promise.all(items.map(async (item) => {
+  // Level 0: Leaf nodes for each finding/component
+  const leafNodes = await Promise.all(items.map(async (item, idx) => {
+    const algo = item.algorithm || item.name || 'Crypto Asset';
+    const file = item.file || item.filePath || '';
+    const line = item.line || item.lineNumber || 0;
     const rawStr = typeof item === 'string' ? item : JSON.stringify({
-      algo: item.algorithm || item.name || 'UNKNOWN',
+      algo: algo,
       type: item.type || item.category || 'Asset',
-      file: item.file || item.filePath || 'unknown',
-      line: item.line || item.lineNumber || 0
+      file: file || 'unknown',
+      line: line || 0
     });
-    return await sha256(rawStr);
+    const hashStr = await sha256(rawStr);
+    const fullHash = hashStr.startsWith('0x') ? hashStr : ('0x' + hashStr);
+    return {
+      id: `leaf-${idx}`,
+      level: 0,
+      index: idx,
+      label: `Finding ${idx + 1}`,
+      meta: algo,
+      fileInfo: file ? `${file.split('/').pop()}:${line}` : `Asset #${idx+1}`,
+      fullFile: file,
+      type: 'leaf',
+      hash: fullHash,
+      children: []
+    };
   }));
 
-  let currentLevel = [...leaves];
-  const tree = [currentLevel];
+  const treeLevels = [leafNodes];
+  const nodesMap = {};
+  leafNodes.forEach(n => { nodesMap[n.id] = n; });
+
+  let currentLevel = leafNodes;
+  let levelIdx = 1;
 
   while (currentLevel.length > 1) {
     const nextLevel = [];
     for (let i = 0; i < currentLevel.length; i += 2) {
-      if (i + 1 < currentLevel.length) {
-        const paired = await sha256(currentLevel[i] + currentLevel[i + 1]);
-        nextLevel.push(paired);
-      } else {
-        const paired = await sha256(currentLevel[i] + currentLevel[i]);
-        nextLevel.push(paired);
-      }
+      const left = currentLevel[i];
+      const right = (i + 1 < currentLevel.length) ? currentLevel[i + 1] : currentLevel[i];
+      const parentHash = await sha256(left.hash + right.hash);
+      const parentFullHash = parentHash.startsWith('0x') ? parentHash : ('0x' + parentHash);
+      const parentNode = {
+        id: `node-${levelIdx}-${Math.floor(i / 2)}`,
+        level: levelIdx,
+        index: Math.floor(i / 2),
+        label: `Combined Node`,
+        type: 'combined',
+        hash: parentFullHash,
+        children: [left.id, right.id],
+        leftHash: left.hash,
+        rightHash: right.hash
+      };
+      nodesMap[parentNode.id] = parentNode;
+      nextLevel.push(parentNode);
     }
-    tree.push(nextLevel);
+    treeLevels.push(nextLevel);
     currentLevel = nextLevel;
+    levelIdx++;
   }
 
+  // Mark top node as root
+  const rootNode = currentLevel[0];
+  rootNode.type = 'root';
+  rootNode.label = 'ROOT';
+
   return {
-    root: currentLevel[0],
-    leaves: leaves,
-    tree: tree
+    root: rootNode.hash,
+    leaves: leafNodes,
+    treeLevels: treeLevels,
+    nodesMap: nodesMap
   };
 }
 
@@ -752,7 +929,7 @@ async function startVerification() {
 
   const btn = document.getElementById('btn-verify');
   btn.disabled = true;
-  btn.innerHTML = '<span class="loader-spinner"></span> Verifying...';
+  btn.innerHTML = '<span class="loader-spinner"></span> Verifying Integrity...';
   
   document.getElementById('pl-progress').style.width = '0%';
   
@@ -806,13 +983,13 @@ async function startVerification() {
 
   await delay(300);
 
-  // ─── Step 3: PQC Signature Check ───
+  // ─── Step 3: Digital Signature Check ───
   updateStep(3, 'active');
   document.getElementById('pl-progress').style.width = '60%';
   await delay(300);
   updateStep(3, 'done');
 
-  // ─── Step 4 & 5: Real Backend API Blockchain Anchor & Verification Call ───
+  // ─── Step 4 & 5: Backend API Blockchain Anchor Call ───
   updateStep(4, 'active');
   updateStep(5, 'active');
   document.getElementById('pl-progress').style.width = '80%';
@@ -844,34 +1021,54 @@ async function startVerification() {
 
     if (verifyRes && verifyRes.ok) {
       verifyResult = await verifyRes.json().catch(() => null);
-      if (verifyResult) apiSuccess = true;
+      if (verifyResult && verifyResult.verified !== undefined && verifyResult.txHash && verifyResult.txHash !== '0x') {
+        apiSuccess = true;
+      }
     }
   } catch(e) {
     console.error('API Verification error:', e);
   }
 
-  // Handle Verification Outcomes
-  if (!apiSuccess || !verifyResult) {
-    // Generate seamless local Merkle Anchor Proof fallback when backend API is offline
-    const fallbackTxHash = '0x' + (await sha256((activeScan.scanId || 'scan') + merkleRootHex)).substring(0, 36);
-    verifyResult = {
-      verified: true,
-      onChainHash: merkleRootHex,
-      network: 'Ethereum Sepolia (CryptoScan Proof Node)',
-      txHash: fallbackTxHash,
-      blockNumber: '1084291',
-      anchoredAt: activeScan.timestamp || new Date().toISOString()
-    };
-    apiSuccess = true;
-  }
+  // Handle Verification Outcomes (HONEST: No fake anchors!)
+  if (!apiSuccess || !verifyResult || !verifyResult.txHash || verifyResult.verified === false) {
+    // Backend/Blockchain call failed or is unreachable: DO NOT FABRICATE A FAKE SUCCESSFUL ANCHOR!
+    updateStep(4, 'done');
+    updateStep(5, 'done');
+    document.getElementById('pl-progress').style.width = '100%';
 
-  if (apiSuccess && verifyResult) {
+    document.getElementById('comp-chain').textContent = 'Not Anchored on Public Ledger';
+    document.getElementById('comp-chain').style.color = 'var(--amber)';
+
+    document.getElementById('anch-status').className = 'status-badge sb-amber';
+    document.getElementById('anch-status').textContent = '⚠️ Verified Locally — Not Anchored On-Chain';
+    document.getElementById('anch-network').textContent = 'Local Engine (Offline / Unreachable)';
+    document.getElementById('anch-tx').textContent = 'N/A (No Blockchain Tx)';
+    document.getElementById('anch-block').textContent = 'N/A';
+    document.getElementById('anch-time').textContent = 'N/A';
+
+    document.getElementById('hash-box').className = 'hash-box amber-box';
+    document.getElementById('comp-result').innerHTML = '⚠️ LOCAL ONLY — NOT ANCHORED';
+    document.getElementById('comp-result').className = 'comp-res amber-res';
+
+    setHero('incomplete', '⚠️ VERIFIED LOCALLY — NOT ANCHORED ON-CHAIN', 
+      'The Merkle Tree root and finding fingerprints were computed correctly, but could not be verified against a live blockchain ledger (backend service unreachable or not anchored).');
+
+    renderBlockchainHistory({
+      txHash: 'N/A',
+      network: 'Local Verification Engine',
+      anchoredAt: null,
+      verified: false,
+      localOnly: true
+    });
+  } else {
+    // Real backend/blockchain call succeeded with real anchor details!
     updateStep(4, 'done');
     updateStep(5, 'done');
     document.getElementById('pl-progress').style.width = '100%';
 
     const chainRoot = verifyResult.onChainHash || (anchorResult && anchorResult.merkleRoot) || merkleRootHex;
     document.getElementById('comp-chain').textContent = chainRoot.startsWith('0x') ? chainRoot : ('0x' + chainRoot);
+    document.getElementById('comp-chain').style.color = 'var(--text-m)';
 
     document.getElementById('anch-status').className = 'status-badge sb-valid';
     document.getElementById('anch-status').textContent = '✅ Verified & Anchored';
@@ -881,26 +1078,19 @@ async function startVerification() {
     document.getElementById('anch-time').textContent = verifyResult.anchoredAt ? new Date(verifyResult.anchoredAt).toLocaleString() : new Date().toLocaleString();
 
     renderBlockchainHistory({
-      txHash: verifyResult.txHash || '0x7f8a9c2b4d1e3f8a9c2b4d1e3f',
+      txHash: verifyResult.txHash,
       network: verifyResult.network || 'Ethereum Sepolia',
       anchoredAt: verifyResult.anchoredAt,
       verified: true
     });
 
-    if (verifyResult.verified !== false) {
-      document.getElementById('hash-box').className = 'hash-box match';
-      document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED';
-      document.getElementById('comp-result').className = 'comp-res match';
-      setHero('verified', '✅ VERIFIED', 'CBOM Merkle Tree Root confirmed against blockchain ledger & cryptographic proof. Integrity 100% intact.');
-    } else {
-      document.getElementById('hash-box').className = 'hash-box mismatch';
-      document.getElementById('comp-result').innerHTML = '❌ MISMATCH — FAILED';
-      document.getElementById('comp-result').className = 'comp-res mismatch';
-      setHero('failed', '❌ VERIFICATION FAILED', 'On-chain Merkle Root does not match local CBOM. The inventory may have been modified.');
-    }
+    document.getElementById('hash-box').className = 'hash-box match';
+    document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED ON-CHAIN';
+    document.getElementById('comp-result').className = 'comp-res match';
+    setHero('verified', '✅ VERIFIED & ANCHORED ON-CHAIN', 'CBOM Merkle Tree Root confirmed against live public blockchain ledger. Integrity 100% intact.');
   }
 
-  btn.innerHTML = 'Verify Again';
+  btn.innerHTML = 'Verify Scan Integrity';
   btn.disabled = false;
 }
 
@@ -920,14 +1110,45 @@ function copyMerkleRoot() {
   }
 }
 
+function copySelectedNodeHash() {
+  if (window.selectedNodeHash) {
+    navigator.clipboard.writeText(window.selectedNodeHash);
+    const btn = document.getElementById('node-hash-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Full Hash', 2000);
+  }
+}
+
+// ─── Merkle Tree Renderer & Switcher ───
+function switchMerkleView(view) {
+  currentMerkleView = view;
+  const diagram = document.getElementById('merkle-tree-diagram');
+  const listContainer = document.getElementById('merkle-list-container');
+  const btnTree = document.getElementById('btn-tree-view');
+  const btnList = document.getElementById('btn-list-view');
+
+  if (view === 'tree') {
+    if (diagram) diagram.style.display = 'block';
+    if (listContainer) listContainer.style.display = 'none';
+    if (btnTree) btnTree.className = 'btn-sec active';
+    if (btnList) btnList.className = 'btn-sec';
+    setTimeout(drawMerkleTreeLines, 60);
+  } else {
+    if (diagram) diagram.style.display = 'none';
+    if (listContainer) listContainer.style.display = 'block';
+    if (btnTree) btnTree.className = 'btn-sec';
+    if (btnList) btnList.className = 'btn-sec active';
+  }
+}
+
 function renderMerkleTree(merkleData) {
   const panel = document.getElementById('merkle-panel');
   if (!panel) return;
   panel.style.display = 'block';
 
-  const root = merkleData.root || null;
-  const leaves = merkleData.leaves || [];
+  window.currentMerkleData = merkleData;
 
+  const root = merkleData.root || null;
   if (root) {
     merkleRootHex = root.startsWith('0x') ? root : ('0x' + root);
     document.getElementById('merkle-root').textContent = merkleRootHex;
@@ -935,22 +1156,164 @@ function renderMerkleTree(merkleData) {
     document.getElementById('merkle-status').textContent = '✅ Merkle Root Computed';
   }
 
+  renderMerkleTreeDiagram(merkleData);
+  renderMerkleListView(merkleData);
+  switchMerkleView(currentMerkleView);
+}
+
+function renderMerkleTreeDiagram(merkleData) {
+  const levelsContainer = document.getElementById('merkle-tree-levels');
+  if (!levelsContainer || !merkleData.treeLevels) return;
+
+  const levels = merkleData.treeLevels;
+  // Render from Top (Root) to Bottom (Leaves)
+  let html = '';
+  for (let l = levels.length - 1; l >= 0; l--) {
+    const levelNodes = levels[l];
+    html += `<div class="merkle-tree-level">`;
+    levelNodes.forEach(node => {
+      const isRoot = node.type === 'root';
+      const isCombined = node.type === 'combined';
+      const shortHash = node.hash.substring(0, 10) + '…' + node.hash.substring(node.hash.length - 4);
+      const badgeClass = isRoot ? 'badge-root' : (isCombined ? 'badge-combined' : 'badge-leaf');
+      
+      html += `
+        <div class="mt-node ${isRoot ? 'is-root' : ''}" 
+             data-node-id="${node.id}" 
+             data-children-ids="${(node.children || []).join(',')}"
+             onclick="selectMerkleNode('${node.id}')">
+          <div class="mt-node-hdr">
+            <span class="mt-node-badge ${badgeClass}">${node.label}</span>
+          </div>
+          <div class="mt-node-hash" title="${node.hash}">${shortHash}</div>
+          ${node.meta ? `<div class="mt-node-meta" title="${node.meta}">${node.meta}</div>` : ''}
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  levelsContainer.innerHTML = html;
+  setTimeout(drawMerkleTreeLines, 60);
+}
+
+function renderMerkleListView(merkleData) {
   const leavesEl = document.getElementById('merkle-leaves');
-  leavesEl.innerHTML = leaves.map((leaf, i) => {
-    const leafHash = leaf.startsWith('0x') ? leaf : ('0x' + leaf);
-    const short = leafHash.substring(0, 16) + '…';
-    return `<div class="merkle-leaf" title="${leafHash}" onclick="showLeafDetail(${i}, '${leafHash}')">Leaf #${i+1}: ${short}</div>`;
+  if (!leavesEl || !merkleData.leaves) return;
+
+  leavesEl.innerHTML = merkleData.leaves.map((node, i) => {
+    const short = node.hash.substring(0, 16) + '…';
+    return `<div class="merkle-leaf" title="${node.hash}" onclick="selectMerkleNode('${node.id}')">
+      <div style="font-weight:600; color:var(--text-h); margin-bottom:4px;">Finding #${i+1}: ${node.meta || 'Asset'}</div>
+      <div>Hash: ${short}</div>
+    </div>`;
   }).join('');
 }
 
-function showLeafDetail(idx, hash) {
-  document.querySelectorAll('.merkle-leaf').forEach((el, i) => {
-    el.classList.toggle('selected', i === idx);
+function drawMerkleTreeLines() {
+  const svg = document.getElementById('merkle-tree-svg');
+  const container = document.getElementById('merkle-tree-diagram');
+  if (!svg || !container) return;
+
+  svg.innerHTML = '';
+  const containerRect = container.getBoundingClientRect();
+  
+  const nodeEls = container.querySelectorAll('.mt-node');
+  const nodeMap = {};
+  nodeEls.forEach(el => {
+    const id = el.getAttribute('data-node-id');
+    if (id) nodeMap[id] = el;
   });
+
+  nodeEls.forEach(parentEl => {
+    const childrenIdsStr = parentEl.getAttribute('data-children-ids');
+    if (!childrenIdsStr) return;
+    const childrenIds = childrenIdsStr.split(',').filter(Boolean);
+
+    const pRect = parentEl.getBoundingClientRect();
+    const pX = pRect.left + pRect.width / 2 - containerRect.left + container.scrollLeft;
+    const pY = pRect.bottom - containerRect.top + container.scrollTop;
+
+    childrenIds.forEach(childId => {
+      const childEl = nodeMap[childId.trim()];
+      if (!childEl) return;
+
+      const cRect = childEl.getBoundingClientRect();
+      const cX = cRect.left + cRect.width / 2 - containerRect.left + container.scrollLeft;
+      const cY = cRect.top - containerRect.top + container.scrollTop;
+
+      const midY = (pY + cY) / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const d = `M ${pX} ${pY} C ${pX} ${midY}, ${cX} ${midY}, ${cX} ${cY}`;
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', 'var(--border-color)');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+    });
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (currentMerkleView === 'tree') drawMerkleTreeLines();
+});
+
+function selectMerkleNode(nodeId) {
+  if (!window.currentMerkleData || !window.currentMerkleData.nodesMap) return;
+  const node = window.currentMerkleData.nodesMap[nodeId];
+  if (!node) return;
+
+  document.querySelectorAll('.mt-node, .merkle-leaf').forEach(el => {
+    const isTarget = el.getAttribute('data-node-id') === nodeId || el.getAttribute('onclick')?.includes(nodeId);
+    el.classList.toggle('selected', isTarget);
+  });
+
   const detail = document.getElementById('merkle-leaf-detail');
   detail.style.display = 'block';
-  document.getElementById('leaf-component').textContent = `CBOM Component #${idx + 1}`;
-  document.getElementById('leaf-hash').textContent = hash;
+
+  window.selectedNodeHash = node.hash;
+
+  const titleEl = document.getElementById('node-detail-title');
+  const labelEl = document.getElementById('node-detail-label');
+  const hashEl = document.getElementById('node-detail-hash');
+  const fileRow = document.getElementById('node-detail-file-row');
+  const fileEl = document.getElementById('node-detail-file');
+  const childrenRow = document.getElementById('node-detail-children-row');
+  const childrenEl = document.getElementById('node-detail-children');
+
+  if (node.type === 'root') {
+    titleEl.textContent = '👑 Merkle Root Node (On-Chain Master Hash)';
+    labelEl.textContent = 'ROOT — Master Cryptographic Fingerprint';
+  } else if (node.type === 'combined') {
+    titleEl.textContent = '🔀 Combined Intermediate Hash Node';
+    labelEl.textContent = `${node.label} (Level ${node.level})`;
+  } else {
+    titleEl.textContent = '📄 Leaf Node (Finding Fingerprint)';
+    labelEl.textContent = `${node.label} (${node.meta || 'Crypto Asset'})`;
+  }
+
+  hashEl.textContent = node.hash;
+
+  if (node.type === 'leaf' && (node.fullFile || node.fileInfo)) {
+    fileRow.style.display = 'flex';
+    fileEl.textContent = node.fullFile || node.fileInfo;
+  } else {
+    fileRow.style.display = 'none';
+  }
+
+  if (node.children && node.children.length > 0) {
+    childrenRow.style.display = 'flex';
+    const leftChild = window.currentMerkleData.nodesMap[node.children[0]];
+    const rightChild = window.currentMerkleData.nodesMap[node.children[1]];
+    childrenEl.innerHTML = `
+      Left: ${leftChild ? leftChild.hash.substring(0, 20) + '…' : '—'}<br>
+      Right: ${rightChild ? rightChild.hash.substring(0, 20) + '…' : '—'}
+    `;
+  } else {
+    childrenRow.style.display = 'none';
+  }
+
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderBlockchainHistory(data) {
@@ -958,6 +1321,26 @@ function renderBlockchainHistory(data) {
   const list = document.getElementById('bh-list');
   if (!panel || !list || !activeScan) return;
   panel.style.display = 'block';
+
+  if (data.localOnly) {
+    list.innerHTML = `
+      <div class="bh-item" style="border-left: 3px solid var(--amber);">
+        <div class="bh-icon-wrap" style="background:var(--amber-bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="bh-algo">${activeScan.repoName || 'Scanned Repository'} — Scan ${(activeScan.scanId || 'scan_1').substring(0,8)}</div>
+          <div class="bh-meta">
+            Network: Local Engine &nbsp;|&nbsp;
+            Status: Verified Locally (Fingerprint computed, no blockchain confirmation)
+          </div>
+          ${merkleRootHex ? `<div class="bh-meta" style="margin-top:4px;">Computed Merkle Root: ${merkleRootHex.substring(0,24)}…</div>` : ''}
+        </div>
+        <div class="bh-status"><span class="status-badge sb-amber">⚠️ Local Only</span></div>
+      </div>
+    `;
+    return;
+  }
 
   const txHash = data.txHash || '0x7f8a9c2b4d1e3f...';
   const network = data.network || 'Ethereum Sepolia';
