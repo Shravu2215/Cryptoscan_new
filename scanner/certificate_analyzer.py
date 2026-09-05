@@ -35,7 +35,7 @@ except ImportError:
     HAS_CRYPTOGRAPHY = False
 
 PEM_CERT_RE = re.compile(r'-----BEGIN CERTIFICATE-----[A-Za-z0-9+/=\s]+-----END CERTIFICATE-----', re.MULTILINE)
-PEM_KEY_RE = re.compile(r'-----BEGIN\s+(?:RSA|EC|DSA|OPENSSH|PRIVATE)\s+KEY-----[A-Za-z0-9+/=\s]+-----END\s+(?:RSA|EC|DSA|OPENSSH|PRIVATE)\s+KEY-----', re.MULTILINE)
+PEM_KEY_RE = re.compile(r'-----BEGIN\s+(?:RSA\s+|EC\s+|DSA\s+|OPENSSH\s+)?PRIVATE\s+KEY-----[A-Za-z0-9+/=\s]+-----END\s+(?:RSA\s+|EC\s+|DSA\s+|OPENSSH\s+)?PRIVATE\s+KEY-----', re.MULTILINE)
 
 class CertificateAnalyzer:
     """Offline analyzer for X.509 certificates and key files."""
@@ -61,16 +61,20 @@ class CertificateAnalyzer:
             findings.append(Finding(
                 file=file_path,
                 line=line_no,
+                column=1,
+                language="certificate",
+                rule_id="certificate-unencrypted-private-key",
+                rule_name=f"Unencrypted {key_type}",
+                category="hardcoded-secret",
                 algorithm=key_type,
-                library="X.509 / PEM Storage",
                 severity=Severity.HIGH,
-                quantum=QuantumRisk.QUANTUM_WEAKENED,
+                quantum_risk=QuantumRisk.QUANTUM_WEAKENED,
+                message=f"Hardcoded unencrypted {key_type} block detected in PEM file.",
+                recommendation="Remove hardcoded private keys from source control. Store keys in AWS KMS, HashiCorp Vault, or hardware HSM.",
+                code_snippet=matched_str[:80] + "...",
                 confidence=Confidence.CONFIRMED,
-                snippet=matched_str[:80] + "...",
-                remediation="Remove hardcoded private keys from source control. Store keys in AWS KMS, HashiCorp Vault, or hardware HSM.",
-                category="Certificate",
-                detection_method="certificate",
-                usage="Key Custody & Secret Storage"
+                library="X.509 / PEM Storage",
+                tags=["certificate", "private-key", "pem"]
             ))
 
         # Check for PEM Certificate blocks
@@ -138,35 +142,43 @@ class CertificateAnalyzer:
             remediation += f" [EXPIRATION WARNING: Certificate expired on {not_after.strftime('%Y-%m-%d')}]"
 
         subj_str = cert.subject.rfc4514_string() if cert.subject else "Unknown Subject"
+        algo_label = f"{key_type}-{key_size}" if key_size else f"{key_type} Certificate"
 
         findings.append(Finding(
             file=file_path,
             line=line_no,
-            algorithm=f"{key_type} Certificate",
-            library="X.509 Certificate PKI",
-            key_size=key_size,
+            column=1,
+            language="certificate",
+            rule_id="certificate-x509-parsed",
+            rule_name=f"X.509 Certificate ({key_type})",
+            category="certificate",
+            algorithm=algo_label,
             severity=severity,
-            quantum=q_status,
+            quantum_risk=q_status,
+            message=f"X.509 Certificate with {key_type} key ({sig_algo_name} signature) detected.",
+            recommendation=remediation,
+            code_snippet=f"Subject: {subj_str} | SigAlgo: {sig_algo_name} | KeySize: {key_size}",
             confidence=Confidence.CONFIRMED,
-            snippet=f"Subject: {subj_str} | SigAlgo: {sig_algo_name} | KeySize: {key_size}",
-            remediation=remediation,
-            category="Certificate",
-            detection_method="certificate",
-            usage="Public Key Infrastructure (PKI) / TLS"
+            library="X.509 Certificate PKI",
+            tags=["certificate", "x509", "pki"]
         ))
 
     def _parse_regex_cert(self, source: str, match, file_path: str, line_no: int, findings: List[Finding]):
         findings.append(Finding(
             file=file_path,
             line=line_no,
+            column=1,
+            language="certificate",
+            rule_id="certificate-x509-pem-block",
+            rule_name="X.509 Certificate Block",
+            category="certificate",
             algorithm="X.509 Certificate",
-            library="X.509 Certificate PKI",
             severity=Severity.MEDIUM,
-            quantum=QuantumRisk.QUANTUM_WEAKENED,
+            quantum_risk=QuantumRisk.QUANTUM_WEAKENED,
+            message="PEM X.509 Certificate Block detected in file.",
+            recommendation="Ensure X.509 certificate uses RSA >= 2048-bit or ECC >= 256-bit with SHA-256 signature algorithm.",
+            code_snippet="PEM X.509 Certificate Block detected.",
             confidence=Confidence.LIKELY,
-            snippet="PEM X.509 Certificate Block detected.",
-            remediation="Ensure X.509 certificate uses RSA >= 2048-bit or ECC >= 256-bit with SHA-256 signature algorithm.",
-            category="Certificate",
-            detection_method="certificate",
-            usage="Public Key Infrastructure (PKI) / TLS"
+            library="X.509 Certificate PKI",
+            tags=["certificate", "x509", "pem"]
         ))

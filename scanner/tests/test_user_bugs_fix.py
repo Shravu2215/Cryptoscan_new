@@ -98,3 +98,39 @@ def test_safe_hmac_sha256_inventory():
     assert findings[0].quantum_risk.value == "Safe"
     assert findings[0].severity.value == "Informational"
     assert findings[0].library == "hmac"
+
+
+def test_binary_and_cert_analyzers_and_new_cipher_fix():
+    from scanner.binary_analyzer import BinaryAnalyzer
+    from scanner.certificate_analyzer import CertificateAnalyzer
+
+    # 1. BinaryAnalyzer test (no TypeError for detection_method)
+    ba = BinaryAnalyzer()
+    dummy_binary_data = b"OpenSSL 1.0.1g 7 Apr 2014 MD5_Init secret_key_literal_123456"
+    b_findings = ba.analyze("/tmp/sample_lib.so", raw_bytes=dummy_binary_data)
+    assert len(b_findings) > 0
+    for f in b_findings:
+        assert f.detection_method == "binary"
+
+    # 2. CertificateAnalyzer test (.pem files)
+    ca = CertificateAnalyzer()
+    pem_key_code = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA1234567890ABCDEF\n-----END RSA PRIVATE KEY-----"
+    c_findings = ca.analyze("/tmp/server.pem", pem_key_code)
+    assert len(c_findings) == 1
+    assert c_findings[0].category == "hardcoded-secret"
+    assert c_findings[0].detection_method == "certificate"
+
+    # 3. PythonAnalyzer test (SHA1.new, SHA256.new, pkcs1_15.new should NOT be labeled as AES)
+    pa = PythonAnalyzer()
+    code = """
+from Crypto.Hash import SHA1, SHA256
+from Crypto.Signature import pkcs1_15
+
+h1 = SHA1.new(b"test")
+h2 = SHA256.new(b"test")
+signer = pkcs1_15.new(key)
+"""
+    py_findings = pa.analyze("/tmp/test_signatures.py", code)
+    aes_findings = [f for f in py_findings if f.algorithm == "AES" or "AES" in f.algorithm]
+    assert len(aes_findings) == 0, f"Expected 0 AES findings for SHA1/SHA256/pkcs1_15.new, got {aes_findings}"
+

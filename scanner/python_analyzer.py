@@ -504,11 +504,13 @@ class PythonAnalyzer:
 
         CIPHER_NAMES = {"DES", "DES3", "TDES", "3DES", "RC2", "RC4", "ARC4", "BLOWFISH", "AES"}
         parts = [p.upper() for p in fname.split(".")]
-        algo = "AES"
+        algo = None
         for p in reversed(parts):
             if p in CIPHER_NAMES:
                 algo = p
                 break
+        if not algo:
+            return out
         if algo == "3DES":
             algo = "DES3"
 

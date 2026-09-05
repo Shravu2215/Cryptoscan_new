@@ -76,7 +76,6 @@ class BinaryAnalyzer:
                         recommendation="Analysis skipped due to size limits.",
                         code_snippet=f"File size: {st.st_size} bytes",
                         confidence=Confidence.CONFIRMED,
-                        detection_method="binary",
                         tags=["binary", "size-limit"],
                     ))
                     return findings
@@ -118,7 +117,6 @@ class BinaryAnalyzer:
                             recommendation="Remove embedded secret token or private key material from compiled binary.",
                             code_snippet=f"Literal string: {s[:6]}***{s[-4:]}",
                             confidence=Confidence.CONFIRMED,
-                            detection_method="binary",
                             tags=["binary", "hardcoded-secret", "entropy"],
                         ))
 
@@ -143,7 +141,6 @@ class BinaryAnalyzer:
                             recommendation=rec,
                             code_snippet=s,
                             confidence=Confidence.CONFIRMED,
-                            detection_method="binary",
                             tags=["binary", "crypto-library"],
                         ))
 
@@ -168,7 +165,6 @@ class BinaryAnalyzer:
                             recommendation=rec,
                             code_snippet=s,
                             confidence=Confidence.CONFIRMED,
-                            detection_method="binary",
                             tags=["binary", "weak-algorithm"],
                         ))
 
