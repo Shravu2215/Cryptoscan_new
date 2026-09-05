@@ -196,11 +196,21 @@ class PythonAnalyzer:
         col = node.col_offset
         snippet = _line_src(source_lines, line)
 
-        # -- hashlib.md5 / hashlib.sha1 / hashlib.new("md5") --------------------
+        # -- Hashlib / Cryptography hashes -------------------------------------
         hash_algo = None
-        if fname in ("hashlib.md5", "md5", "hashlib.sha1", "sha1", "hashlib.sha256", "sha256", "hashlib.sha3_256", "sha3_256", "hashlib.sha512", "sha512"):
+        is_crypto_lib = False
+        fname_lower = fname.lower()
+        if fname in ("hashlib.md5", "md5", "hashlib.sha1", "sha1", "hashlib.sha256", "sha256", "hashlib.sha3_256", "sha3_256", "hashlib.sha512", "sha512", "hashlib.sha384", "sha384"):
             hash_algo = fname.split(".")[-1].replace("sha3_256", "sha3")
-        elif fname == "hashlib.new" and node.args:
+            is_crypto_lib = False
+        elif (fname_lower in ("hashes.md5", "hashes.sha1", "hashes.sha256", "hashes.sha3_256", "hashes.sha512", "hashes.sha384")
+              or fname_lower.startswith("cryptography.hazmat.primitives.hashes.")
+              or fname in ("MD5", "SHA1", "SHA256", "SHA512", "SHA3_256", "SHA384")):
+            last_part = fname.split(".")[-1].lower().replace("sha3_256", "sha3")
+            if last_part in rules.HASH_ALGOS:
+                hash_algo = last_part
+                is_crypto_lib = True
+        elif fname in ("hashlib.new", "new") and node.args:
             lit = _resolve(node.args[0], table)
             if isinstance(lit, ast.Constant) and isinstance(lit.value, str):
                 hash_algo = lit.value.lower()
@@ -208,79 +218,114 @@ class PythonAnalyzer:
         if hash_algo and hash_algo in rules.HASH_ALGOS:
             profile = dict(rules.HASH_ALGOS[hash_algo])
             is_password_ctx = _is_secret_name(snippet) and ("password" in snippet.lower() or "pwd" in snippet.lower() or "passwd" in snippet.lower())
+            lib = "cryptography" if is_crypto_lib else "hashlib"
             
-            # Modern strong hashes (SHA-256, SHA-3, SHA-512) are allowed unless misused as raw password hashes
-            if hash_algo in ("sha256", "sha3", "sha512") and not is_password_ctx:
-                pass
+            if hash_algo in ("sha256", "sha3", "sha512", "sha384") and not is_password_ctx:
+                out.append(self._mk_finding(
+                    file_path, line, col, "python", f"{hash_algo}-hash-safe",
+                    f"{profile['algorithm']} Hash", "hash", profile, snippet,
+                    specificity=1, generic=False, library=lib
+                ))
             else:
                 rule_id = f"{hash_algo}-weak-password-hash" if is_password_ctx else f"{hash_algo}-hashing"
-                out.append(Finding(
-                    file=file_path, line=line, column=col, language="python",
-                    rule_id=rule_id, rule_name=f"{profile['algorithm']} {'weak-password-hash' if is_password_ctx else 'hashing'}",
-                    category="hash", algorithm=profile["algorithm"], severity=profile["severity"],
-                    quantum_risk=profile["quantum_risk"],
-                    message=f"{profile['algorithm']} used{' for password hashing' if is_password_ctx else ''} at line {line}.",
-                    recommendation=profile["recommendation"], code_snippet=snippet,
-                    specificity=3 if is_password_ctx else 2, generic=False,
+                out.append(self._mk_finding(
+                    file_path, line, col, "python", rule_id,
+                    f"{profile['algorithm']} {'weak-password-hash' if is_password_ctx else 'hashing'}",
+                    "hash", profile, snippet, specificity=3 if is_password_ctx else 2, generic=False, library=lib
                 ))
-            return out  # a hashlib call can't also be a cipher/rng call
+            return out
 
-        # -- Crypto.Cipher.<ALGO>.new(...) (pycryptodome) ------------------------
-        # Gate includes every algo name the classical-break branch of
-        # _check_cipher_new recognizes, not just AES/DES/DES3 - otherwise an
-        # aliased or directly-imported RC4/ARC4/Blowfish/RC2/3DES class name
-        # never even reaches the check below.
-        # -- Crypto.Cipher.<ALGO>.new(...) (pycryptodome) ------------------------
+        # -- PyCryptodome Crypto.Cipher.<ALGO>.new(...) ------------------------
         first_p = fname.split(".")[0]
         last_p = fname.split(".")[-1]
         if (fname.endswith(".new") or first_p in ("AES", "DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish", "Crypto", "Cryptodome")
                 or last_p in ("AES", "DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish")):
             out.extend(self._check_cipher_new(node, fname, file_path, table, source_lines))
 
-        # -- cryptography lib hazmat: Cipher(algorithms.X(key), modes.Y()) -------
-        if fname == "Cipher":
+        # -- Cryptography hazmat: Cipher(algorithms.X(key), modes.Y()) ---------
+        if fname in ("Cipher", "ciphers.Cipher") or fname.endswith(".Cipher") or "ciphers.Cipher" in fname:
             out.extend(self._check_hazmat_cipher(node, file_path, table, source_lines))
 
-        # -- cryptography lib: Fernet(key) - flag the construction site only -----
-        if fname == "Fernet":
+        # -- Cryptography Fernet -----------------------------------------------
+        if fname in ("Fernet", "fernet.Fernet") or fname.endswith(".Fernet"):
             out.append(self._mk_finding(file_path, line, col, "python", "fernet-aes128-cbc-hmac",
                                           "Fernet symmetric encryption", "symmetric-cipher",
-                                          rules.FERNET_PROFILE, snippet, specificity=2))
+                                          rules.FERNET_PROFILE, snippet, specificity=2, library="cryptography"))
 
-        # -- Safe builtins & Argon2id & ChaCha20-Poly1305 -------------------------
-        if fname in ("secrets.token_urlsafe", "secrets.randbelow", "secrets.token_bytes", "secrets.choice", "secrets.SystemRandom", "os.urandom", "urandom", "token_urlsafe", "randbelow", "token_bytes") or fname.startswith("secrets.") or fname.startswith("os.urandom"):
+        # -- CSPRNG (secrets, os.urandom) --------------------------------------
+        if fname in ("secrets.token_hex", "token_hex") or fname.endswith(".token_hex"):
+            profile = dict(rules.SECRETS_TOKEN_HEX_PROFILE)
+            out.append(self._mk_finding(file_path, line, col, "python", "secrets-token-hex-csprng",
+                                          "CSPRNG (secrets.token_hex)", "rng", profile, snippet, specificity=1, generic=False, library="secrets"))
+        elif (fname in ("secrets.token_urlsafe", "secrets.randbelow", "secrets.token_bytes", "secrets.choice", "secrets.SystemRandom", "token_urlsafe", "randbelow", "token_bytes")
+              or (fname.startswith("secrets.") and fname not in ("secrets.token_hex", "token_hex"))):
             if not ("random." in fname or fname == "choice"):
                 profile = dict(rules.SAFE_CSPRNG_PROFILE)
                 profile["algorithm"] = f"CSPRNG ({fname})"
                 out.append(self._mk_finding(file_path, line, col, "python", "csprng-safe",
-                                              f"CSPRNG usage ({fname})", "rng", profile, snippet, specificity=1, generic=False))
+                                              f"CSPRNG usage ({fname})", "rng", profile, snippet, specificity=1, generic=False, library="secrets"))
 
-        if fname in ("secrets.token_hex", "token_hex"):
-            profile = dict(rules.SECRETS_TOKEN_HEX_PROFILE)
-            out.append(self._mk_finding(file_path, line, col, "python", "secrets-token-hex-csprng",
-                                          "CSPRNG (secrets.token_hex)", "rng", profile, snippet, specificity=1, generic=False))
+        if fname in ("os.urandom", "urandom") or fname.endswith(".urandom"):
+            profile = dict(rules.SAFE_CSPRNG_PROFILE)
+            profile["algorithm"] = "CSPRNG (os.urandom)"
+            out.append(self._mk_finding(file_path, line, col, "python", "csprng-safe",
+                                          "CSPRNG usage (os.urandom)", "rng", profile, snippet, specificity=1, generic=False, library="os"))
 
+        # -- Constant-time comparison ------------------------------------------
         if fname in ("hmac.compare_digest", "compare_digest") or fname.endswith(".compare_digest"):
             profile = dict(rules.SAFE_COMPARE_PROFILE)
             out.append(self._mk_finding(file_path, line, col, "python", "constant-time-compare-safe",
-                                          "Constant-Time Comparison (hmac.compare_digest)", "comparison", profile, snippet, specificity=1, generic=False))
+                                          "Constant-Time Comparison (hmac.compare_digest)", "comparison", profile, snippet, specificity=1, generic=False, library="hmac"))
 
+        # -- ChaCha20-Poly1305 -------------------------------------------------
         if "chacha20" in fname.lower():
             profile = dict(rules.CHACHA20_POLY1305_PROFILE)
+            lib = "cryptography" if ("cryptography" in fname or "hazmat" in fname) else "pycryptodome"
             out.append(self._mk_finding(file_path, line, col, "python", "chacha20-poly1305-aead",
-                                          "ChaCha20-Poly1305 AEAD", "symmetric-cipher", profile, snippet, specificity=1, generic=False))
+                                          "ChaCha20-Poly1305 AEAD", "symmetric-cipher", profile, snippet, specificity=1, generic=False, library=lib))
 
+        # -- Argon2id ----------------------------------------------------------
         if "argon2" in fname.lower() or fname in ("PasswordHasher", "hash_password", "hash_secret", "ph.hash"):
             profile = dict(rules.ARGON2ID_PROFILE)
             out.append(self._mk_finding(file_path, line, col, "python", "argon2id-kdf",
-                                          "Argon2id Password KDF", "kdf", profile, snippet, specificity=2, generic=False))
+                                          "Argon2id Password KDF", "kdf", profile, snippet, specificity=2, generic=False, library="argon2-cffi"))
 
-        # -- hmac.new(key, msg, hashlib.<weak>) - weak digest used as a MAC ------
-        if fname == "hmac.new":
+        # -- HMAC digest checking ----------------------------------------------
+        if fname in ("hmac.new", "new") and ("hmac" in fname or aliases.get("new", "").startswith("hmac")):
             out.extend(self._check_hmac_digest(node, file_path, table, source_lines, aliases))
 
-        # -- RSA.generate(bits) (pycryptodome) or rsa.newkeys(bits) (rsa) ---------
-        if fname in ("RSA.generate", "rsa.newkeys", "newkeys") or fname.endswith("RSA.generate") or fname.endswith("PublicKey.RSA.generate"):
+        # -- Asymmetric Key Generation: ECDSA vs RSA vs DSA --------------------
+        is_ecdsa_gen = (
+            fname in ("ec.generate_private_key", "asymmetric.ec.generate_private_key")
+            or fname.endswith("ec.generate_private_key")
+            or ("ec." in fname and "generate_private_key" in fname)
+            or ("generate_private_key" in fname and any(k in snippet for k in ("ec.", "SECP", "SECT", "Brainpool", "Curve", "elliptic_curve")))
+        )
+        is_dsa_gen = (
+            fname in ("dsa.generate_private_key", "DSA.generate")
+            or fname.endswith("dsa.generate_private_key")
+            or fname.endswith("DSA.generate")
+        )
+        is_rsa_gen = (
+            fname in ("RSA.generate", "rsa.newkeys", "newkeys", "rsa.generate_private_key")
+            or fname.endswith("RSA.generate") or fname.endswith("PublicKey.RSA.generate")
+            or (fname.endswith("rsa.generate_private_key") and not is_ecdsa_gen)
+            or ("generate_private_key" in fname and not is_ecdsa_gen and not is_dsa_gen and ("key_size" in snippet or "rsa" in snippet.lower() or "RSA" in snippet))
+        )
+
+        if is_ecdsa_gen:
+            curve = "unknown-curve"
+            if node.args and isinstance(node.args[0], ast.Call):
+                curve = _name_of(node.args[0].func).split(".")[-1]
+            elif node.args and isinstance(node.args[0], ast.Attribute):
+                curve = node.args[0].attr
+            elif "SECP256R1" in snippet:
+                curve = "SECP256R1"
+            profile = rules.ecc_profile(curve, purpose="signature")
+            out.append(self._mk_finding(file_path, line, col, "python", "ecdsa-key-generation",
+                                          f"ECDSA key_generation ({curve})", "asymmetric", profile, snippet,
+                                          specificity=2, library="cryptography"))
+        elif is_rsa_gen:
             bits = None
             if node.args:
                 lit = _resolve(node.args[0], table)
@@ -292,35 +337,11 @@ class PythonAnalyzer:
                     if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
                         bits = lit.value
             profile = rules.rsa_profile(bits)
+            lib = "pycryptodome" if ("RSA.generate" in fname or "newkeys" in fname) else "cryptography"
             out.append(self._mk_finding(file_path, line, col, "python", "rsa-key-generation",
                                           "RSA key_generation", "asymmetric", profile, snippet,
-                                          specificity=2, tags=profile.get("tags", [])))
-
-        # -- cryptography lib: rsa.generate_private_key(key_size=X) --------------
-        elif fname in ("rsa.generate_private_key", "generate_private_key") or fname.endswith(".generate_private_key"):
-            bits = None
-            for kw in node.keywords:
-                if kw.arg == "key_size":
-                    lit = _resolve(kw.value, table)
-                    if isinstance(lit, ast.Constant) and isinstance(lit.value, int):
-                        bits = lit.value
-            profile = rules.rsa_profile(bits)
-            out.append(self._mk_finding(file_path, line, col, "python", "rsa-key-generation",
-                                          "RSA key_generation", "asymmetric", profile, snippet,
-                                          specificity=2, tags=profile.get("tags", [])))
-
-        # -- cryptography lib: ec.generate_private_key(ec.SECP256R1()) -----------
-        if fname in ("ec.generate_private_key",):
-            curve = "unknown-curve"
-            if node.args and isinstance(node.args[0], ast.Call):
-                curve = _name_of(node.args[0].func).split(".")[-1]
-            profile = rules.ecc_profile(curve, purpose="signature")
-            out.append(self._mk_finding(file_path, line, col, "python", "ecdsa-key-generation",
-                                          f"ECDSA key_generation ({curve})", "asymmetric", profile, snippet,
-                                          specificity=2))
-
-        # -- DSA key generation (pycryptodome / cryptography) ---------------------
-        if fname in ("dsa.generate_private_key", "DSA.generate"):
+                                          specificity=2, tags=profile.get("tags", []), library=lib))
+        elif is_dsa_gen:
             bits = None
             if node.args:
                 lit = _resolve(node.args[0], table)
@@ -337,11 +358,25 @@ class PythonAnalyzer:
                 quantum_risk=QuantumRisk.QUANTUM_BROKEN,
                 recommendation="DSA is broken by Shor's algorithm and weak when key size < 2048. Migrate to ML-DSA (FIPS 204).",
             )
+            lib = "pycryptodome" if "DSA.generate" in fname else "cryptography"
             out.append(self._mk_finding(file_path, line, col, "python", "dsa-key-generation",
                                           "DSA key_generation", "asymmetric", profile, snippet,
-                                          specificity=2))
+                                          specificity=2, library=lib))
 
-        # -- insecure RNG feeding a security-sensitive value ----------------------
+        # -- Sign / Verify operations ------------------------------------------
+        if fname.endswith(".sign") or fname.endswith(".verify") or fname in ("sign", "verify"):
+            if "PSS" in snippet or "padding.PSS" in snippet or "PKCS1v15" in snippet:
+                profile = rules.rsa_profile(None)
+                out.append(self._mk_finding(file_path, line, col, "python", "rsa-signature-operation",
+                                              "RSA Signature Operation", "asymmetric", profile, snippet,
+                                              specificity=3, library="cryptography"))
+            elif "ECDSA" in snippet or "ec.ECDSA" in snippet:
+                profile = rules.ecc_profile("generic", purpose="signature")
+                out.append(self._mk_finding(file_path, line, col, "python", "ecdsa-signature-operation",
+                                              "ECDSA Signature Operation", "asymmetric", profile, snippet,
+                                              specificity=3, library="cryptography"))
+
+        # -- Insecure RNG feeding security-sensitive value ---------------------
         if fname in ("random.random", "random.randint", "random.choice", "random.getrandbits",
                        "random.randrange", "random.sample", "random.seed",
                        "randint", "choice", "getrandbits", "randrange", "sample", "seed", "random"):
@@ -350,10 +385,7 @@ class PythonAnalyzer:
         return out
 
     def _check_hazmat_cipher(self, node, file_path, table, source_lines) -> List[Finding]:
-        """cryptography lib: Cipher(algorithms.AES(key), modes.ECB()) etc.
-        A structurally different call shape from pycryptodome's `AES.new(...)`
-        - this is a separate composed-object API, so it needs its own check
-        rather than reusing _check_cipher_new."""
+        """cryptography lib: Cipher(algorithms.AES(key), modes.ECB()) etc."""
         out = []
         line, col = node.lineno, node.col_offset
         snippet = _line_src(source_lines, line)
@@ -381,34 +413,29 @@ class PythonAnalyzer:
                 key_bits = blen * 8
 
         if algo.upper() not in ("AES",):
-            # Non-AES hazmat ciphers (TripleDES etc.) - flag via the same
-            # classical-break table used for pycryptodome's DES3/RC4/Blowfish.
             if algo.upper() in ("TRIPLEDES", "3DES", "DES", "BLOWFISH", "ARC4", "RC4"):
                 profile = rules.symmetric_profile(algo, mode or "")
                 out.append(self._mk_finding(file_path, line, col, "python", f"{algo.lower()}-deprecated-cipher",
                                               f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                              specificity=3))
+                                              specificity=3, library="cryptography"))
             return out
 
         profile = rules.symmetric_profile("AES", mode or "", key_bits)
         if mode == "ECB":
             out.append(self._mk_finding(file_path, line, col, "python", "aes-ecb-mode",
                                           f"AES-{key_bits or '?'}-ECB", "symmetric-cipher", profile, snippet,
-                                          specificity=3))
+                                          specificity=3, library="cryptography"))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-missing-aead",
                                           f"AES-{key_bits or '?'}-{mode} missing-aead", "symmetric-cipher",
-                                          profile, snippet, specificity=2, generic=True))
+                                          profile, snippet, specificity=2, generic=True, library="cryptography"))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-aead-mode",
                                           f"AES-{key_bits or '?'}-{mode}", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True))
+                                          specificity=1, generic=True, library="cryptography"))
         return out
 
     def _check_hmac_digest(self, node, file_path, table, source_lines, aliases) -> List[Finding]:
-        """hmac.new(key, msg, hashlib.sha1) / digestmod=hashlib.md5 - the weak
-        hash is passed as a *reference*, not called, so the hashlib.md5/sha1
-        call check above never sees it. Needs its own check."""
         out = []
         line, col = node.lineno, node.col_offset
         snippet = _line_src(source_lines, line)
@@ -427,12 +454,23 @@ class PythonAnalyzer:
 
         if not digest_name or not digest_name.startswith("hashlib."):
             return out
-        algo_key = digest_name.split(".")[-1]
+        algo_key = digest_name.split(".")[-1].lower()
         if algo_key in ("md5", "sha1"):
             profile = dict(rules.HASH_ALGOS[algo_key])
             out.append(self._mk_finding(file_path, line, col, "python", f"{algo_key}-hmac-weak-digest",
                                           f"HMAC-{profile['algorithm']} weak-digest", "hash", profile, snippet,
-                                          specificity=3))
+                                          specificity=3, library="hmac"))
+        elif algo_key in ("sha256", "sha512", "sha3_256", "sha3", "sha384"):
+            raw_prof = rules.HASH_ALGOS.get(algo_key, rules.HASH_ALGOS["sha256"])
+            hmac_profile = dict(
+                algorithm=f"HMAC-{raw_prof['algorithm']}",
+                severity=Severity.INFO,
+                quantum_risk=QuantumRisk.SAFE,
+                recommendation=f"HMAC-{raw_prof['algorithm']} is a secure authenticated hash function."
+            )
+            out.append(self._mk_finding(file_path, line, col, "python", f"hmac-{algo_key}-safe",
+                                          f"HMAC-{raw_prof['algorithm']}", "hash", hmac_profile, snippet,
+                                          specificity=2, generic=False, library="hmac"))
         return out
 
     def _check_cipher_new(self, node, fname, file_path, table, source_lines) -> List[Finding]:
@@ -441,15 +479,10 @@ class PythonAnalyzer:
         snippet = _line_src(source_lines, line)
         algo = fname.split(".")[0]
         if algo in ("Crypto", "Cryptodome"):
-            # e.g. Crypto.Cipher.AES.new -> pull the real algo name out of the dotted path
             dotted = fname.split(".")
             algo = dotted[-2] if len(dotted) >= 2 else "AES"
 
         if algo in ("DES", "DES3", "TDES", "RC2", "RC4", "ARC4", "Blowfish"):
-            # Extract the mode too (if given) purely for a more precise label
-            # (e.g. "DES3-ECB" vs bare "DES3") - severity is CRITICAL either
-            # way since the algorithm itself is broken/deprecated regardless
-            # of mode.
             mode = None
             mode_node = node.args[1] if len(node.args) >= 2 else None
             for kw in node.keywords:
@@ -460,13 +493,12 @@ class PythonAnalyzer:
             profile = rules.symmetric_profile(algo, mode or "")
             out.append(self._mk_finding(file_path, line, col, "python", f"{algo.lower()}-deprecated-cipher",
                                           f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                          specificity=3))
+                                          specificity=3, library="pycryptodome"))
             return out
 
         if algo != "AES":
             return out
 
-        # Determine mode: 2nd positional arg or mode= kwarg, expected form AES.MODE_XXX
         mode = None
         mode_node = None
         if len(node.args) >= 2:
@@ -477,7 +509,6 @@ class PythonAnalyzer:
         if isinstance(mode_node, ast.Attribute) and mode_node.attr.startswith("MODE_"):
             mode = mode_node.attr.replace("MODE_", "")
 
-        # Key: 1st positional arg
         key_bits = None
         key_hardcoded = False
         if node.args:
@@ -488,7 +519,6 @@ class PythonAnalyzer:
                 if isinstance(key_val, ast.Constant):
                     key_hardcoded = True
 
-        # IV: 3rd positional or iv=/nonce= kwarg
         iv_node = node.args[2] if len(node.args) >= 3 else None
         for kw in node.keywords:
             if kw.arg in ("iv", "nonce"):
@@ -506,27 +536,23 @@ class PythonAnalyzer:
         if iv_node is not None and iv_static:
             red_flags.append("static-iv")
 
-        # Hardcoded key -> its own critical, specific finding (independent of mode)
         if key_hardcoded:
             hp = dict(rules.HARDCODED_KEY)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-hardcoded-key",
                                           f"AES-{key_bits}-{mode or '?'} hardcoded-key", "hardcoded-secret",
-                                          hp, snippet, specificity=4))
+                                          hp, snippet, specificity=4, library="pycryptodome"))
 
         if iv_node is not None and iv_static and mode in ("CBC", "CTR", "CFB", "OFB", "GCM"):
             ivp = dict(rules.STATIC_IV)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-static-iv-reuse",
                                           f"AES-{key_bits}-{mode} static-iv-reuse", "symmetric-cipher",
-                                          ivp, snippet, specificity=4))
+                                          ivp, snippet, specificity=4, library="pycryptodome"))
 
         if mode == "ECB":
             out.append(self._mk_finding(file_path, line, col, "python", "aes-ecb-mode",
                                           f"AES-{key_bits}-ECB", "symmetric-cipher", profile, snippet,
-                                          specificity=3))
+                                          specificity=3, library="pycryptodome"))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
-            # Escalate "missing AEAD" only when paired with another concrete red flag.
-            # A correctly-fixed file (fresh IV, no hardcoded key) gets Low/Informational,
-            # not the same Critical rating as a genuinely broken one.
             missing_aead = dict(profile)
             if red_flags:
                 missing_aead["severity"] = Severity.CRITICAL
@@ -536,25 +562,21 @@ class PythonAnalyzer:
                 )
             out.append(self._mk_finding(file_path, line, col, "python", "aes-missing-aead",
                                           f"AES-{key_bits}-{mode} missing-aead", "symmetric-cipher",
-                                          missing_aead, snippet, specificity=2, generic=(not red_flags)))
+                                          missing_aead, snippet, specificity=2, generic=(not red_flags), library="pycryptodome"))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-aead-mode",
                                           f"AES-{key_bits}-{mode}", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True))
+                                          specificity=1, generic=True, library="pycryptodome"))
         else:
-            # unknown/unspecified mode - generic catch-all, lowest specificity so any
-            # more specific finding above on the same call site suppresses this one.
             out.append(self._mk_finding(file_path, line, col, "python", "aes-encryption",
                                           f"AES encryption", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True))
+                                          specificity=1, generic=True, library="pycryptodome"))
         return out
 
     def _check_rng_context(self, node, file_path, source_lines, fname: str = "") -> List[Finding]:
         line, col = node.lineno, node.col_offset
         snippet = _line_src(source_lines, line)
         parent_target = None
-        # Approximate using the source line's assignment target name if this
-        # call is the RHS of a simple `name = random...(...)`.
         if "=" in snippet and not snippet.strip().startswith("if"):
             target = snippet.split("=", 1)[0].strip()
             target = target.split(":")[0].strip()
@@ -563,13 +585,6 @@ class PythonAnalyzer:
 
         is_secret_context = bool(parent_target and _is_secret_name(parent_target))
 
-        # Fall back to the enclosing function's name: catches calls that
-        # aren't a simple `var = random.x(...)` assignment - e.g. used
-        # directly in a `return`, or nested inside a comprehension/another
-        # call like `"".join(random.choice(c) for _ in range(n))` or
-        # `bytes(random.getrandbits(8) for _ in range(32))`. A function named
-        # like `generate_otp(...)` or `..._token(...)` is itself the
-        # security-sensitive-name signal when no local variable name exists.
         if not is_secret_context:
             func_name = _enclosing_func_name(node)
             if func_name and _is_secret_name(func_name):
@@ -587,13 +602,12 @@ class PythonAnalyzer:
                     break
 
         if not is_secret_context and fname in ("random.seed", "seed", "random.getrandbits", "getrandbits", "random.choice", "choice", "random.randint", "randint", "random.random", "random"):
-            # Known random module insecure methods in Python
             is_secret_context = True
 
         if is_secret_context:
             profile = dict(rules.INSECURE_RNG)
             return [self._mk_finding(file_path, line, col, "python", "insecure-rng",
-                                       "random module insecure-rng", "rng", profile, snippet, specificity=3, generic=False)]
+                                       "random module insecure-rng", "rng", profile, snippet, specificity=3, generic=False, library="random")]
         return []
 
     def _check_compare(self, node: ast.Compare, file_path, source_lines) -> Optional[Finding]:
@@ -631,15 +645,16 @@ class PythonAnalyzer:
         profile = dict(rules.TIMING_UNSAFE_COMPARE)
         return self._mk_finding(file_path, line, col, "python", "timing-unsafe-compare",
                                   "Non-constant-time secret comparison", "comparison", profile, snippet,
-                                  specificity=3)
+                                  specificity=3, library="stdlib")
 
     @staticmethod
     def _mk_finding(file_path, line, col, language, rule_id, rule_name, category, profile,
-                     snippet, specificity=1, generic=False, tags=None) -> Finding:
+                     snippet, specificity=1, generic=False, tags=None, library="") -> Finding:
         return Finding(
             file=file_path, line=line, column=col, language=language, rule_id=rule_id,
             rule_name=rule_name, category=category, algorithm=profile["algorithm"],
             severity=profile["severity"], quantum_risk=profile["quantum_risk"],
             message=f"{rule_name} at line {line}.", recommendation=profile["recommendation"],
             code_snippet=snippet, specificity=specificity, generic=generic, tags=tags or [],
+            library=library,
         )

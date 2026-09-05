@@ -30,6 +30,18 @@ def dedup(findings: List[Finding]) -> List[Finding]:
             seen[key] = f
     deduped = list(seen.values())
 
+    # Pass 1b: collapse duplicate findings from the SAME detection layer on the same line with same algorithm and category
+    seen_algo = {}
+    for f in deduped:
+        key = (f.file, f.line, f.detection_method, f.algorithm, f.category)
+        if key not in seen_algo:
+            seen_algo[key] = f
+        else:
+            existing = seen_algo[key]
+            if f.specificity > existing.specificity:
+                seen_algo[key] = f
+    deduped = list(seen_algo.values())
+
     # Pass 2: group by (file, line); drop generic findings if a specific one
     # exists for the same call site / line.
     by_site = {}

@@ -29,6 +29,8 @@ from scanner.sca_correlation import correlate_sca_with_source
 from scanner.suppression import load_suppressions, apply_suppressions
 
 def _infer_library(f) -> str:
+    if getattr(f, "library", None):
+        return f.library
     tags = getattr(f, "tags", []) or []
     if "sca" in tags:
         for t in tags:
@@ -49,12 +51,23 @@ def _infer_library(f) -> str:
     if "k8s" in tags:
         return "kubernetes"
     if f.language == "python":
-        if "pycryptodome" in str(tags) or "aes" in f.rule_id:
+        if "pycryptodome" in str(tags) or "pycryptodome" in f.rule_id:
             return "pycryptodome"
+        if "cryptography" in str(tags) or "cryptography" in f.rule_id:
+            return "cryptography"
+        if "secrets" in f.rule_id:
+            return "secrets"
+        if "os." in f.rule_id:
+            return "os"
+        if "hmac" in f.rule_id:
+            return "hmac"
+        if "random" in f.rule_id:
+            return "random"
         return "hashlib"
     if f.language in ("javascript", "typescript"):
         return "Node Builtin crypto"
     return "Standard Crypto API"
+
 
 
 def _infer_key_size(f):

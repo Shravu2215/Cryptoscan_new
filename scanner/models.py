@@ -78,6 +78,7 @@ class Finding:
     suppression_reason: str = ""
     exposure: str = "internal"        # "external-facing" | "internal"
     version: str = ""
+    library: str = ""
 
     def __post_init__(self):
         if not self.call_site:
@@ -125,4 +126,5 @@ class Finding:
         d["detection_method"] = self.detection_method
         d["exposure"] = self.exposure
         d["version"] = self.version
+        d["library"] = self.library
         return d
