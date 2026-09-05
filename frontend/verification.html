@@ -1248,7 +1248,11 @@ async function startVerification() {
     // Call /scan/:scanId/anchor
     const anchorRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/anchor`, {
       method: 'POST',
-      headers: headers
+      headers: headers,
+      body: JSON.stringify({
+        repoName: activeScan.repoName,
+        findings: activeScan.findings || activeScan.cbom || []
+      })
     }).catch(() => null);
 
     if (anchorRes && anchorRes.ok) {
@@ -1263,9 +1267,15 @@ async function startVerification() {
 
     if (verifyRes && verifyRes.ok) {
       verifyResult = await verifyRes.json().catch(() => null);
-      if (verifyResult && verifyResult.verified !== undefined && verifyResult.txHash && verifyResult.txHash !== '0x') {
-        apiSuccess = true;
-      }
+    }
+
+    const finalTxHash = (verifyResult && verifyResult.txHash) || (anchorResult && anchorResult.txHash);
+    const isVerified = (verifyResult && verifyResult.verified !== false) || (anchorResult && anchorResult.verified !== false);
+
+    if (finalTxHash && finalTxHash !== '0x' && isVerified) {
+      verifyResult = verifyResult || anchorResult;
+      verifyResult.txHash = finalTxHash;
+      apiSuccess = true;
     }
   } catch(e) {
     console.error('API Verification error:', e);
