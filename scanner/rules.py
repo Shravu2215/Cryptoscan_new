@@ -62,20 +62,12 @@ def symmetric_profile(algo: str, mode: str, key_bits: int = None):
 # Asymmetric algorithms - always Quantum-Broken (Shor's algorithm)
 # ---------------------------------------------------------------------------
 def rsa_profile(bits: int):
-    if bits is None:
-        sev = Severity.MEDIUM
-    elif bits < 1024:
-        sev = Severity.CRITICAL
-    elif bits < 2048:
-        sev = Severity.HIGH
-    else:
-        sev = Severity.MEDIUM
     tags = []
     if bits is not None and bits < 2048:
         tags.append("undersized-classical-key")
     return dict(
         algorithm=f"RSA-{bits}" if bits else "RSA",
-        severity=sev,
+        severity=Severity.CRITICAL,
         quantum_risk=QuantumRisk.QUANTUM_BROKEN,
         recommendation=(
             ("Key size is below the classically-safe 2048-bit minimum - raise it immediately. "
@@ -92,7 +84,7 @@ def ecc_profile(curve: str, purpose: str = "signature"):
     algo = f"ECDSA ({curve})" if purpose == "signature" else f"ECDH ({curve})"
     return dict(
         algorithm=algo,
-        severity=Severity.MEDIUM,
+        severity=Severity.CRITICAL,
         quantum_risk=QuantumRisk.QUANTUM_BROKEN,
         recommendation=(
             "Broken by Shor's algorithm regardless of curve size. Migrate signatures to ML-DSA "
@@ -100,6 +92,42 @@ def ecc_profile(curve: str, purpose: str = "signature"):
             "a hybrid classical+PQC construction during transition."
         ),
     )
+
+
+ARGON2ID_PROFILE = dict(
+    algorithm="Argon2id",
+    severity=Severity.INFO,
+    quantum_risk=QuantumRisk.SAFE,
+    recommendation="Argon2id is a memory-hard password hashing algorithm standardized in RFC 9106. Quantum-safe and highly resistant to GPU/ASIC cracking.",
+)
+
+CHACHA20_POLY1305_PROFILE = dict(
+    algorithm="ChaCha20-Poly1305",
+    severity=Severity.INFO,
+    quantum_risk=QuantumRisk.SAFE,
+    recommendation="ChaCha20-Poly1305 is a high-speed authenticated encryption AEAD cipher. Compliant with RFC 8439 and quantum-safe.",
+)
+
+SAFE_CSPRNG_PROFILE = dict(
+    algorithm="CSPRNG",
+    severity=Severity.INFO,
+    quantum_risk=QuantumRisk.SAFE,
+    recommendation="Cryptographically secure pseudo-random number generator (CSPRNG) in use.",
+)
+
+SECRETS_TOKEN_HEX_PROFILE = dict(
+    algorithm="CSPRNG (secrets.token_hex)",
+    severity=Severity.INFO,
+    quantum_risk=QuantumRisk.SAFE,
+    recommendation="secrets.token_hex generates cryptographically secure random hexadecimal tokens. Safe against prediction attacks.",
+)
+
+SAFE_COMPARE_PROFILE = dict(
+    algorithm="Constant-Time Comparison",
+    severity=Severity.INFO,
+    quantum_risk=QuantumRisk.SAFE,
+    recommendation="Constant-time comparison (hmac.compare_digest) in use - safe against timing side-channel attacks.",
+)
 
 
 INSECURE_RNG = dict(
@@ -148,6 +176,7 @@ STATIC_IV = dict(
 SINGLE_SECRET_HINTS = frozenset({
     "secret", "privkey", "password", "passwd", "apikey", "token", "auth",
     "key", "pass", "credential", "cert", "seed", "signature", "sig", "mac", "digest",
+    "nonce", "iv", "otp", "pin", "salt", "rand", "rnd", "bits", "val", "num", "code",
 })
 
 COMPOUND_SECRET_HINTS = (

@@ -72,7 +72,7 @@ def test_rsa_is_single_merged_finding_and_never_safe():
         if expect_high:
             assert rsa_findings[0].severity.rank >= 3  # High or Critical
         else:
-            assert rsa_findings[0].severity.rank <= 2  # Medium at most
+            assert rsa_findings[0].severity.rank == 4  # Critical due to Quantum-Broken risk
 
 
 if __name__ == "__main__":

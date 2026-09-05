@@ -56,20 +56,14 @@ def _infer_library(f) -> str:
 
 def _infer_key_size(f):
     alg = (f.algorithm or "").upper()
-    if "1024" in alg or "1024" in f.rule_id:
-        return 1024
-    if "2048" in alg or "2048" in f.rule_id:
-        return 2048
-    if "4096" in alg or "4096" in f.rule_id:
-        return 4096
-    if "256" in alg:
-        return 256
-    if "128" in alg:
-        return 128
-    if "192" in alg:
-        return 192
-    if "512" in alg:
-        return 512
+    rule_id = getattr(f, "rule_id", "") or ""
+    import re
+    m = re.search(r'\b(8192|4096|3072|2048|1024|512|256|192|128|56|112)\b', alg)
+    if m:
+        return int(m.group(1))
+    m2 = re.search(r'\b(8192|4096|3072|2048|1024|512|256|192|128|56|112)\b', rule_id)
+    if m2:
+        return int(m2.group(1))
     if "DES" in alg and "3DES" not in alg:
         return 56
     if "3DES" in alg:
@@ -111,6 +105,11 @@ def scan_repo(repo_path, scan_id=None):
         for fn in files:
             path = os.path.join(root, fn)
             ext = os.path.splitext(fn)[1].lower()
+
+            # Skip documentation, markdown, and text files
+            if ext in {".md", ".markdown", ".rst", ".doc", ".docx"} or fn.lower().endswith((".md", ".markdown", ".rst")):
+                continue
+
             try:
                 with open(path, "r", encoding="utf-8", errors="ignore") as fh:
                     source = fh.read()
@@ -130,11 +129,9 @@ def scan_repo(repo_path, scan_id=None):
             # 3. Source Code / Regex / Entropy Layers
             if ext == ".py":
                 findings.extend(py.analyze(path, source))
-                findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
             elif ext in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
                 findings.extend(js.analyze(path, source))
-                findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
             elif ext in {".java", ".c", ".cpp", ".cc", ".h", ".hpp", ".cs", ".go", ".php", ".rb", ".rs", ".kt", ".swift", ".sql", ".sh", ".bash", ".pem", ".key", ".crt", ".pfx", ".p12"}:
                 findings.extend(rx.analyze(path, source))

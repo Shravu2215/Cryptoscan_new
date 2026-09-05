@@ -247,5 +247,5 @@ key = RSA.generate(1024)
 """
         findings_1024 = py_analyzer.analyze("rsa_gen.py", code_1024)
         assert len(findings_1024) == 1
-        assert findings_1024[0].severity == Severity.HIGH
+        assert findings_1024[0].severity == Severity.CRITICAL
         assert "undersized-classical-key" in findings_1024[0].tags

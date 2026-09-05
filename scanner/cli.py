@@ -43,12 +43,16 @@ SKIP_DIRS = {"node_modules", ".git", "__pycache__", "venv", ".venv", "dist", "bu
 
 def iter_source_files(root, extensions):
     if os.path.isfile(root):
-        yield root
+        ext = os.path.splitext(root)[1].lower()
+        if ext not in {".md", ".markdown", ".rst"}:
+            yield root
         return
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for fn in filenames:
             ext = os.path.splitext(fn)[1].lower()
+            if ext in {".md", ".markdown", ".rst", ".doc", ".docx"} or fn.lower().endswith((".md", ".markdown", ".rst")):
+                continue
             # Always yield Dockerfiles, .env files, manifests, and configs regardless of extension filter
             if (fn == "Dockerfile" or fn.startswith("Dockerfile.") or fn.startswith(".env")
                     or "package" in fn.lower() or "requirements" in fn.lower() or "pom" in fn.lower()
