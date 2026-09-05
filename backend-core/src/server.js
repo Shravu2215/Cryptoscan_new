@@ -28,7 +28,7 @@ app.use(auditMiddleware);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const { execSync } = require('child_process');
-let commitHash = process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT || '';
+let commitHash = process.env.VERCEL_GIT_COMMIT_SHA || process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '';
 if (!commitHash) {
   try {
     commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
