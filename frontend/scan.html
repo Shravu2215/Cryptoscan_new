@@ -934,7 +934,13 @@
           <!-- STATE 3: SCANNING -->
           <div id="state-scanning" class="hide">
             <div class="card" style="margin-bottom: 24px;">
-              <div class="card-hd" id="scan-hdr">Analyzing Repository...</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div class="card-hd" id="scan-hdr" style="margin-bottom: 0;">Analyzing Repository...</div>
+                <div id="scan-live-timer-badge" style="display: none; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--purple); background: var(--purple-bg); border: 1px solid rgba(139, 92, 246, 0.3); padding: 4px 12px; border-radius: 20px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--purple); display: inline-block; animation: pulse 1s infinite;"></span>
+                  <span id="scan-live-timer-text">Scanning... 0:00</span>
+                </div>
+              </div>
 
               <div class="pipeline">
                 <div class="pipe-step active" id="pipe-1">
@@ -997,13 +1003,19 @@
           <!-- STATE 4: COMPLETED -->
           <div id="state-completed" class="hide">
             <div class="card" style="margin-bottom: 24px; border-top: 4px solid var(--green);">
-              <div class="card-hd" style="display: flex; align-items: center; gap: 8px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  style="width:24px;height:24px;color:var(--green);">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Scan Complete
+              <div class="card-hd" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    style="width:24px;height:24px;color:var(--green);">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Scan Complete
+                </div>
+                <div id="scan-completed-duration-badge" style="display: none; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span id="scan-completed-duration-text">Scan completed in 0s</span>
+                </div>
               </div>
 
               <div class="summary-grid" style="grid-template-columns: repeat(6, 1fr);">
@@ -1164,10 +1176,102 @@
         }
       }
 
+      let liveScanTimerInterval = null;
+      let scanRealStartTime = 0;
+
+      function formatDuration(ms) {
+        const totalSeconds = Math.max(1, Math.round(ms / 1000));
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        if (m === 0) {
+          return `${s}s`;
+        }
+        return `${m}m ${s}s`;
+      }
+
+      function startLiveScanTimer(startTime) {
+        scanRealStartTime = startTime || Date.now();
+        if (liveScanTimerInterval) clearInterval(liveScanTimerInterval);
+        
+        const badge = document.getElementById('scan-live-timer-badge');
+        const text = document.getElementById('scan-live-timer-text');
+        if (badge) badge.style.display = 'inline-flex';
+        
+        const update = () => {
+          const elapsedSec = Math.floor((Date.now() - scanRealStartTime) / 1000);
+          const m = Math.floor(elapsedSec / 60);
+          const s = elapsedSec % 60;
+          if (text) text.textContent = `Scanning... ${m}:${s < 10 ? '0' : ''}${s}`;
+        };
+        update();
+        liveScanTimerInterval = setInterval(update, 200);
+      }
+
+      function stopLiveScanTimer() {
+        if (liveScanTimerInterval) {
+          clearInterval(liveScanTimerInterval);
+          liveScanTimerInterval = null;
+        }
+        const badge = document.getElementById('scan-live-timer-badge');
+        if (badge) badge.style.display = 'none';
+      }
+
+      function saveAndDisplayScanDuration(startTime, endTime, scanId) {
+        const durationMs = Math.max(0, endTime - startTime);
+        const durationSeconds = Math.max(1, Math.round(durationMs / 1000));
+        const durationFormatted = formatDuration(durationMs);
+
+        // Update Scan Complete status indicator badge
+        const badge = document.getElementById('scan-completed-duration-badge');
+        const text = document.getElementById('scan-completed-duration-text');
+        if (badge && text) {
+          text.textContent = `Scan completed in ${durationFormatted}`;
+          badge.style.display = 'inline-flex';
+        }
+
+        // Store per-scan metadata so it can be retrieved without recomputation
+        try {
+          const currentData = CryptoEngine.getData();
+          if (currentData.activeScan) {
+            currentData.activeScan.durationMs = durationMs;
+            currentData.activeScan.durationSeconds = durationSeconds;
+            currentData.activeScan.durationFormatted = durationFormatted;
+            currentData.activeScan.scanStartTime = startTime;
+            currentData.activeScan.scanEndTime = endTime;
+          }
+          if (currentData.scans && currentData.scans.length > 0) {
+            const foundScan = (scanId ? currentData.scans.find(s => s.scanId === scanId) : null) || currentData.scans[0];
+            if (foundScan) {
+              foundScan.durationMs = durationMs;
+              foundScan.durationSeconds = durationSeconds;
+              foundScan.durationFormatted = durationFormatted;
+              foundScan.scanStartTime = startTime;
+              foundScan.scanEndTime = endTime;
+            }
+          }
+          localStorage.setItem('cs_data', JSON.stringify(currentData));
+          if (scanId) {
+            localStorage.setItem('cs_scan_duration_' + scanId, JSON.stringify({
+              scanId,
+              durationMs,
+              durationSeconds,
+              durationFormatted,
+              scanStartTime: startTime,
+              scanEndTime: endTime
+            }));
+          }
+        } catch (e) {
+          console.warn('Could not persist scan duration:', e);
+        }
+      }
+
       function resetScan() {
         selectedFile = null;
         selectedRepoId = null;
         document.getElementById('repo-upload').value = '';
+        stopLiveScanTimer();
+        const durBadge = document.getElementById('scan-completed-duration-badge');
+        if (durBadge) durBadge.style.display = 'none';
         showState('state-idle');
         clearInterval(logInterval);
       }
@@ -1198,6 +1302,8 @@
       }
 
       async function runFallbackClientScan() {
+        const clientScanStart = Date.now();
+        startLiveScanTimer(clientScanStart);
         addLog('Analyzing uploaded repository structure...');
         setPipe(1);
         await new Promise(r => setTimeout(r, 400));
@@ -1319,6 +1425,8 @@
 
         setPipe(8);
         addLog('Scan completed successfully.');
+        const clientScanEnd = Date.now();
+        stopLiveScanTimer();
 
         const repoNameClean = currentRepoName || 'Scanned Repository';
         const mockScanId = 'scan_' + Date.now().toString(36);
@@ -1334,6 +1442,7 @@
           name: repoNameClean
         };
         CryptoEngine.processRealBackendFindings(repoInfo, mockScanId, detectedFindings);
+        saveAndDisplayScanDuration(clientScanStart, clientScanEnd, mockScanId);
 
         populateCompletionState(finalData, detectedFindings);
         setTimeout(() => { showState('state-completed'); }, 800);
@@ -1385,6 +1494,10 @@
             setPipe(2);
           }
 
+          // Real repository processing starts at this exact trigger moment:
+          const scanRealStart = Date.now();
+          startLiveScanTimer(scanRealStart);
+
           addLog('Triggering remote scan analysis...');
           const scanRes = await fetch(`${API_BASE}/scan/${repo.id}`, {
             method: 'POST',
@@ -1425,6 +1538,8 @@
 
           setPipe(8);
           addLog('Scan completed successfully.');
+          const scanRealEnd = Date.now();
+          stopLiveScanTimer();
 
           const allFindings = finalData.findings || [];
           document.getElementById('live-files').textContent = finalData.filesScanned || allFindings.length;
@@ -1435,12 +1550,14 @@
             name: repo.name || currentRepoName || 'Scanned Repository'
           };
           CryptoEngine.processRealBackendFindings(repoInfo, scanData.scanId, allFindings);
+          saveAndDisplayScanDuration(scanRealStart, scanRealEnd, scanData.scanId);
 
           populateCompletionState(finalData, allFindings);
           setTimeout(() => { showState('state-completed'); }, 1000);
 
         } catch (err) {
           console.log('Remote scan status:', err.message);
+          stopLiveScanTimer();
           addLog(`<span style="color:var(--green)">Executing zero-latency client-side cryptographic scan engine...</span>`);
           await runFallbackClientScan();
         }

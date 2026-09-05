@@ -500,6 +500,141 @@ tbody tr:hover { background: var(--bg-card-hover); }
   .explanation-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-sm); padding: 16px; }
   .explanation-box h4 { margin: 0 0 8px 0; font-size: 13px; color: var(--text-h); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
   .explanation-box p { margin: 0; font-size: 13px; color: var(--text-m); line-height: 1.5; }
+
+  /* Mosca Risk Categorization Panel */
+  .mosca-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    margin-bottom: 0;
+  }
+  .mosca-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mosca-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mosca-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mosca-icon svg {
+    width: 22px;
+    height: 22px;
+    color: var(--amber);
+  }
+  .mosca-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-h);
+  }
+  .mosca-sub {
+    font-size: 12px;
+    color: var(--text-m);
+    margin-top: 2px;
+  }
+  .mosca-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .mosca-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--r-md);
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+  }
+  .mosca-card:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+  .mosca-card.active {
+    border-color: var(--card-accent, #38bdf8) !important;
+    box-shadow: 0 0 0 1px var(--card-accent, #38bdf8), 0 8px 24px rgba(0, 0, 0, 0.35);
+    background: var(--card-active-bg, rgba(56, 189, 248, 0.05)) !important;
+  }
+  .mosca-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 12px;
+    align-self: flex-start;
+    margin-bottom: 12px;
+  }
+  .mosca-card-count {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .mosca-card-ttl {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin-bottom: 6px;
+  }
+  .mosca-card-desc {
+    font-size: 12px;
+    color: var(--text-m);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .mosca-card-sub {
+    font-size: 11px;
+    color: var(--text-s);
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+  }
+  .prop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .prop-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .prop-lbl {
+    font-size: 11px;
+    color: var(--text-s);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .prop-val {
+    font-size: 14px;
+    color: var(--text-h);
+    font-weight: 500;
+  }
 </style>
   <link rel="stylesheet" href="assets/css/global.css">
 </head>
@@ -691,6 +826,59 @@ tbody tr:hover { background: var(--bg-card-hover); }
         </div>
       </div>
 
+      <!-- Mosca Risk Categorization Section -->
+      <div class="mosca-panel" id="mosca-panel" style="display:none;">
+        <div class="mosca-hd">
+          <div class="mosca-title-wrap">
+            <div class="mosca-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="mosca-title">Mosca Risk Categorization</div>
+              <div class="mosca-sub">Structured quantum risk categorization using Mosca's Inequality (X + Y vs Z threat horizon). Click a category to filter recommendations below.</div>
+            </div>
+          </div>
+          <div id="mosca-filter-indicator" style="display:none; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:var(--text-m);">Filtered by: <strong id="mosca-active-filter-name" style="color:var(--text-h);">-</strong></span>
+            <button class="btn-sec" style="padding:4px 10px; font-size:11px;" onclick="clearMoscaFilter()">Clear Filter</button>
+          </div>
+        </div>
+        <div class="mosca-grid">
+          <!-- Card 1: Vulnerable Now -->
+          <div class="mosca-card" id="mcard-now" onclick="setMoscaCategoryFilter('VULNERABLE_NOW')" style="--card-accent: var(--red); --card-active-bg: rgba(239, 68, 68, 0.08);">
+            <div class="mosca-card-badge" style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3);">
+              Inequality Met • X + Y &gt; Z
+            </div>
+            <div class="mosca-card-count" id="mc-count-now" style="color:var(--red);">0</div>
+            <div class="mosca-card-ttl">Vulnerable Now</div>
+            <div class="mosca-card-desc">Migration time + data lifetime exceeds the quantum threat horizon. Cryptographic data will remain exposed after CRQC arrival.</div>
+            <div class="mosca-card-sub" id="mc-sub-now">0 components affected</div>
+          </div>
+
+          <!-- Card 2: Vulnerable Within Threat Horizon -->
+          <div class="mosca-card" id="mcard-horizon" onclick="setMoscaCategoryFilter('WITHIN_HORIZON')" style="--card-accent: var(--amber); --card-active-bg: rgba(245, 158, 11, 0.08);">
+            <div class="mosca-card-badge" style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3);">
+              Buffer ≤ 3.0 yrs • Z - (X + Y) ≤ 3y
+            </div>
+            <div class="mosca-card-count" id="mc-count-horizon" style="color:var(--amber);">0</div>
+            <div class="mosca-card-ttl">Vulnerable Within Threat Horizon</div>
+            <div class="mosca-card-desc">Inequality not yet breached, but transition margin is under 3.0 years. Immediate migration planning required before buffer collapses.</div>
+            <div class="mosca-card-sub" id="mc-sub-horizon">0 components affected</div>
+          </div>
+
+          <!-- Card 3: Safe Under Current Timeline -->
+          <div class="mosca-card" id="mcard-safe" onclick="setMoscaCategoryFilter('SAFE_TIMELINE')" style="--card-accent: var(--green); --card-active-bg: rgba(16, 185, 129, 0.08);">
+            <div class="mosca-card-badge" style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3);">
+              Runway &gt; 3.0 yrs • Comfortable Margin
+            </div>
+            <div class="mosca-card-count" id="mc-count-safe" style="color:var(--green);">0</div>
+            <div class="mosca-card-ttl">Safe Under Current Timeline</div>
+            <div class="mosca-card-desc">Sufficient migration buffer exists before CRQC threat. Component can be upgraded in planned software maintenance cycles.</div>
+            <div class="mosca-card-sub" id="mc-sub-safe">0 components affected</div>
+          </div>
+        </div>
+      </div>
+
       <div class="row">
         <!-- Migration Recommendations List -->
         <div class="col col-2">
@@ -778,8 +966,16 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div class="prop-val" id="drw-files-count">0</div>
       </div>
       <div class="prop-item">
+        <div class="prop-lbl">Recommended Mode</div>
+        <div class="prop-val" id="drw-recommended-mode">-</div>
+      </div>
+      <div class="prop-item">
         <div class="prop-lbl">Migration Effort</div>
         <div class="prop-val" id="drw-migration-effort">-</div>
+      </div>
+      <div class="prop-item">
+        <div class="prop-lbl">Cost Impact</div>
+        <div class="prop-val" id="drw-cost-impact">-</div>
       </div>
       <div class="prop-item">
         <div class="prop-lbl">Latency/Size Impact</div>
@@ -795,11 +991,14 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div><strong>Z (Threat Horizon):</strong> <span id="drw-mosca-z">-</span> years</div>
       </div>
       <div style="margin-top:8px; font-size:13px; font-weight:600;" id="drw-mosca-result"></div>
+      <div style="margin-top:6px; font-size:12px;" id="drw-mosca-category"></div>
     </div>
     
     <div class="explanation-box" style="margin-top:16px;">
       <h4>Why Replace It?</h4>
       <p id="drw-rationale">Explanation goes here.</p>
+      <div id="drw-risk-profile-rationale" style="margin-top:12px; padding:10px 14px; background:rgba(255,255,255,0.03); border-left:3px solid var(--amber); border-radius:6px; font-size:12px; line-height:1.5; color:var(--text-h); font-weight:500;">
+      </div>
     </div>
     
     <div style="margin-top:16px;">
@@ -869,6 +1068,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
 <script>
 let allFindings = [];
 let migrationCandidates = [];
+let activeMoscaFilter = null;
 
 function getSeverity(f) { return ((f && f.severity) || 'SAFE').toUpperCase(); }
 function isQuantum(f) {
@@ -897,6 +1097,188 @@ function determineReplacement(algo) {
   if (a.includes('node-forge') || a.includes('crypto-js')) return 'Web Crypto API / Node crypto / @noble/ciphers';
   if (a.includes('pyjwt') || a.includes('jwt')) return 'EdDSA / ES256 with standard claims';
   return 'Modern NIST standard';
+}
+
+// PART 2: Mosca's Algorithm live calculation (reusing exact per-finding logic)
+function computeFindingMosca(f, fileCount = 1) {
+  if (!f) f = {};
+  const isHardcoded = (f.cryptoAgilityScore !== undefined ? f.cryptoAgilityScore < 50 : true);
+  const moscaX = f.hndl && f.hndl.migrationTimeYears ? f.hndl.migrationTimeYears : (fileCount > 5 ? 2 : 1) + (isHardcoded ? 2 : 1);
+  const moscaY = f.dataLifetimeYears || 10;
+  const moscaZ = f.hndl && f.hndl.crqcHorizonYears ? f.hndl.crqcHorizonYears : 7;
+  const isMet = (moscaX + moscaY) > moscaZ;
+  const diff = moscaZ - (moscaX + moscaY);
+
+  // Stated real threshold: Buffer <= 3.0 years before CRQC threat arrival
+  let category = 'SAFE_TIMELINE';
+  let categoryLabel = 'Safe Under Current Timeline';
+  if (isMet) {
+    category = 'VULNERABLE_NOW';
+    categoryLabel = 'Vulnerable Now';
+  } else if (diff <= 3.0) {
+    category = 'WITHIN_HORIZON';
+    categoryLabel = 'Vulnerable Within Threat Horizon';
+  }
+
+  return { moscaX, moscaY, moscaZ, isMet, diff, category, categoryLabel };
+}
+
+// PART 3: Recommended Mode (Hybrid vs Standalone PQC / Direct classical)
+function getRecommendedMode(algo, replacement, purpose) {
+  const a = (algo || '').toLowerCase();
+  const r = (replacement || '').toLowerCase();
+  const p = (purpose || '').toLowerCase();
+  const isPqc = r.includes('ml-kem') || r.includes('ml-dsa') || r.includes('kyber') || r.includes('dilithium') || r.includes('slh-dsa') || r.includes('sphincs');
+  
+  if (!isPqc) {
+    return 'Direct Replacement (Standalone)';
+  }
+  
+  // Digital signature algorithms default to Hybrid ECDSA + ML-DSA
+  if (p.includes('sign') || a.includes('sign') || a.includes('dsa') || a.includes('ecdsa') || r.includes('ml-dsa') || r.includes('slh-dsa')) {
+    return 'Hybrid (ECDSA P-256 + ML-DSA-65)';
+  }
+  
+  // Key encapsulation / Public key encryption defaults to Hybrid X25519 + ML-KEM
+  return 'Hybrid (X25519 + ML-KEM-768)';
+}
+
+// PART 3: Cost Impact evaluation (Low / Medium / High based on key size, dependencies, infrastructure/HSM)
+function computeCostImpact(algo, replacement, purpose) {
+  const a = (algo || '').toLowerCase();
+  const r = (replacement || '').toLowerCase();
+  const p = (purpose || '').toLowerCase();
+
+  // Asymmetric / Quantum-broken swaps to PQC (RSA, ECC, DSA, DH -> ML-KEM, ML-DSA)
+  if (r.includes('ml-kem') || r.includes('ml-dsa') || r.includes('kyber') || r.includes('dilithium') || 
+      a.includes('rsa') || a.includes('ecc') || a.includes('curve') || a.includes('dh') || a.includes('dsa')) {
+    return {
+      level: 'High',
+      badgeClass: 'badge-crit',
+      summary: 'Significant key/signature size increase, new PQC dependencies, KMS/HSM re-provisioning'
+    };
+  }
+
+  // Password hashing or complex tokens (Argon2, EdDSA/ES256 in JWT)
+  if (a.includes('bcrypt') || a.includes('jwt') || r.includes('argon2') || p.includes('password') || p.includes('token')) {
+    return {
+      level: 'Medium',
+      badgeClass: 'badge-med',
+      summary: 'New library installation & memory tuning required; standard KMS compatible'
+    };
+  }
+
+  // Hash swaps (MD5, SHA-1 -> SHA-256) & Symmetric (DES/RC4 -> AES-GCM)
+  return {
+    level: 'Low',
+    badgeClass: 'badge-low',
+    summary: 'Built-in runtime support, zero new dependencies, native hardware acceleration'
+  };
+}
+
+// PART 3: One-line "Why this alternative for this risk profile"
+function getRiskProfileRationale(c, mosca) {
+  const algo = c.algorithm || 'This component';
+  const repl = c.replacement || 'modern alternative';
+  const sev = c.severity || 'HIGH';
+  const cat = mosca.category;
+  
+  if (cat === 'VULNERABLE_NOW') {
+    return `This is Vulnerable Now under Mosca's inequality (X+Y > Z) — prioritize migrating ${algo} to ${repl} immediately before other ${sev}-risk items to prevent post-quantum exposure.`;
+  } else if (cat === 'WITHIN_HORIZON') {
+    return `This is Vulnerable Within Threat Horizon (Z - (X+Y) = ${mosca.diff.toFixed(1)}y buffer remaining) — schedule migration to ${repl} before the migration window collapses.`;
+  } else {
+    return `This is Safe Under Current Timeline (${mosca.diff.toFixed(1)}y runway) — migrate to ${repl} in planned software lifecycle updates after Immediate-priority items.`;
+  }
+}
+
+// Mosca Filter Handlers
+function setMoscaCategoryFilter(cat) {
+  if (activeMoscaFilter === cat) {
+    activeMoscaFilter = null;
+  } else {
+    activeMoscaFilter = cat;
+  }
+  updateMoscaFilterUI();
+  renderRecommendations();
+  renderTimeline();
+}
+
+function clearMoscaFilter() {
+  activeMoscaFilter = null;
+  updateMoscaFilterUI();
+  renderRecommendations();
+  renderTimeline();
+}
+
+function updateMoscaFilterUI() {
+  const cardNow = document.getElementById('mcard-now');
+  const cardHorizon = document.getElementById('mcard-horizon');
+  const cardSafe = document.getElementById('mcard-safe');
+  const ind = document.getElementById('mosca-filter-indicator');
+  const nameEl = document.getElementById('mosca-active-filter-name');
+
+  if (cardNow) cardNow.classList.toggle('active', activeMoscaFilter === 'VULNERABLE_NOW');
+  if (cardHorizon) cardHorizon.classList.toggle('active', activeMoscaFilter === 'WITHIN_HORIZON');
+  if (cardSafe) cardSafe.classList.toggle('active', activeMoscaFilter === 'SAFE_TIMELINE');
+
+  if (ind && nameEl) {
+    if (activeMoscaFilter) {
+      ind.style.display = 'inline-flex';
+      const labels = {
+        'VULNERABLE_NOW': 'Vulnerable Now',
+        'WITHIN_HORIZON': 'Vulnerable Within Threat Horizon',
+        'SAFE_TIMELINE': 'Safe Under Current Timeline'
+      };
+      nameEl.textContent = labels[activeMoscaFilter] || activeMoscaFilter;
+    } else {
+      ind.style.display = 'none';
+    }
+  }
+}
+
+function updateMoscaCategorizationPanel() {
+  const panel = document.getElementById('mosca-panel');
+  if (!panel) return;
+  if (allFindings.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  let findingsNow = 0, findingsHorizon = 0, findingsSafe = 0;
+  allFindings.forEach(f => {
+    const m = computeFindingMosca(f, 1);
+    if (m.category === 'VULNERABLE_NOW') findingsNow++;
+    else if (m.category === 'WITHIN_HORIZON') findingsHorizon++;
+    else findingsSafe++;
+  });
+
+  let candNow = 0, candHorizon = 0, candSafe = 0;
+  migrationCandidates.forEach(c => {
+    const m = computeFindingMosca(c.rawFinding, c.fileCount);
+    c.mosca = m;
+    if (m.category === 'VULNERABLE_NOW') candNow++;
+    else if (m.category === 'WITHIN_HORIZON') candHorizon++;
+    else candSafe++;
+  });
+
+  const countNowEl = document.getElementById('mc-count-now');
+  const subNowEl = document.getElementById('mc-sub-now');
+  if (countNowEl) countNowEl.textContent = findingsNow;
+  if (subNowEl) subNowEl.textContent = `${candNow} component${candNow === 1 ? '' : 's'} affected (${findingsNow} total finding${findingsNow === 1 ? '' : 's'})`;
+
+  const countHorEl = document.getElementById('mc-count-horizon');
+  const subHorEl = document.getElementById('mc-sub-horizon');
+  if (countHorEl) countHorEl.textContent = findingsHorizon;
+  if (subHorEl) subHorEl.textContent = `${candHorizon} component${candHorizon === 1 ? '' : 's'} affected (${findingsHorizon} total finding${findingsHorizon === 1 ? '' : 's'})`;
+
+  const countSafeEl = document.getElementById('mc-count-safe');
+  const subSafeEl = document.getElementById('mc-sub-safe');
+  if (countSafeEl) countSafeEl.textContent = findingsSafe;
+  if (subSafeEl) subSafeEl.textContent = `${candSafe} component${candSafe === 1 ? '' : 's'} affected (${findingsSafe} total finding${findingsSafe === 1 ? '' : 's'})`;
+
+  updateMoscaFilterUI();
 }
 
 function init() {
@@ -1034,6 +1416,7 @@ function init() {
   renderRecommendations();
   renderTimeline();
   computeHndlAndAgility();
+  updateMoscaCategorizationPanel();
   
   // Auto-open drawer if ?algo= param is passed
   const urlAlgo = new URLSearchParams(window.location.search).get('algo');
@@ -1179,8 +1562,36 @@ function computeHndlAndAgility() {
 
 function renderRecommendations() {
   const container = document.getElementById('recommendations-list');
-  container.innerHTML = migrationCandidates.map((c, idx) => {
+  let candidatesToRender = migrationCandidates;
+  if (activeMoscaFilter) {
+    candidatesToRender = migrationCandidates.filter(c => {
+      const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+      return m.category === activeMoscaFilter;
+    });
+  }
+
+  if (candidatesToRender.length === 0) {
+    const filterLabels = {
+      'VULNERABLE_NOW': 'Vulnerable Now',
+      'WITHIN_HORIZON': 'Vulnerable Within Threat Horizon',
+      'SAFE_TIMELINE': 'Safe Under Current Timeline'
+    };
+    const curLabel = filterLabels[activeMoscaFilter] || 'selected';
+    container.innerHTML = `
+      <div class="empty-state" style="padding:48px 24px; background:var(--bg-card); border-radius:16px; border:1px solid var(--border-color); text-align:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;color:var(--text-s);margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="font-size:15px; font-weight:600; color:var(--text-h);">No recommendations in "${curLabel}"</div>
+        <div class="empty-msg" style="margin-top:4px;">None of the detected components fall into this specific Mosca category.</div>
+        <button class="btn-sec" style="margin-top:16px;" onclick="clearMoscaFilter()">View All Recommendations</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = candidatesToRender.map((c, idx) => {
     const priorityLabel = c.priority === 1 ? 'Priority 1 • Action Needed' : c.priority === 2 ? 'Priority 2 • High Priority' : 'Priority 3 • Standard Upgrade';
+    const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+    const mBadgeClass = m.category === 'VULNERABLE_NOW' ? 'badge-crit' : (m.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
     
     return `
       <div class="rec-card p${c.priority}">
@@ -1190,6 +1601,7 @@ function renderRecommendations() {
             <div class="rec-purpose">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--text-s);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               ${c.purpose}
+              <span class="badge ${mBadgeClass}" style="margin-left:8px; font-size:10px;">${m.categoryLabel}</span>
             </div>
           </div>
           <div class="rec-priority-badge p${c.priority}">${priorityLabel}</div>
@@ -1248,8 +1660,8 @@ function renderRecommendations() {
       const rawIdx = this.getAttribute('data-idx');
       if (rawIdx === null || rawIdx === undefined) return;
       const idx = parseInt(rawIdx, 10);
-      if (isNaN(idx) || idx < 0 || idx >= migrationCandidates.length) return;
-      const c = migrationCandidates[idx];
+      if (isNaN(idx) || idx < 0 || idx >= candidatesToRender.length) return;
+      const c = candidatesToRender[idx];
       openDrawerObj(c);
     });
   });
@@ -1257,9 +1669,20 @@ function renderRecommendations() {
 
 function renderTimeline() {
   const container = document.getElementById('migration-timeline');
-  container.innerHTML = migrationCandidates.map((c, i) => {
+  let candidatesToRender = migrationCandidates;
+  if (activeMoscaFilter) {
+    candidatesToRender = migrationCandidates.filter(c => {
+      const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+      return m.category === activeMoscaFilter;
+    });
+  }
+  if (candidatesToRender.length === 0) {
+    container.innerHTML = `<div style="padding:16px; font-size:12px; color:var(--text-m); text-align:center;">No items matching filter.</div>`;
+    return;
+  }
+  container.innerHTML = candidatesToRender.map((c, i) => {
     let depStr = '';
-    if (i > 0 && c.priority > migrationCandidates[i-1].priority) {
+    if (i > 0 && c.priority > candidatesToRender[i-1].priority) {
       depStr = `<div class="tl-dep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:12px;height:12px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Depends on prior step</div>`;
     }
     
@@ -1306,22 +1729,46 @@ function openDrawerObj(c) {
   document.getElementById('drw-files-count').textContent = fileCount;
   document.getElementById('drw-rationale').textContent = c.rationale || 'Component is considered insecure or vulnerable to quantum attacks.';
   
-  // Task 1: Mosca's Inequality and Task 8: Migration Impact
-  const f = c.rawFinding || {};
-  const isHardcoded = (f.cryptoAgilityScore !== undefined ? f.cryptoAgilityScore < 50 : true);
-  const moscaX = f.hndl && f.hndl.migrationTimeYears ? f.hndl.migrationTimeYears : (fileCount > 5 ? 2 : 1) + (isHardcoded ? 2 : 1);
-  const moscaY = f.dataLifetimeYears || 10;
-  const moscaZ = f.hndl && f.hndl.crqcHorizonYears ? f.hndl.crqcHorizonYears : 7;
-  const isMet = (moscaX + moscaY) > moscaZ;
-  
-  document.getElementById('drw-mosca-x').textContent = moscaX;
-  document.getElementById('drw-mosca-y').textContent = moscaY;
-  document.getElementById('drw-mosca-z').textContent = moscaZ;
+  // Part 2: Mosca's Inequality live calculation (exact same as page panel)
+  const mosca = computeFindingMosca(c.rawFinding, fileCount);
+  document.getElementById('drw-mosca-x').textContent = mosca.moscaX;
+  document.getElementById('drw-mosca-y').textContent = mosca.moscaY;
+  document.getElementById('drw-mosca-z').textContent = mosca.moscaZ;
   const resEl = document.getElementById('drw-mosca-result');
-  resEl.textContent = isMet ? "🚨 Inequality Met: Data will be vulnerable before migration completes!" : "✅ Safe: Migration can complete before threat horizon.";
-  resEl.style.color = isMet ? "var(--red)" : "var(--green)";
+  resEl.textContent = mosca.isMet ? "🚨 Inequality Met: Data will be vulnerable before migration completes!" : "✅ Safe: Migration can complete before threat horizon.";
+  resEl.style.color = mosca.isMet ? "var(--red)" : "var(--green)";
   
-  const migrationEffort = (f.cryptoAgilityScore < 40) ? 'High' : (f.cryptoAgilityScore < 80 ? 'Medium' : 'Low');
+  const catEl = document.getElementById('drw-mosca-category');
+  if (catEl) {
+    const catBadgeClass = mosca.category === 'VULNERABLE_NOW' ? 'badge-crit' : (mosca.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
+    catEl.innerHTML = `<span style="color:var(--text-s); font-weight:600;">MOSCA STATUS:</span> <span class="badge ${catBadgeClass}" style="margin-left:6px;">${mosca.categoryLabel}</span> <span style="margin-left:6px; color:var(--text-s);">(${mosca.diff < 0 ? 'Exceeded by ' + Math.abs(mosca.diff).toFixed(1) + 'y' : mosca.diff.toFixed(1) + 'y runway'})</span>`;
+  }
+
+  // Part 3: Recommended Mode
+  const recMode = getRecommendedMode(c.algorithm, c.replacement, c.purpose);
+  const recModeEl = document.getElementById('drw-recommended-mode');
+  if (recModeEl) {
+    const isHybrid = recMode.startsWith('Hybrid');
+    recModeEl.innerHTML = `<span class="badge ${isHybrid ? 'badge-quant' : 'badge-safe'}" style="font-weight:600;">${recMode}</span>`;
+  }
+
+  // Part 3: Cost Impact
+  const costImpact = computeCostImpact(c.algorithm, c.replacement, c.purpose);
+  const costEl = document.getElementById('drw-cost-impact');
+  if (costEl) {
+    costEl.innerHTML = `<span class="badge ${costImpact.badgeClass}" style="font-weight:600;">${costImpact.level}</span><span style="font-size:11px; color:var(--text-s); display:block; margin-top:2px;">${costImpact.summary}</span>`;
+  }
+
+  // Part 3: One-line Why this alternative for this risk profile
+  const riskProfileRationale = getRiskProfileRationale(c, mosca);
+  const rprEl = document.getElementById('drw-risk-profile-rationale');
+  if (rprEl) {
+    const borderColor = mosca.category === 'VULNERABLE_NOW' ? 'var(--red)' : (mosca.category === 'WITHIN_HORIZON' ? 'var(--amber)' : 'var(--green)');
+    rprEl.style.borderLeftColor = borderColor;
+    rprEl.innerHTML = `<span style="color:${borderColor}; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px; display:block; margin-bottom:4px;">Risk Profile Rationale</span>${riskProfileRationale}`;
+  }
+
+  const migrationEffort = (c.rawFinding && c.rawFinding.cryptoAgilityScore < 40) ? 'High' : (c.rawFinding && c.rawFinding.cryptoAgilityScore < 80 ? 'Medium' : 'Low');
   const latencyImpact = (c.purpose === 'digital_signature' && (c.algorithm.includes('RSA') || c.algorithm.includes('EC'))) ? 'High' : (c.purpose === 'key_exchange' ? 'Medium' : 'Low');
   document.getElementById('drw-migration-effort').textContent = migrationEffort;
   document.getElementById('drw-latency-impact').textContent = latencyImpact;

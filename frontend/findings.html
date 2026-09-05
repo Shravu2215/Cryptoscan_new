@@ -975,6 +975,13 @@
       border-color: rgba(245, 101, 101, 0.2);
     }
 
+    .badge-not-tagged {
+      background: rgba(148, 163, 184, 0.06);
+      color: var(--text-s);
+      border: 1px dashed var(--border-color);
+      font-style: italic;
+    }
+
     .badge-safe {
       background: rgba(16, 185, 129, 0.1);
       color: var(--green);
@@ -1338,6 +1345,32 @@
                   <option value="MEDIUM">Medium</option>
                   <option value="LOW">Low</option>
                 </select>
+                <select id="filter-type" class="filter-sel" onchange="handleFilterChange()">
+                  <option value="ALL">All Types</option>
+                  <option value="Asymmetric Key">Asymmetric Key</option>
+                  <option value="Symmetric Cipher">Symmetric Cipher</option>
+                  <option value="Cryptographic Hash">Cryptographic Hash</option>
+                  <option value="Key Derivation">Key Derivation</option>
+                  <option value="MAC / HMAC">MAC / HMAC</option>
+                  <option value="Secret Material">Secret Material</option>
+                  <option value="Protocol / TLS">Protocol / TLS</option>
+                  <option value="PRNG / Entropy">PRNG / Entropy</option>
+                </select>
+                <select id="filter-lifetime" class="filter-sel" onchange="handleFilterChange()">
+                  <option value="ALL">All Lifetimes</option>
+                  <option value="Permanent">Permanent (10+ yrs)</option>
+                  <option value="Long-term">Long-term (3-10 yrs)</option>
+                  <option value="Medium-term">Medium-term (1-3 yrs)</option>
+                  <option value="Short-term">Short-term (&lt;1 yr / Ephemeral)</option>
+                </select>
+                <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
+                  <option value="ALL">All Business Criticality</option>
+                  <option value="Critical">Critical (Tier 1)</option>
+                  <option value="Important">Important (Tier 2)</option>
+                  <option value="Standard">Standard (Tier 3)</option>
+                  <option value="Low">Low (Tier 4)</option>
+                  <option value="Not tagged">Not tagged</option>
+                </select>
                 <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
                   <option value="ALL">All Exposure</option>
                   <option value="external-facing">External-Facing</option>
@@ -1356,11 +1389,14 @@
                     <tr>
                       <th>Risk</th>
                       <th>Algorithm</th>
+                      <th>Type</th>
                       <th>Exposure</th>
                       <th>Detection</th>
                       <th>Confidence</th>
                       <th>Quantum Status</th>
                       <th>Purpose</th>
+                      <th>Lifetime</th>
+                      <th>Business Criticality</th>
                       <th>File</th>
                       <th>Line</th>
                       <th>Action</th>
@@ -1466,12 +1502,24 @@
 
       <div class="prop-grid">
         <div class="prop-item">
+          <div class="prop-lbl">Artefact Type</div>
+          <div class="prop-val" id="drw-type">-</div>
+        </div>
+        <div class="prop-item">
           <div class="prop-lbl">Exposure</div>
           <div class="prop-val" id="drw-exposure">-</div>
         </div>
         <div class="prop-item">
           <div class="prop-lbl">Data Sensitivity</div>
           <div class="prop-val" id="drw-sensitivity">-</div>
+        </div>
+        <div class="prop-item">
+          <div class="prop-lbl">Lifetime</div>
+          <div class="prop-val" id="drw-lifetime">-</div>
+        </div>
+        <div class="prop-item">
+          <div class="prop-lbl">Business Criticality</div>
+          <div class="prop-val" id="drw-criticality">-</div>
         </div>
         <div class="prop-item">
           <div class="prop-lbl">Purpose</div>
@@ -1567,10 +1615,22 @@
 
       const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
       const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+      const repoCritMap = {};
+      (data.repositories || []).forEach(r => {
+        if (r.id && r.businessCriticality) repoCritMap[r.id] = r.businessCriticality;
+        if (r.name && r.businessCriticality) repoCritMap[r.name] = r.businessCriticality;
+      });
+      (data.scans || []).forEach(s => {
+        if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality;
+        if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality;
+      });
+
       allFindings = targetScans.flatMap(s => {
         return (s.findings || []).map(f => ({
           ...f,
-          repoName: s.repoName
+          repoName: s.repoName,
+          repoId: s.repoId,
+          businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || null
         }));
       });
 
@@ -1643,6 +1703,95 @@
       if (sev === 'HIGH') return 'badge-high';
       if (sev === 'MEDIUM') return 'badge-med';
       return 'badge-low';
+    }
+
+    function getArtefactType(f) {
+      if (!f) return 'Cryptographic Asset';
+      if (f.type && f.type !== 'Asset') return f.type;
+      
+      const algo = (f.algorithm || f.title || '').toUpperCase();
+      const usage = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
+
+      if (algo.includes('RSA') || algo.includes('ECDSA') || algo.includes('ECDH') || algo.includes('ECC') || algo.includes('CURVE25519') || algo.includes('ED25519') || algo.includes('DSA') || algo.includes('ASYMMETRIC') || usage.includes('ASYMMETRIC') || usage.includes('PUBLIC KEY') || usage.includes('KEY PAIR')) {
+        return 'Asymmetric Key';
+      }
+      if (algo.includes('AES') || algo.includes('DES') || algo.includes('BLOWFISH') || algo.includes('RC4') || algo.includes('CHACHA') || algo.includes('SYMMETRIC') || usage.includes('SYMMETRIC') || usage.includes('BLOCK CIPHER') || usage.includes('STREAM CIPHER')) {
+        return 'Symmetric Cipher';
+      }
+      if (algo.includes('SHA') || algo.includes('MD5') || algo.includes('HASH') || algo.includes('DIGEST') || usage.includes('HASH') || usage.includes('DIGEST')) {
+        return 'Cryptographic Hash';
+      }
+      if (algo.includes('PBKDF') || algo.includes('BCRYPT') || algo.includes('ARGON') || algo.includes('SCRYPT') || algo.includes('KDF') || usage.includes('PASSWORD') || usage.includes('DERIVATION')) {
+        return 'Key Derivation';
+      }
+      if (algo.includes('HMAC') || algo.includes('MAC') || usage.includes('AUTHENTICATION CODE')) {
+        return 'MAC / HMAC';
+      }
+      if (algo.includes('SECRET') || algo.includes('KEY MATERIAL') || algo.includes('PRIVATE KEY') || usage.includes('SECRET') || usage.includes('CREDENTIAL')) {
+        return 'Secret Material';
+      }
+      if (algo.includes('TLS') || algo.includes('SSL') || usage.includes('TRANSPORT') || usage.includes('CERTIFICATE')) {
+        return 'Protocol / TLS';
+      }
+      if (algo.includes('PRNG') || algo.includes('RANDOM') || usage.includes('RANDOM')) {
+        return 'PRNG / Entropy';
+      }
+      return 'Cryptographic Asset';
+    }
+
+    function getArtefactLifetime(f) {
+      if (!f) return 'Medium-term';
+      if (f.lifetime) return f.lifetime;
+      const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '') + ' ' + (f.title || '')).toUpperCase();
+      const file = (f.file || f.filePath || '').toLowerCase();
+      
+      // Permanent / Sovereign / Root / Master keys / Health records
+      if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || file.includes('ca-') || file.includes('master')) {
+        return 'Permanent';
+      }
+      // Long-term: PII, Financial / Payment records, customer data, biometric credentials
+      if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || sens.includes('CREDENTIAL') || file.includes('auth') || file.includes('user')) {
+        return 'Long-term';
+      }
+      // Short-term: Ephemeral tokens, session keys, transient TLS sessions, caches, nonces
+      if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || sens.includes('TOKEN') || file.includes('session') || file.includes('cache') || file.includes('temp')) {
+        return 'Short-term';
+      }
+      if (f.dataLifetimeYears) {
+        if (f.dataLifetimeYears > 20) return 'Permanent';
+        if (f.dataLifetimeYears >= 10) return 'Long-term';
+        if (f.dataLifetimeYears <= 1) return 'Short-term';
+        return 'Medium-term';
+      }
+      return 'Medium-term';
+    }
+
+    function getBusinessCriticality(f) {
+      if (!f) return 'Not tagged';
+      const raw = f.businessCriticality || f.repoCriticality || null;
+      if (!raw || raw === 'NOT TAGGED' || raw === 'UNKNOWN' || raw === 'NONE') return 'Not tagged';
+      const u = String(raw).toUpperCase().trim();
+      if (u === 'CRITICAL' || u === 'TIER 1') return 'Critical';
+      if (u === 'HIGH' || u === 'IMPORTANT' || u === 'TIER 2') return 'Important';
+      if (u === 'MEDIUM' || u === 'STANDARD' || u === 'TIER 3') return 'Standard';
+      if (u === 'LOW' || u === 'TIER 4') return 'Low';
+      return u;
+    }
+
+    function getLifetimeBadgeClass(lt) {
+      if (!lt) return 'badge-ast';
+      if (lt.includes('Permanent')) return 'badge-quant';
+      if (lt.includes('Long-term')) return 'badge-high';
+      if (lt.includes('Short-term')) return 'badge-safe';
+      return 'badge-ast';
+    }
+
+    function getCritBadgeClass(crit) {
+      if (crit === 'Critical') return 'badge-crit';
+      if (crit === 'Important') return 'badge-high';
+      if (crit === 'Standard') return 'badge-med';
+      if (crit === 'Low') return 'badge-low';
+      return 'badge-not-tagged';
     }
     function getConfBadgeClass(conf) {
       if (conf === 'Confirmed') return 'badge-conf';
@@ -1733,6 +1882,9 @@
     function handleFilterChange() {
       const search = document.getElementById('filter-search').value.toLowerCase();
       const risk = document.getElementById('filter-risk').value;
+      const type = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'ALL';
+      const lifetime = document.getElementById('filter-lifetime') ? document.getElementById('filter-lifetime').value : 'ALL';
+      const criticality = document.getElementById('filter-criticality') ? document.getElementById('filter-criticality').value : 'ALL';
       const exposure = document.getElementById('filter-exposure') ? document.getElementById('filter-exposure').value : 'ALL';
       const algo = document.getElementById('filter-algo').value;
 
@@ -1747,37 +1899,61 @@
         const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
         const matchAlgo = algo === 'ALL' || fAlgo === algo;
 
-        return matchSearch && matchRisk && matchExposure && matchAlgo;
+        const fType = getArtefactType(f);
+        const matchType = type === 'ALL' || fType === type;
+
+        const fLifetime = getArtefactLifetime(f);
+        const matchLifetime = lifetime === 'ALL' || fLifetime === lifetime;
+
+        const fCrit = getBusinessCriticality(f);
+        const matchCriticality = criticality === 'ALL' || fCrit === criticality;
+
+        return matchSearch && matchRisk && matchType && matchLifetime && matchCriticality && matchExposure && matchAlgo;
       });
 
       currentPage = 1;
       updateSummaryStats();
-      renderChips(search, risk, exposure, algo);
+      renderChips(search, risk, type, lifetime, criticality, exposure, algo);
       renderTable();
     }
 
     function clearFilters() {
       document.getElementById('filter-search').value = '';
       document.getElementById('filter-risk').value = 'ALL';
+      if (document.getElementById('filter-type')) document.getElementById('filter-type').value = 'ALL';
+      if (document.getElementById('filter-lifetime')) document.getElementById('filter-lifetime').value = 'ALL';
+      if (document.getElementById('filter-criticality')) document.getElementById('filter-criticality').value = 'ALL';
       if (document.getElementById('filter-exposure')) document.getElementById('filter-exposure').value = 'ALL';
       document.getElementById('filter-algo').value = 'ALL';
       handleFilterChange();
     }
 
-    function renderChips(search, risk, exposure, algo) {
+    function renderChips(search, risk, type, lifetime, criticality, exposure, algo) {
       const container = document.getElementById('chips-container');
       container.innerHTML = '';
       let active = false;
 
-      if (risk !== 'ALL') {
+      if (risk && risk !== 'ALL') {
         active = true;
         container.innerHTML += `<div class="filter-chip"><span>Risk:</span> ${risk} <button onclick="document.getElementById('filter-risk').value='ALL';handleFilterChange()">×</button></div>`;
+      }
+      if (type && type !== 'ALL') {
+        active = true;
+        container.innerHTML += `<div class="filter-chip"><span>Type:</span> ${type} <button onclick="document.getElementById('filter-type').value='ALL';handleFilterChange()">×</button></div>`;
+      }
+      if (lifetime && lifetime !== 'ALL') {
+        active = true;
+        container.innerHTML += `<div class="filter-chip"><span>Lifetime:</span> ${lifetime} <button onclick="document.getElementById('filter-lifetime').value='ALL';handleFilterChange()">×</button></div>`;
+      }
+      if (criticality && criticality !== 'ALL') {
+        active = true;
+        container.innerHTML += `<div class="filter-chip"><span>Criticality:</span> ${criticality} <button onclick="document.getElementById('filter-criticality').value='ALL';handleFilterChange()">×</button></div>`;
       }
       if (exposure && exposure !== 'ALL') {
         active = true;
         container.innerHTML += `<div class="filter-chip"><span>Exposure:</span> ${exposure} <button onclick="document.getElementById('filter-exposure').value='ALL';handleFilterChange()">×</button></div>`;
       }
-      if (algo !== 'ALL') {
+      if (algo && algo !== 'ALL') {
         active = true;
         container.innerHTML += `<div class="filter-chip"><span>Algo:</span> ${algo} <button onclick="document.getElementById('filter-algo').value='ALL';handleFilterChange()">×</button></div>`;
       }
@@ -1842,15 +2018,22 @@
         const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
         const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
 
+        const type = getArtefactType(f);
+        const lifetime = getArtefactLifetime(f);
+        const bizCrit = getBusinessCriticality(f);
+
         return `
       <tr class="finding-row" style="cursor:pointer;" data-index="${i}">
         <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
+        <td><span class="badge badge-ast" style="font-size:11px;">${type}</span></td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
         <td><span class="badge ${detClass}">${detLabel}</span></td>
         <td><span class="badge ${confClass}">${conf}</span></td>
         <td><span class="badge ${qClass}">${quant}</span></td>
         <td>${purpose}</td>
+        <td><span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span></td>
+        <td><span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit}</span></td>
         <td><span class="code-font" style="color:var(--text-m);">${f.file || 'unknown'}</span></td>
         <td><span class="code-font" style="color:var(--text-m);">${f.line || '?'}</span></td>
         <td>
@@ -1892,6 +2075,12 @@
       b.className = 'badge ' + getBadgeClass(sev);
       b.textContent = sev;
 
+      const type = getArtefactType(f);
+      const drwTypeEl = document.getElementById('drw-type');
+      if (drwTypeEl) {
+        drwTypeEl.innerHTML = `<span class="badge badge-ast">${type}</span>`;
+      }
+
       const exp = f.exposure || 'internal';
       const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
       const expLabel = exp === 'external-facing' ? 'External-Facing' : 'Internal';
@@ -1900,6 +2089,17 @@
       const sens = f.dataSensitivity || 'GENERAL';
       const sensColor = sens === 'HEALTH' || sens === 'PII' ? 'var(--red)' : (sens === 'FINANCIAL' ? 'var(--amber)' : 'var(--text-h)');
       document.getElementById('drw-sensitivity').innerHTML = `<span style="font-weight:600; color:${sensColor}">${sens}</span>`;
+
+      const lifetime = getArtefactLifetime(f);
+      const bizCrit = getBusinessCriticality(f);
+      const ltEl = document.getElementById('drw-lifetime');
+      if (ltEl) {
+        ltEl.innerHTML = `<span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span>`;
+      }
+      const critEl = document.getElementById('drw-criticality');
+      if (critEl) {
+        critEl.innerHTML = `<span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit}</span>`;
+      }
 
       document.getElementById('drw-purpose').textContent = f.usage || f.category || '-';
       document.getElementById('drw-lib').textContent = f.library || f.category || 'Standard';
