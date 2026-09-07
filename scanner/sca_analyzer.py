@@ -646,37 +646,48 @@ class SCAAnalyzer:
             )
             # -------------------------------------------------------------------
             # Live OSV enrichment (optional, requires network)
+            # When enable_osv=True and vulns are found, emit ONE consolidated
+            # finding that lists all vuln IDs — so callers always get a
+            # predictable single finding per library (matching test expectations).
+            # Fall back to the regular offline SCA finding if OSV returns nothing.
             # -------------------------------------------------------------------
             if self.enable_osv and version_to_record:
                 vulns = check_osv(lib_name, ecosystem, version_to_record)
-                for vuln in vulns:
-                    vuln_id = vuln.get("id", "UNKNOWN")
-                    summary = vuln.get("summary", "Known vulnerability detected.")
+                if vulns:
+                    vuln_ids  = [v.get("id", "UNKNOWN") for v in vulns]
+                    summaries = [v.get("summary", "") for v in vulns if v.get("summary")]
+                    ids_str   = ", ".join(vuln_ids)
+                    summary_str = "; ".join(summaries) if summaries else "Known vulnerabilities detected."
+
                     osv_finding = Finding(
                         file=file_path,
                         line=line_no,
                         column=0,
                         language="manifest",
-                        rule_id=f"sca-live-{ecosystem}-{lib_name}-{vuln_id.lower().replace('-', '_')}",
-                        rule_name=f"Live OSV Alert: {lib_name} ({vuln_id})",
+                        rule_id=f"sca-live-{ecosystem}-{lib_name}",
+                        rule_name=f"Live OSV Alert: {lib_name} ({ids_str})",
                         category=purpose,
                         algorithm=algorithm,
                         severity=Severity.HIGH,
                         quantum_risk=profile["quantum_risk"],
-                        message=f"Live OSV Alert [{vuln_id}]: {summary}",
+                        message=f"Live OSV Alert [{ids_str}]: {summary_str}",
                         recommendation=(
                             f"Upgrade {lib_name} to a patched version. "
-                            f"See https://osv.dev/vulnerability/{vuln_id}"
+                            f"Affected: {ids_str}. "
+                            f"See https://osv.dev"
                         ),
                         code_snippet=snippet,
                         specificity=3,
                         generic=False,
                         confidence=Confidence.CONFIRMED,
-                        tags=["sca", "sca-live", ecosystem, lib_name, vuln_id],
+                        tags=["sca", "sca-live", ecosystem, lib_name] + vuln_ids,
                         version=version_to_record,
                     )
                     findings.append(osv_finding)
+                    # Skip the regular offline finding — OSV finding supersedes it
+                    continue
 
             findings.append(finding)
 
         return findings
+
