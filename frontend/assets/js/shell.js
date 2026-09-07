@@ -112,7 +112,7 @@ class AppShell {
   }
 
   renderTopbar(currentPage) {
-    const topbar = document.getElementById('app-topbar');
+    const topbar = document.getElementById('app-topbar') || document.querySelector('.app-topbar') || document.querySelector('.topbar');
     if (!topbar) return;
 
     // Get page title for breadcrumb
@@ -129,6 +129,8 @@ class AppShell {
     };
     const title = titles[currentPage] || 'Overview';
 
+    topbar.className = 'app-topbar';
+    topbar.id = 'app-topbar';
     topbar.innerHTML = `
       <div class="tb-left">
         <button class="mobile-menu-trigger" id="mobile-menu-btn">
@@ -140,7 +142,7 @@ class AppShell {
           <img src="assets/images/nebula-logo.png" alt="NEBULA" style="height:22px; width:auto; border-radius:4px;">
           <span style="font-weight:700; color:var(--text-h);">NEBULA</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-          <span class="current">${title}</span>
+          <span class="current" style="color:#c084fc; font-weight:600;">${title}</span>
         </div>
       </div>
       <div class="tb-right" style="display:flex; align-items:center; gap:12px;">
