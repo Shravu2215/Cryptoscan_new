@@ -3,13 +3,19 @@ Software Composition Analysis (SCA) Layer.
 
 Scans dependency manifests (package.json, requirements.txt, pom.xml) for
 cryptography libraries against a maintained, structured offline catalogue.
-Runs completely offline with zero network calls.
+Optionally enriches findings with live OSV vulnerability data when
+`enable_osv=True` is passed to SCAAnalyzer.
 """
 import json
 import os
 import re
 import xml.etree.ElementTree as ET
 from typing import List, Optional, Tuple, Dict, Any
+
+try:
+    import urllib.request as _urllib_request
+except ImportError:  # pragma: no cover
+    _urllib_request = None  # type: ignore
 
 from .models import Finding, Severity, QuantumRisk, Confidence
 
@@ -487,6 +493,68 @@ def _extract_maven_manifest(source: str) -> List[Tuple[str, str, int, str]]:
 
 
 # ---------------------------------------------------------------------------
+# Live OSV Query Helper
+# ---------------------------------------------------------------------------
+
+_OSV_API = "https://api.osv.dev/v1/query"
+
+
+def check_osv(package_name: str, ecosystem: str, version: str) -> List[Dict[str, Any]]:
+    """
+    Query the OSV (Open Source Vulnerability) API for known vulnerabilities.
+
+    Parameters
+    ----------
+    package_name : str
+        The package name, e.g. ``"jsonwebtoken"``.
+    ecosystem : str
+        The ecosystem string used by OSV, e.g. ``"npm"`` or ``"PyPI"``.
+        The function normalises common aliases (``"pip"`` → ``"PyPI"``).
+    version : str
+        The exact version to query, e.g. ``"8.5.1"``.
+
+    Returns
+    -------
+    list of dict
+        Each dict is a raw OSV vulnerability record containing at least an
+        ``"id"`` key (GHSA-… or CVE-…) and a ``"summary"`` key.
+        Returns an empty list if OSV is unreachable or no vulns are found.
+    """
+    # Normalise ecosystem names
+    _eco_map = {
+        "pip": "PyPI",
+        "pypi": "PyPI",
+        "npm": "npm",
+        "maven": "Maven",
+        "nuget": "NuGet",
+        "cargo": "crates.io",
+        "go": "Go",
+    }
+    osv_ecosystem = _eco_map.get(ecosystem.lower(), ecosystem)
+
+    payload = json.dumps({
+        "version": version,
+        "package": {
+            "name": package_name,
+            "ecosystem": osv_ecosystem,
+        },
+    }).encode("utf-8")
+
+    try:
+        req = _urllib_request.Request(
+            _OSV_API,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with _urllib_request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data.get("vulns", [])
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
 # SCA Analyzer Class
 # ---------------------------------------------------------------------------
 
@@ -494,9 +562,22 @@ class SCAAnalyzer:
     """
     Software Composition Analysis (SCA) Analyzer for dependency manifests.
     Extracts cryptography dependencies from package.json, requirements.txt, and pom.xml.
+
+    Parameters
+    ----------
+    resolver : LockfileVersionResolver, optional
+        Used to resolve pinned versions from lock files.
+    enable_osv : bool, optional
+        When True, enriches findings with live OSV vulnerability data via
+        the public OSV API.  Requires network access.  Default: False.
     """
-    def __init__(self, resolver: Optional[LockfileVersionResolver] = None):
+    def __init__(
+        self,
+        resolver: Optional[LockfileVersionResolver] = None,
+        enable_osv: bool = False,
+    ):
         self.resolver = resolver or LockfileVersionResolver()
+        self.enable_osv = enable_osv
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         """Analyze a single dependency manifest. Returns list of Finding objects."""
@@ -563,6 +644,39 @@ class SCAAnalyzer:
                 tags=["sca", ecosystem, lib_name],
                 version=version_to_record,
             )
+            # -------------------------------------------------------------------
+            # Live OSV enrichment (optional, requires network)
+            # -------------------------------------------------------------------
+            if self.enable_osv and version_to_record:
+                vulns = check_osv(lib_name, ecosystem, version_to_record)
+                for vuln in vulns:
+                    vuln_id = vuln.get("id", "UNKNOWN")
+                    summary = vuln.get("summary", "Known vulnerability detected.")
+                    osv_finding = Finding(
+                        file=file_path,
+                        line=line_no,
+                        column=0,
+                        language="manifest",
+                        rule_id=f"sca-live-{ecosystem}-{lib_name}-{vuln_id.lower().replace('-', '_')}",
+                        rule_name=f"Live OSV Alert: {lib_name} ({vuln_id})",
+                        category=purpose,
+                        algorithm=algorithm,
+                        severity=Severity.HIGH,
+                        quantum_risk=profile["quantum_risk"],
+                        message=f"Live OSV Alert [{vuln_id}]: {summary}",
+                        recommendation=(
+                            f"Upgrade {lib_name} to a patched version. "
+                            f"See https://osv.dev/vulnerability/{vuln_id}"
+                        ),
+                        code_snippet=snippet,
+                        specificity=3,
+                        generic=False,
+                        confidence=Confidence.CONFIRMED,
+                        tags=["sca", "sca-live", ecosystem, lib_name, vuln_id],
+                        version=version_to_record,
+                    )
+                    findings.append(osv_finding)
+
             findings.append(finding)
 
         return findings
