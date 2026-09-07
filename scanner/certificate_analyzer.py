@@ -135,14 +135,55 @@ class CertificateAnalyzer:
             severity = Severity.LOW
             remediation = f"X.509 Certificate with {key_type} public key detected."
 
-        # Expiry Check
-        not_after = cert.not_valid_after_utc if hasattr(cert, 'not_valid_after_utc') else cert.not_valid_after
-        if not_after and not_after < datetime.now(not_after.tzinfo if hasattr(not_after, 'tzinfo') else None):
-            severity = Severity.HIGH
-            remediation += f" [EXPIRATION WARNING: Certificate expired on {not_after.strftime('%Y-%m-%d')}]"
+        # ---------------------------------------------------------------
+        # Fix 11: Expiry metadata — parse notBefore/notAfter, escalate
+        # severity for expired or near-expiry certificates.
+        # ---------------------------------------------------------------
+        expiry_date = None
+        is_expired = False
+        days_until_expiry = None
+        expiry_msg = ""
+
+        try:
+            # cryptography >= 42 exposes timezone-aware datetimes via not_valid_after_utc
+            if hasattr(cert, "not_valid_after_utc"):
+                not_after = cert.not_valid_after_utc
+                now = datetime.now(not_after.tzinfo)
+            else:
+                not_after = cert.not_valid_after  # naive UTC datetime (older library)
+                now = datetime.utcnow()
+
+            expiry_date = not_after.strftime("%Y-%m-%d")
+            delta = (not_after - now).total_seconds()
+            days_until_expiry = int(delta / 86400)
+            is_expired = days_until_expiry < 0
+
+            if is_expired:
+                severity = Severity.CRITICAL
+                expiry_msg = f" [EXPIRED: {expiry_date} — {abs(days_until_expiry)} days ago]"
+                remediation += expiry_msg
+            elif days_until_expiry <= 30:
+                # Escalate to at least HIGH for certs expiring very soon
+                if severity.rank < Severity.HIGH.rank:
+                    severity = Severity.HIGH
+                expiry_msg = f" [EXPIRING SOON: {expiry_date} — {days_until_expiry} days remaining]"
+                remediation += expiry_msg
+            else:
+                expiry_msg = f" [Valid until {expiry_date} — {days_until_expiry} days]"
+        except Exception:
+            expiry_date = None
+            is_expired = False
+            days_until_expiry = None
 
         subj_str = cert.subject.rfc4514_string() if cert.subject else "Unknown Subject"
         algo_label = f"{key_type}-{key_size}" if key_size else f"{key_type} Certificate"
+        snippet = (
+            f"Subject: {subj_str} | SigAlgo: {sig_algo_name} | KeySize: {key_size}"
+            f" | Expiry: {expiry_date or 'unknown'}{expiry_msg}"
+        )
+        expiry_tags = (["expired"] if is_expired else []) + (
+            ["expiring-soon"] if (not is_expired and days_until_expiry is not None and days_until_expiry <= 30) else []
+        )
 
         findings.append(Finding(
             file=file_path,
@@ -155,12 +196,12 @@ class CertificateAnalyzer:
             algorithm=algo_label,
             severity=severity,
             quantum_risk=q_status,
-            message=f"X.509 Certificate with {key_type} key ({sig_algo_name} signature) detected.",
+            message=f"X.509 Certificate with {key_type} key ({sig_algo_name} signature) detected.{expiry_msg}",
             recommendation=remediation,
-            code_snippet=f"Subject: {subj_str} | SigAlgo: {sig_algo_name} | KeySize: {key_size}",
+            code_snippet=snippet,
             confidence=Confidence.CONFIRMED,
             library="X.509 Certificate PKI",
-            tags=["certificate", "x509", "pki"]
+            tags=["certificate", "x509", "pki"] + expiry_tags
         ))
 
     def _parse_regex_cert(self, source: str, match, file_path: str, line_no: int, findings: List[Finding]):

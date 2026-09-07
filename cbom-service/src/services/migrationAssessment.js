@@ -222,37 +222,62 @@ const PQC_IMPACT_SPECS = {
     classicalSizeOverheadFactor: 4.25,
     cpuCostMultiplier: 1.4,
     latencyImpactMs: 1.8,
-    estimatedEffort: '2-4 weeks'
+    baseMinWeeks: 2,
+    baseMaxWeeks: 4,
   },
   'ML-DSA (Dilithium)': {
     signatureOverheadBytes: 2420,
     classicalSizeOverheadFactor: 9.45,
     cpuCostMultiplier: 2.1,
     latencyImpactMs: 3.5,
-    estimatedEffort: '4-8 weeks'
+    baseMinWeeks: 4,
+    baseMaxWeeks: 8,
   },
   'SLH-DSA (SPHINCS+)': {
     signatureOverheadBytes: 7856,
     classicalSizeOverheadFactor: 30.6,
     cpuCostMultiplier: 4.5,
     latencyImpactMs: 12.0,
-    estimatedEffort: '6-10 weeks'
+    baseMinWeeks: 6,
+    baseMaxWeeks: 10,
   },
   'AES-256-GCM': {
     ciphertextOverheadBytes: 16,
     classicalSizeOverheadFactor: 1.0,
     cpuCostMultiplier: 1.0,
     latencyImpactMs: 0.1,
-    estimatedEffort: '1-2 weeks'
+    baseMinWeeks: 1,
+    baseMaxWeeks: 2,
   }
 };
 
-  const performanceImpact = PQC_IMPACT_SPECS[recommendedPqc] || {
+  const spec = PQC_IMPACT_SPECS[recommendedPqc] || {
     ciphertextOverheadBytes: 1024,
     classicalSizeOverheadFactor: 3.5,
     cpuCostMultiplier: 1.5,
     latencyImpactMs: 2.0,
-    estimatedEffort: '2-6 weeks'
+    baseMinWeeks: 2,
+    baseMaxWeeks: 6,
+  };
+
+  const fileCount = typeof affectedFilesCount === 'number' && affectedFilesCount > 0 ? affectedFilesCount : 1;
+  let scaleFactor = 1.0;
+  if (fileCount > 10) {
+    scaleFactor = 2.5;
+  } else if (fileCount > 3) {
+    scaleFactor = 1.5;
+  }
+
+  const minWeeks = Math.max(1, Math.round(spec.baseMinWeeks * scaleFactor));
+  const maxWeeks = Math.max(minWeeks + 1, Math.round(spec.baseMaxWeeks * scaleFactor));
+
+  const performanceImpact = {
+    ciphertextOverheadBytes: spec.ciphertextOverheadBytes,
+    classicalSizeOverheadFactor: spec.classicalSizeOverheadFactor,
+    cpuCostMultiplier: spec.cpuCostMultiplier,
+    latencyImpactMs: spec.latencyImpactMs,
+    estimatedEffort: `${minWeeks}-${maxWeeks} weeks`,
+    affectedFilesCount: fileCount,
   };
 
   return {
@@ -301,10 +326,20 @@ function assessMigration(scan, rawFindings) {
     return plan;
   }
 
+  const filesPerAlgo = {};
+  rawFindings.forEach(f => {
+    const algo = f.algorithm || 'UNKNOWN';
+    const file = f.file || f.filePath || '';
+    if (!filesPerAlgo[algo]) filesPerAlgo[algo] = new Set();
+    if (file) filesPerAlgo[algo].add(file);
+  });
+
   let totalAgility = 0;
   
   rawFindings.forEach(f => {
-    const assessment = assessFinding(f);
+    const algo = f.algorithm || 'UNKNOWN';
+    const count = (filesPerAlgo[algo] && filesPerAlgo[algo].size) || 1;
+    const assessment = assessFinding(f, count);
     
     if (assessment.error) return;
 

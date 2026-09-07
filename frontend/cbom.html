@@ -513,6 +513,14 @@ tbody tr:hover { background: var(--bg-card-hover); }
                 <option value="external-facing">External-Facing</option>
                 <option value="internal">Internal</option>
               </select>
+              <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
+                <option value="ALL">All Criticality</option>
+                <option value="Critical">Critical</option>
+                <option value="Important">Important</option>
+                <option value="Standard">Standard</option>
+                <option value="Low">Low</option>
+                <option value="Not tagged">Not tagged</option>
+              </select>
               <select id="filter-lib" class="filter-sel" onchange="handleFilterChange()">
                 <option value="ALL">All Libraries</option>
               </select>
@@ -531,6 +539,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
                     <th>Type</th>
                     <th>Purpose</th>
                     <th>Exposure</th>
+                    <th>Criticality</th>
                     <th>File</th>
                     <th>Library</th>
                     <th>Version</th>
@@ -623,6 +632,10 @@ tbody tr:hover { background: var(--bg-card-hover); }
         <div class="prop-lbl">Key Size</div>
         <div class="prop-val code-font" id="drw-keysize" style="font-size:13px;">-</div>
       </div>
+      <div class="prop-item">
+        <div class="prop-lbl">Business Criticality</div>
+        <div class="prop-val" id="drw-criticality">-</div>
+      </div>
     </div>
     
     <div style="margin-top:8px;">
@@ -713,7 +726,15 @@ function getAlgoType(algo) {
   return 'Unknown';
 }
 
-function init() {
+function getCriticalityBadgeClass(crit) {
+  if (crit === 'Critical') return 'badge-crit';
+  if (crit === 'Important') return 'badge-high';
+  if (crit === 'Standard') return 'badge-med';
+  if (crit === 'Low') return 'badge-low';
+  return 'badge-low';
+}
+
+async function init() {
   const data = CryptoEngine.getData();
   const noDataEl = document.getElementById('view-no-data');
   const activeEl = document.getElementById('view-active');
@@ -725,17 +746,48 @@ function init() {
     if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
+
+  // Live join repository criticality
+  const repoCritMap = {};
+  try {
+    const res = await fetch('http://localhost:3000/repos');
+    if (res.ok) {
+      const repos = await res.json();
+      repos.forEach(r => {
+        const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+        if (r.id) repoCritMap[r.id] = crit;
+        if (r.name) repoCritMap[r.name] = crit;
+        if (r.url) repoCritMap[r.url] = crit;
+      });
+    }
+  } catch(e) {
+    console.warn('Could not fetch live repos for criticality:', e);
+  }
+  (data.repositories || []).forEach(r => {
+    const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+    if (r.id && !repoCritMap[r.id]) repoCritMap[r.id] = crit;
+    if (r.name && !repoCritMap[r.name]) repoCritMap[r.name] = crit;
+    if (r.url && !repoCritMap[r.url]) repoCritMap[r.url] = crit;
+  });
   
   // Transform findings into an inventory representation (CBOM elements)
   inventory = data.scans.flatMap(s => {
+    const parentCrit = (s.repositoryId && repoCritMap[s.repositoryId]) || 
+                       (s.repo && repoCritMap[s.repo]) || 
+                       (s.targetUrl && repoCritMap[s.targetUrl]) || 
+                       s.businessCriticality || s.criticality_tier ||
+                       'Not tagged';
     return (s.findings || []).map(f => {
       const algo = f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown');
+      const itemCrit = (f.repositoryId && repoCritMap[f.repositoryId]) ||
+                       f.businessCriticality || f.criticality_tier || parentCrit;
       return {
         id: f.id || Math.random().toString(36).substr(2, 9),
         algorithm: algo,
         type: getAlgoType(algo),
         purpose: f.usage || f.category || 'Data Protection',
         exposure: f.exposure || 'internal',
+        criticality: itemCrit,
         file: f.file || 'unknown',
         line: f.line || '',
         library: f.library || 'Standard/Unknown',
@@ -887,6 +939,7 @@ function handleFilterChange() {
   const type = document.getElementById('filter-type').value;
   const risk = document.getElementById('filter-risk').value;
   const exposure = document.getElementById('filter-exposure') ? document.getElementById('filter-exposure').value : 'ALL';
+  const crit = document.getElementById('filter-criticality') ? document.getElementById('filter-criticality').value : 'ALL';
   const lib = document.getElementById('filter-lib').value;
   const quant = document.getElementById('filter-quant').value;
   
@@ -898,13 +951,14 @@ function handleFilterChange() {
     const matchType = type === 'ALL' || c.type === type;
     const matchRisk = risk === 'ALL' || c.risk === risk;
     const matchExposure = exposure === 'ALL' || (c.exposure || 'internal') === exposure;
+    const matchCrit = crit === 'ALL' || (c.criticality || 'Not tagged') === crit;
     const matchLib = lib === 'ALL' || c.library === lib;
     
     let matchQuant = true;
     if (quant === 'Vulnerable') matchQuant = c.quantumVulnerable;
     else if (quant === 'Not Vulnerable') matchQuant = !c.quantumVulnerable;
     
-    return matchSearch && matchType && matchRisk && matchExposure && matchLib && matchQuant;
+    return matchSearch && matchType && matchRisk && matchExposure && matchCrit && matchLib && matchQuant;
   });
   
   currentPage = 1;
@@ -916,6 +970,7 @@ function clearFilters() {
   document.getElementById('filter-type').value = 'ALL';
   document.getElementById('filter-risk').value = 'ALL';
   if (document.getElementById('filter-exposure')) document.getElementById('filter-exposure').value = 'ALL';
+  if (document.getElementById('filter-criticality')) document.getElementById('filter-criticality').value = 'ALL';
   document.getElementById('filter-lib').value = 'ALL';
   document.getElementById('filter-quant').value = 'ALL';
   handleFilterChange();
@@ -953,12 +1008,14 @@ function renderTable() {
     const exp = c.exposure || 'internal';
     const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
     const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
+    const critClass = getCriticalityBadgeClass(c.criticality);
     return `
       <tr class="cbom-row" style="cursor:pointer;" data-index="${i}">
         <td><span style="font-weight:600;color:var(--text-h)">${c.algorithm}</span></td>
         <td>${c.type}</td>
         <td>${c.purpose}</td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
+        <td><span class="badge ${critClass}">${c.criticality || 'Not tagged'}</span></td>
         <td><span class="code-font" style="color:var(--text-m);">${c.file}</span></td>
         <td>${c.library}</td>
         <td><span class="code-font">${c.version}</span></td>
@@ -1002,6 +1059,11 @@ function openDrawer(c) {
   document.getElementById('drw-purpose').textContent = c.purpose;
   document.getElementById('drw-lib').textContent = c.library;
   document.getElementById('drw-keysize').textContent = c.keySize;
+
+  const critEl = document.getElementById('drw-criticality');
+  if (critEl) {
+    critEl.innerHTML = `<span class="badge ${getCriticalityBadgeClass(c.criticality)}">${c.criticality || 'Not tagged'}</span>`;
+  }
   
   const qStr = c.quantumVulnerable ? 'Vulnerable' : 'Not Identified as Vulnerable';
   document.getElementById('drw-quantum').innerHTML = `<span style="color:${c.quantumVulnerable?'var(--red)':'var(--green)'};">${qStr}</span>`;
@@ -1039,6 +1101,7 @@ function generateCycloneDX() {
         { name: "crypto:type", value: c.type },
         { name: "crypto:purpose", value: c.purpose },
         { name: "crypto:exposure", value: c.exposure || "internal" },
+        { name: "crypto:businessCriticality", value: c.criticality || "Not tagged" },
         { name: "crypto:keySize", value: c.keySize },
         { name: "crypto:quantumVulnerable", value: c.quantumVulnerable.toString() },
         { name: "crypto:risk", value: c.risk },

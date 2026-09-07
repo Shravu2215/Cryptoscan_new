@@ -1600,7 +1600,7 @@
       return urlParams.get(param);
     }
 
-    function init() {
+    async function init() {
       const data = CryptoEngine.getData();
       const noDataEl = document.getElementById('view-no-data');
       const activeEl = document.getElementById('view-active');
@@ -1613,24 +1613,64 @@
         return;
       }
 
-      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+      // Live-fetch repositories from backend for live join (single source of truth)
       const repoCritMap = {};
+      const addCrit = (k, v) => {
+        if (!k || !v) return;
+        repoCritMap[k] = v;
+        const clean = String(k).replace(/\.zip$/i, '');
+        repoCritMap[clean] = v;
+        repoCritMap[clean.toLowerCase()] = v;
+      };
+
+      try {
+        const token = localStorage.getItem('cs_token');
+        const res = await fetch('http://localhost:3000/repos', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const liveRepos = await res.json();
+          liveRepos.forEach(r => {
+            const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+            if (r.id) addCrit(r.id, crit);
+            if (r.name) addCrit(r.name, crit);
+          });
+        }
+      } catch (err) {
+        console.warn('Live repos fetch failed, using cached store:', err);
+      }
+
       (data.repositories || []).forEach(r => {
-        if (r.id && r.businessCriticality) repoCritMap[r.id] = r.businessCriticality;
-        if (r.name && r.businessCriticality) repoCritMap[r.name] = r.businessCriticality;
+        const crit = r.businessCriticality || r.criticality_tier;
+        if (r.id && crit) addCrit(r.id, crit);
+        if (r.name && crit) addCrit(r.name, crit);
       });
       (data.scans || []).forEach(s => {
-        if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality;
-        if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality;
+        const crit = s.businessCriticality || s.criticality_tier;
+        if (s.repoId && crit) addCrit(s.repoId, crit);
+        if (s.repoName && crit) addCrit(s.repoName, crit);
       });
 
+      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+
       allFindings = targetScans.flatMap(s => {
+        // Inherit live tier from parent repo record
+        const repoKey = s.repoName || s.name || '';
+        const repoClean = repoKey.replace(/\.zip$/i, '');
+        const liveCrit = repoCritMap[s.repoId] || 
+                         repoCritMap[repoKey] || 
+                         repoCritMap[repoClean] || 
+                         repoCritMap[repoClean.toLowerCase()] || 
+                         s.businessCriticality || 
+                         s.criticality_tier || 
+                         'Not tagged';
         return (s.findings || []).map(f => ({
           ...f,
-          repoName: s.repoName,
+          repoName: s.repoName || s.name,
           repoId: s.repoId,
-          businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || null
+          businessCriticality: liveCrit,
+          criticality_tier: liveCrit,
         }));
       });
 
@@ -1651,13 +1691,20 @@
       updateTopRisks();
       updateDetectionCoverage();
 
-      const urlRepo = getUrlParam('repo');
-      if (urlRepo) document.getElementById('filter-search').value = urlRepo;
+      const urlSearch = getUrlParam('search') || getUrlParam('system') || getUrlParam('repo');
+      if (urlSearch) document.getElementById('filter-search').value = urlSearch;
 
       const urlAlgo = getUrlParam('algo');
       if (urlAlgo) {
         const algFilter = document.getElementById('filter-algo');
         if ([...algFilter.options].some(o => o.value === urlAlgo)) {
+          algFilter.value = urlAlgo;
+        } else {
+          // If option not present yet, add it
+          const opt = document.createElement('option');
+          opt.value = urlAlgo;
+          opt.textContent = urlAlgo;
+          algFilter.appendChild(opt);
           algFilter.value = urlAlgo;
         }
       }
@@ -1768,14 +1815,53 @@
 
     function getBusinessCriticality(f) {
       if (!f) return 'Not tagged';
-      const raw = f.businessCriticality || f.repoCriticality || null;
-      if (!raw || raw === 'NOT TAGGED' || raw === 'UNKNOWN' || raw === 'NONE') return 'Not tagged';
+      const raw = f.businessCriticality || f.criticality_tier || f.repoCriticality || null;
+      if (!raw || raw === 'NOT TAGGED' || raw === 'NOT_TAGGED' || raw === 'UNKNOWN' || raw === 'NONE') return 'Not tagged';
       const u = String(raw).toUpperCase().trim();
       if (u === 'CRITICAL' || u === 'TIER 1') return 'Critical';
       if (u === 'HIGH' || u === 'IMPORTANT' || u === 'TIER 2') return 'Important';
       if (u === 'MEDIUM' || u === 'STANDARD' || u === 'TIER 3') return 'Standard';
       if (u === 'LOW' || u === 'TIER 4') return 'Low';
       return u;
+    }
+
+    function computeFindingRisk(f) {
+      const sev = getSeverity(f).toUpperCase();
+      let exploitability = 2.0;
+      if (sev === 'CRITICAL') exploitability = 10.0;
+      else if (sev === 'HIGH') exploitability = 8.0;
+      else if (sev === 'MEDIUM') exploitability = 5.0;
+      else if (sev === 'LOW' || sev === 'INFORMATIONAL') exploitability = 2.0;
+
+      const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '')).toUpperCase();
+      let dataSensitivity = 4.0;
+      if (sens.includes('HEALTH') || sens.includes('ROOT') || sens.includes('CRITICAL')) dataSensitivity = 10.0;
+      else if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT')) dataSensitivity = 8.0;
+      else if (sens.includes('CONFIDENTIAL') || sens.includes('INTERNAL')) dataSensitivity = 6.0;
+
+      const exp = (f.exposure || '').toLowerCase();
+      const exposure = exp === 'external-facing' ? 10.0 : 4.0;
+
+      const isQ = isQuantum(f);
+      const qStatus = (f.quantumStatus || '').toLowerCase();
+      let quantumTimeline = 2.0;
+      if (isQ || qStatus.includes('broken') || qStatus.includes('vuln')) quantumTimeline = 10.0;
+      else if (qStatus.includes('weaken')) quantumTimeline = 6.0;
+
+      // Formula: Risk Score = Exploitability*0.3 + DataSensitivity*0.3 + Exposure*0.2 + QuantumTimeline*0.2
+      const baseScore = (exploitability * 0.3) + (dataSensitivity * 0.3) + (exposure * 0.2) + (quantumTimeline * 0.2);
+
+      // Business Criticality multiplier: Critical: 1.5x, Important: 1.25x, Standard: 1.0x, Low: 0.8x, Not tagged: 1.0x
+      const crit = getBusinessCriticality(f);
+      let multiplier = 1.0;
+      if (crit === 'Critical') multiplier = 1.5;
+      else if (crit === 'Important') multiplier = 1.25;
+      else if (crit === 'Standard') multiplier = 1.0;
+      else if (crit === 'Low') multiplier = 0.8;
+      else multiplier = 1.0;
+
+      const finalScore = Math.min(10.0, parseFloat((baseScore * multiplier).toFixed(1)));
+      return { baseScore: parseFloat(baseScore.toFixed(1)), multiplier, finalScore, crit };
     }
 
     function getLifetimeBadgeClass(lt) {
@@ -2021,10 +2107,11 @@
         const type = getArtefactType(f);
         const lifetime = getArtefactLifetime(f);
         const bizCrit = getBusinessCriticality(f);
+        const riskInfo = computeFindingRisk(f);
 
         return `
       <tr class="finding-row" style="cursor:pointer;" data-index="${i}">
-        <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
+        <td><span class="badge ${getBadgeClass(sev)}">${sev}</span><div style="font-size:10px; color:var(--text-s); margin-top:2px; font-weight:700;">Score: ${riskInfo.finalScore}</div></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
         <td><span class="badge badge-ast" style="font-size:11px;">${type}</span></td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
@@ -2071,9 +2158,10 @@
       document.getElementById('drw-algo').textContent = f.algorithm || f.title.split(' ')[0] || 'Unknown';
       document.getElementById('drw-fileline').textContent = `${f.file || 'unknown'}:${f.line || '?'}`;
 
+      const riskInfo = computeFindingRisk(f);
       const b = document.getElementById('drw-risk-badge');
       b.className = 'badge ' + getBadgeClass(sev);
-      b.textContent = sev;
+      b.innerHTML = `${sev} <span style="font-size:11px; opacity:0.85;">(Score: ${riskInfo.finalScore}/10)</span>`;
 
       const type = getArtefactType(f);
       const drwTypeEl = document.getElementById('drw-type');
@@ -2098,7 +2186,7 @@
       }
       const critEl = document.getElementById('drw-criticality');
       if (critEl) {
-        critEl.innerHTML = `<span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit}</span>`;
+        critEl.innerHTML = `<span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit} (${riskInfo.multiplier}x multiplier)</span>`;
       }
 
       document.getElementById('drw-purpose').textContent = f.usage || f.category || '-';

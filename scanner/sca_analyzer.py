@@ -3,13 +3,19 @@ Software Composition Analysis (SCA) Layer.
 
 Scans dependency manifests (package.json, requirements.txt, pom.xml) for
 cryptography libraries against a maintained, structured offline catalogue.
-Runs completely offline with zero network calls.
+Optionally enriches findings with live OSV vulnerability data when
+`enable_osv=True` is passed to SCAAnalyzer.
 """
 import json
 import os
 import re
 import xml.etree.ElementTree as ET
 from typing import List, Optional, Tuple, Dict, Any
+
+try:
+    import urllib.request as _urllib_request
+except ImportError:  # pragma: no cover
+    _urllib_request = None  # type: ignore
 
 from .models import Finding, Severity, QuantumRisk, Confidence
 
@@ -226,6 +232,110 @@ KNOWN_CRYPTO_LIBRARIES: Dict[str, Dict[str, Dict[str, Any]]] = {
 
 
 # ---------------------------------------------------------------------------
+# Lockfile Version Resolver
+# ---------------------------------------------------------------------------
+
+class LockfileVersionResolver:
+    """
+    Resolves precise locked dependency versions from lockfiles
+    (package-lock.json, yarn.lock, pinned requirements.txt, pom.xml).
+    """
+    def __init__(self, repo_dir: str = ""):
+        self.repo_dir = repo_dir
+        self.npm_locked: Dict[str, str] = {}
+        self.pip_locked: Dict[str, str] = {}
+        self.maven_locked: Dict[str, str] = {}
+        if repo_dir and os.path.exists(repo_dir):
+            self.load_from_dir(repo_dir)
+
+    def load_from_dir(self, repo_dir: str):
+        self.repo_dir = repo_dir
+        for root, _, files in os.walk(repo_dir):
+            for fn in files:
+                fn_lower = fn.lower()
+                fp = os.path.join(root, fn)
+                if fn_lower == "package-lock.json":
+                    self._parse_package_lock(fp)
+                elif fn_lower in {"requirements.txt", "requirements-lock.txt"} or (fn_lower.startswith("requirements") and fn_lower.endswith(".txt")):
+                    self._parse_requirements_txt(fp)
+                elif fn_lower == "pom.xml":
+                    self._parse_pom_xml(fp)
+
+    def _parse_package_lock(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                data = json.load(fh)
+            # v2/v3 lockfile format
+            packages = data.get("packages", {})
+            for pkg_path, meta in packages.items():
+                if isinstance(meta, dict) and "version" in meta:
+                    pkg_name = pkg_path.split("node_modules/")[-1].lower()
+                    if pkg_name and pkg_name not in self.npm_locked:
+                        self.npm_locked[pkg_name] = str(meta["version"])
+            # v1 lockfile format
+            dependencies = data.get("dependencies", {})
+            for dep_name, meta in dependencies.items():
+                if isinstance(meta, dict) and "version" in meta:
+                    dep_lower = dep_name.lower()
+                    if dep_lower not in self.npm_locked:
+                        self.npm_locked[dep_lower] = str(meta["version"])
+        except Exception:
+            pass
+
+    def _parse_requirements_txt(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    m = re.match(r'^([A-Za-z0-9_\-\.]+)\s*==\s*([A-Za-z0-9_\-\.]+)', line)
+                    if m:
+                        pkg = m.group(1).lower().replace("-", "").replace("_", "")
+                        self.pip_locked[pkg] = m.group(2)
+        except Exception:
+            pass
+
+    def _parse_pom_xml(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                source = fh.read()
+            xml_clean = re.sub(r' xmlns="[^"]+"', '', source, count=1)
+            root = ET.fromstring(xml_clean)
+            for dep in root.findall(".//dependency"):
+                artifact_id_el = dep.find("artifactId")
+                version_el = dep.find("version")
+                if artifact_id_el is not None and artifact_id_el.text and version_el is not None and version_el.text:
+                    art_id = artifact_id_el.text.strip().lower()
+                    ver = version_el.text.strip()
+                    if not ver.startswith("${"):
+                        self.maven_locked[art_id] = ver
+        except Exception:
+            pass
+
+    def resolve_version(self, ecosystem: str, lib_name: str, fallback_version: str = "") -> str:
+        """Returns the precise locked version, or a normalized version from manifest."""
+        if ecosystem == "npm":
+            lib_lower = lib_name.lower()
+            if lib_lower in self.npm_locked:
+                return self.npm_locked[lib_lower]
+        elif ecosystem == "pip":
+            norm = lib_name.lower().replace("-", "").replace("_", "")
+            if norm in self.pip_locked:
+                return self.pip_locked[norm]
+        elif ecosystem == "maven":
+            lib_lower = lib_name.lower()
+            if lib_lower in self.maven_locked:
+                return self.maven_locked[lib_lower]
+
+        if fallback_version:
+            # Strip prefixes like ^, ~, >=, ==, v
+            cleaned = re.sub(r'^[^\d]*', '', fallback_version.strip())
+            return cleaned if cleaned else fallback_version
+        return ""
+
+
+# ---------------------------------------------------------------------------
 # Version Comparison Helper
 # ---------------------------------------------------------------------------
 
@@ -383,6 +493,68 @@ def _extract_maven_manifest(source: str) -> List[Tuple[str, str, int, str]]:
 
 
 # ---------------------------------------------------------------------------
+# Live OSV Query Helper
+# ---------------------------------------------------------------------------
+
+_OSV_API = "https://api.osv.dev/v1/query"
+
+
+def check_osv(package_name: str, ecosystem: str, version: str) -> List[Dict[str, Any]]:
+    """
+    Query the OSV (Open Source Vulnerability) API for known vulnerabilities.
+
+    Parameters
+    ----------
+    package_name : str
+        The package name, e.g. ``"jsonwebtoken"``.
+    ecosystem : str
+        The ecosystem string used by OSV, e.g. ``"npm"`` or ``"PyPI"``.
+        The function normalises common aliases (``"pip"`` → ``"PyPI"``).
+    version : str
+        The exact version to query, e.g. ``"8.5.1"``.
+
+    Returns
+    -------
+    list of dict
+        Each dict is a raw OSV vulnerability record containing at least an
+        ``"id"`` key (GHSA-… or CVE-…) and a ``"summary"`` key.
+        Returns an empty list if OSV is unreachable or no vulns are found.
+    """
+    # Normalise ecosystem names
+    _eco_map = {
+        "pip": "PyPI",
+        "pypi": "PyPI",
+        "npm": "npm",
+        "maven": "Maven",
+        "nuget": "NuGet",
+        "cargo": "crates.io",
+        "go": "Go",
+    }
+    osv_ecosystem = _eco_map.get(ecosystem.lower(), ecosystem)
+
+    payload = json.dumps({
+        "version": version,
+        "package": {
+            "name": package_name,
+            "ecosystem": osv_ecosystem,
+        },
+    }).encode("utf-8")
+
+    try:
+        req = _urllib_request.Request(
+            _OSV_API,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with _urllib_request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data.get("vulns", [])
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
 # SCA Analyzer Class
 # ---------------------------------------------------------------------------
 
@@ -390,7 +562,22 @@ class SCAAnalyzer:
     """
     Software Composition Analysis (SCA) Analyzer for dependency manifests.
     Extracts cryptography dependencies from package.json, requirements.txt, and pom.xml.
+
+    Parameters
+    ----------
+    resolver : LockfileVersionResolver, optional
+        Used to resolve pinned versions from lock files.
+    enable_osv : bool, optional
+        When True, enriches findings with live OSV vulnerability data via
+        the public OSV API.  Requires network access.  Default: False.
     """
+    def __init__(
+        self,
+        resolver: Optional[LockfileVersionResolver] = None,
+        enable_osv: bool = False,
+    ):
+        self.resolver = resolver or LockfileVersionResolver()
+        self.enable_osv = enable_osv
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         """Analyze a single dependency manifest. Returns list of Finding objects."""
@@ -434,6 +621,9 @@ class SCAAnalyzer:
             if profile.get("note"):
                 msg += f" {profile['note']}"
 
+            resolved_version = self.resolver.resolve_version(ecosystem, lib_name, version)
+            version_to_record = resolved_version or (str(version).strip() if version else "")
+
             finding = Finding(
                 file=file_path,
                 line=line_no,
@@ -452,8 +642,52 @@ class SCAAnalyzer:
                 generic=False,
                 confidence=Confidence.LIKELY,
                 tags=["sca", ecosystem, lib_name],
-                version=str(version or ""),
+                version=version_to_record,
             )
+            # -------------------------------------------------------------------
+            # Live OSV enrichment (optional, requires network)
+            # When enable_osv=True and vulns are found, emit ONE consolidated
+            # finding that lists all vuln IDs — so callers always get a
+            # predictable single finding per library (matching test expectations).
+            # Fall back to the regular offline SCA finding if OSV returns nothing.
+            # -------------------------------------------------------------------
+            if self.enable_osv and version_to_record:
+                vulns = check_osv(lib_name, ecosystem, version_to_record)
+                if vulns:
+                    vuln_ids  = [v.get("id", "UNKNOWN") for v in vulns]
+                    summaries = [v.get("summary", "") for v in vulns if v.get("summary")]
+                    ids_str   = ", ".join(vuln_ids)
+                    summary_str = "; ".join(summaries) if summaries else "Known vulnerabilities detected."
+
+                    osv_finding = Finding(
+                        file=file_path,
+                        line=line_no,
+                        column=0,
+                        language="manifest",
+                        rule_id=f"sca-live-{ecosystem}-{lib_name}",
+                        rule_name=f"Live OSV Alert: {lib_name} ({ids_str})",
+                        category=purpose,
+                        algorithm=algorithm,
+                        severity=Severity.HIGH,
+                        quantum_risk=profile["quantum_risk"],
+                        message=f"Live OSV Alert [{ids_str}]: {summary_str}",
+                        recommendation=(
+                            f"Upgrade {lib_name} to a patched version. "
+                            f"Affected: {ids_str}. "
+                            f"See https://osv.dev"
+                        ),
+                        code_snippet=snippet,
+                        specificity=3,
+                        generic=False,
+                        confidence=Confidence.CONFIRMED,
+                        tags=["sca", "sca-live", ecosystem, lib_name] + vuln_ids,
+                        version=version_to_record,
+                    )
+                    findings.append(osv_finding)
+                    # Skip the regular offline finding — OSV finding supersedes it
+                    continue
+
             findings.append(finding)
 
         return findings
+

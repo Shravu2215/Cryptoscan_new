@@ -196,8 +196,24 @@ function scoreFinding(finding, purpose, contextOrLifetime) {
   const classicalDeprecation = classicalDeprecationScore(finding.primitive, finding.mode);
   const usageCriticality = usageCriticalityScore(purpose);
 
-  const isDefaultLifetime = (dataLifetimeInput === undefined || dataLifetimeInput === null);
-  const dataLifetimeYears = isDefaultLifetime ? HNDL_CONFIG.defaultDataLifetimeYears : dataLifetimeInput;
+  let isDefaultLifetime = (dataLifetimeInput === undefined || dataLifetimeInput === null);
+  let dataLifetimeYears = dataLifetimeInput;
+
+  if (isDefaultLifetime && finding) {
+    const { detectDataSensitivity } = require('./purposeDetection');
+    if (detectDataSensitivity) {
+      const { recommendedLifetimeYears } = detectDataSensitivity(finding);
+      if (recommendedLifetimeYears) {
+        dataLifetimeYears = recommendedLifetimeYears;
+        isDefaultLifetime = false;
+      }
+    }
+  }
+
+  if (dataLifetimeYears === undefined || dataLifetimeYears === null) {
+    dataLifetimeYears = HNDL_CONFIG.defaultDataLifetimeYears;
+    isDefaultLifetime = true;
+  }
   const dataLifetime = normalizeDataLifetime(dataLifetimeYears);
   
   const quantumExposureWindow = calculateQuantumExposureWindow(dataLifetime);

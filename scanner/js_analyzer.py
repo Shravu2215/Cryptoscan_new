@@ -218,6 +218,74 @@ class JSAnalyzer:
                                           "hash", profile, snippet, specificity=3 if is_password_ctx else 2))
             return out
 
+        # -- crypto.createHmac('sha256'|'sha1'|'md5', key) ----------------------
+        # HMAC-MD5 and HMAC-SHA1 are cryptographically weak; HMAC-SHA256+ is
+        # informational only.  A variable key argument is CORRECT usage — do not
+        # flag it as hardcoded.  Only a literal-string key triggers that finding.
+        if fname in ("crypto.createHmac",):
+            algo = _arg_literal(args[0]) if args else None
+            algo_lower = (algo or "").lower()
+            # Resolve key argument — flag only provably literal keys
+            key_node = assigns.resolve(args[1]) if len(args) >= 2 else None
+            key_hardcoded = (
+                isinstance(key_node, dict)
+                and key_node.get("type") == "Literal"
+                and isinstance(key_node.get("value"), str)
+                and len(key_node.get("value", "")) >= 4
+            )
+            if algo_lower in rules.HASH_ALGOS:
+                profile = dict(rules.HASH_ALGOS[algo_lower])
+                # Weak HMAC (MD5, SHA-1)
+                weak_hmac = algo_lower in ("md5", "sha1", "sha-1", "ripemd160")
+                if weak_hmac:
+                    out.append(self._mk(
+                        file_path, line, col,
+                        f"hmac-{algo_lower}-weak",
+                        f"HMAC-{(algo or algo_lower).upper()} weak MAC",
+                        "mac", profile, snippet, specificity=3,
+                    ))
+                else:
+                    # Informational for strong HMAC (sha256, sha384, sha512)
+                    from .models import Severity, QuantumRisk, Confidence
+                    info_profile = dict(
+                        algorithm=f"HMAC-{(algo or algo_lower).upper()}",
+                        severity=Severity.INFO,
+                        quantum_risk=QuantumRisk.SAFE,
+                        recommendation="HMAC-SHA-256 is acceptable for message authentication. Ensure the key is sufficiently random and never hardcoded.",
+                    )
+                    out.append(self._mk(
+                        file_path, line, col,
+                        f"hmac-{algo_lower}-usage",
+                        f"HMAC-{(algo or algo_lower).upper()} MAC usage",
+                        "mac", info_profile, snippet, specificity=1, generic=True,
+                    ))
+            elif algo is not None:
+                # Unknown / unsupported HMAC algorithm — flag generically
+                from .models import Severity, QuantumRisk
+                generic_profile = dict(
+                    algorithm=f"HMAC-{algo.upper()}",
+                    severity=Severity.LOW,
+                    quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                    recommendation="Verify the HMAC algorithm is a strong hash function (SHA-256 or better).",
+                )
+                out.append(self._mk(
+                    file_path, line, col,
+                    "hmac-unknown-algorithm",
+                    f"HMAC with unrecognised algorithm '{algo}'",
+                    "mac", generic_profile, snippet, specificity=2,
+                ))
+            # Hardcoded key secondary finding (independent of algorithm weakness)
+            if key_hardcoded:
+                from .models import Severity, QuantumRisk
+                hk_profile = dict(rules.HARDCODED_KEY)
+                out.append(self._mk(
+                    file_path, line, col,
+                    "hmac-hardcoded-key",
+                    "HMAC hardcoded-key",
+                    "hardcoded-secret", hk_profile, snippet, specificity=4,
+                ))
+            return out
+
         # -- crypto.createCipheriv(algo, key, iv) / createDecipheriv -------------
         if fname in ("crypto.createCipheriv", "crypto.createDecipheriv"):
             direction = "encryption" if fname.endswith("Cipheriv") else "decryption"

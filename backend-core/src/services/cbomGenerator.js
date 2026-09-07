@@ -10,7 +10,7 @@ const { normalizeFamily } = require('./primitiveFamily');
 function enrichFinding(raw) {
   const family = normalizeFamily(raw.primitive);
   const { purpose, confidence, source } = detectPurpose(raw);
-  const migration = getMigrationGuidance(family, purpose);
+  const migration = getMigrationGuidance(family, purpose, raw);
   const vulnerability = scoreFinding(raw, purpose);
 
   return {
