@@ -1,73 +1,89 @@
-# CryptoScan (ECDAT) — Enterprise Cryptographic Discovery & Assurance Tool
+🔐 CryptoScan (ECDAT)
+AI-Powered Enterprise Cryptographic Discovery & On-Chain Assurance Platform
 
-CryptoScan is an end-to-end cryptographic discovery, vulnerability remediation, and on-chain tamper-evidence assurance platform. It scans source code repositories for cryptographic assets (classical and post-quantum), detects vulnerabilities, generates standard CycloneDX Cryptographic Bill of Materials (CBOM), and anchors cryptographic audit proofs immutably to the Ethereum Sepolia blockchain with RFC 3161 trusted timestamps and NIST FIPS 204 post-quantum hybrid signatures.
+CryptoScan is an end-to-end cryptographic asset discovery, vulnerability remediation, and on-chain tamper-evidence assurance platform. It scans source code repositories for cryptographic assets (classical and post-quantum), detects vulnerabilities, generates standard CycloneDX Cryptographic Bill of Materials (CBOM), and anchors cryptographic audit proofs immutably to the Ethereum Sepolia blockchain with RFC 3161 trusted timestamps and NIST FIPS 204 post-quantum hybrid signatures.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CryptoScan Dashboard UI                      │
-└────────────────────────────────┬────────────────────────────────┘
-                                 │
-┌────────────────────────────────▼────────────────────────────────┐
-│                          Backend Core                           │
-│  Express.js API • Prisma ORM (SQLite) • JWT Auth • Auditing     │
-└───────┬────────────────────────┬────────────────────────┬───────┘
-        │                        │                        │
-┌───────▼─────────────┐  ┌───────▼─────────────┐  ┌───────▼─────────────┐
-│   Scanner Engine    │  │    CBOM Service     │  │  Integrity Service  │
-│ Python AST Analysis │  │ CycloneDX CBOM Gen  │  │ Merkle Tree • KMS   │
-│  Classical & PQC    │  │ Purpose Detection   │  │ RFC 3161 Timestamp  │
-│ Vulnerability Rules │  │ PQC Recommendations │  │ ML-DSA-65 Hybrid Sig│
-└─────────────────────┘  └─────────────────────┘  └──────────┬──────────┘
-                                                             │
-                                                  ┌──────────▼──────────┐
-                                                  │  Blockchain Module  │
-                                                  │ CryptoAnchor.sol    │
-                                                  │  Ethereum Sepolia   │
-                                                  └─────────────────────┘
-```
+Built using Node.js, Express.js, Python AST, Solidity, Hardhat, Ethereum Sepolia, and Prisma, the platform combines static analysis with decentralized proof-of-integrity to create a secure, transparent cryptographic environment for enterprise software teams.
 
-### Module Overview
+📸 Project Preview
 
-1. **`backend-core/`**: Express.js REST API, PostgreSQL database via Prisma ORM, JWT authentication, rate-limiting, CORS control, field-level AES-256 encryption, multipart repository uploads, audit logging, and orchestration of scanning and verification.
-2. **`scanner/`**: Python-based AST analyzer for Python (`python_analyzer.py`) and JavaScript (`js_analyzer.py`) detecting hardcoded keys, broken primitives (MD5, DES, RSA-1024), insecure RNGs, and quantum-vulnerable cryptography.
-3. **`cbom-service/`**: Cryptographic Bill of Materials generator adhering to the CycloneDX standard, featuring purpose-based PQC transition recommendations (e.g. ML-KEM for key exchange, ML-DSA for digital signatures).
-4. **`integrity-service/`**: Enterprise cryptographic integrity layer providing:
-   - **Deterministic Merkle Trees** (`merkle.js`): Component-level leaf hashing, canonical key sorting, and independent Merkle proof verification.
-   - **KMS Key Management** (`kms.js`, `providers/awsKmsEthSigner.js`): Redacted, secure key representations, AWS KMS integration, and life-cycle management.
-   - **RFC 3161 Trusted Timestamping** (`timestamp.js`): Live TSA integration (DigiCert Trusted G4) producing authenticatable ASN.1 DER CMS SignedData tokens.
-   - **Post-Quantum Hybrid Signatures** (`hybrid-signature.js`): Dual-layer ECDSA-secp256k1 + ML-DSA-65 (NIST FIPS 204) signing.
-5. **`blockchain-module/`**: Hardhat smart-contract module deploying and interacting with `CryptoAnchor.sol` on Ethereum Sepolia. Write-once, on-chain tamper evidence.
-6. **`frontend/`**: Interactive dashboard, CBOM viewer, findings browser, and live on-chain verification interface.
+🏠 Dashboard & Security Control Center
+![CryptoScan Dashboard](frontend/hero-image.png)
 
----
+🛡️ Cryptographic Network & Visual Assurance
+![Cryptographic Analysis](frontend/assets/images/hero-network.png)
 
-## ⚡ Live Ethereum Sepolia & Local Deployment
+✨ Key Features
 
-- **Smart Contract:** `CryptoAnchor`
-- **Sepolia Network:** `sepolia` (Chain ID `11155111`)
-- **Sepolia Address:** [`0x6BD080EfF2E516B6F02d87Cc2D11dCf8A7c86898`](https://sepolia.etherscan.io/address/0x6BD080EfF2E516B6F02d87Cc2D11dCf8A7c86898)
-- **Local Network:** `localhost` (Chain ID `31337`)
-- **Local Address:** `0x610178dA211FEF7D417bC0e6FeD39F05609AD788`
-- **Deployment Artifacts:** [`blockchain-module/deployed-sepolia.json`](file:///c:/Users/Shravani/Downloads/Cryptoscan-main/blockchain-module/deployed-sepolia.json), [`blockchain-module/deployed-localhost.json`](file:///c:/Users/Shravani/Downloads/Cryptoscan-main/blockchain-module/deployed-localhost.json)
+🔍 Static AST Code Scanner — Deep Python and JavaScript AST analysis to detect hardcoded keys, weak ciphers (MD5, DES, RSA-1024), insecure RNGs, and post-quantum vulnerabilities.
+📋 CycloneDX CBOM Engine — Native CycloneDX v1.6 Cryptographic Bill of Materials generator with automatic purpose detection and PQC migration advice.
+🌲 Deterministic Merkle Integrity — Binary Merkle tree root hashing with canonical JSON sorting for instant tamper detection.
+⏰ RFC 3161 Trusted Timestamping — Authenticatable ASN.1 DER CMS SignedData tokens issued by DigiCert Trusted G4 TSA.
+🛡️ Post-Quantum Hybrid Signatures — Dual-layer signing combining ECDSA-secp256k1 + NIST FIPS 204 ML-DSA-65 signatures.
+⛓️ On-Chain Sepolia Anchoring — Immutable proof storage in CryptoAnchor.sol smart contract on Ethereum Sepolia.
+🎨 Interactive Glassmorphic Dashboard — Live CBOM browser, findings browser, risk migration planner, and on-chain verification interface.
+🔒 Enterprise KMS & Key Safety — Redacted key representations, AWS KMS integration, and zero-trust credentials management.
 
-> [!CAUTION]
-> **SECURITY WARNING:** Never commit `.env` files, private keys, or credentials to version control. All `.env` files are strictly gitignored. Real private keys must only reside in your local `.env`.
+🏗️ System Modules
 
----
+⚙️ Backend Core (backend-core/)
+Express.js REST API, PostgreSQL/SQLite database via Prisma ORM, JWT authentication, rate-limiting, CORS control, field-level AES-256 encryption, and repository orchestration.
 
-## 📋 Prerequisites
+🔍 Scanner Engine (scanner/)
+Python-based AST analyzer (python_analyzer.py) and JavaScript analyzer (js_analyzer.py) detecting hardcoded credentials, broken ciphers, and quantum risks.
 
-- **Node.js**: v18+ (tested on Node.js v20 and v24)
-- **npm**: v9+
-- **Python**: 3.10+ (for Python scanner engine)
-- **Git**: v2.30+
-- **Docker & Docker Compose** (optional, for production containerized deployment)
+📋 CBOM Service (cbom-service/)
+CycloneDX v1.6 standard CBOM generator featuring purpose-based PQC transition recommendations (e.g. ML-KEM for key exchange, ML-DSA for digital signatures).
 
----
+🛡️ Integrity Service (integrity-service/)
+Enterprise cryptographic layer providing:
+- Deterministic Merkle Trees (merkle.js): Component-level leaf hashing and canonical sorting.
+- KMS Key Management (kms.js, providers/awsKmsEthSigner.js): Secure key representation and AWS KMS signing.
+- RFC 3161 Timestamping (timestamp.js): DigiCert Trusted G4 TSA integration producing DER CMS SignedData tokens.
+- Post-Quantum Hybrid Signatures (hybrid-signature.js): ECDSA + NIST FIPS 204 ML-DSA-65 signatures.
 
-## 🚀 Installation & Setup
+⛓️ Blockchain Module (blockchain-module/)
+Hardhat smart-contract environment deploying and interacting with CryptoAnchor.sol on Ethereum Sepolia for write-once on-chain tamper evidence.
 
-### 1. Backend Core Setup
+🎨 Frontend UI (frontend/)
+Interactive glassmorphic dashboard, CBOM viewer, findings browser, risk migration planner, and live on-chain verification interface.
+
+🎯 Project Objective
+
+Modern software ecosystems face critical security threats due to unmonitored cryptographic assets, legacy ciphers (RSA, ECC, MD5, DES), and the upcoming threat of quantum computing capable of breaking public-key encryption.
+
+CryptoScan addresses these enterprise security challenges by combining:
+
+- Blockchain technology & smart contracts for trust, transparency, and automated enforcement.
+- Post-Quantum Cryptography (PQC) readiness via NIST FIPS 204 standards.
+- Static AST parsing for full cryptographic asset visibility.
+- RFC 3161 Trusted Timestamps for legal non-repudiation.
+- Modern web interfaces for seamless enterprise operations.
+
+The result is a secure digital payment & cryptographic assurance ecosystem designed specifically for modern enterprise compliance and post-quantum readiness.
+
+⚡ Live Ethereum Sepolia Contract & Local Deployment
+
+- Smart Contract: CryptoAnchor
+- Network: Ethereum Sepolia (Chain ID: 11155111)
+- Sepolia Address: [0x6BD080EfF2E516B6F02d87Cc2D11dCf8A7c86898](https://sepolia.etherscan.io/address/0x6BD080EfF2E516B6F02d87Cc2D11dCf8A7c86898)
+- Local Dev Network: localhost (Chain ID: 31337)
+- Local Address: 0x610178dA211FEF7D417bC0e6FeD39F05609AD788
+- Deployment Artifacts: [blockchain-module/deployed-sepolia.json](file:///c:/Users/Shravani/Downloads/Cryptoscan_new/blockchain-module/deployed-sepolia.json), [blockchain-module/deployed-localhost.json](file:///c:/Users/Shravani/Downloads/Cryptoscan_new/blockchain-module/deployed-localhost.json)
+
+⚠️ Security Warning: Never commit .env files, private keys, or API credentials to version control. All .env files are strictly gitignored. Real private keys must reside only in your local environment.
+
+📋 Prerequisites
+
+- Node.js: v18+ (tested on Node.js v20 and v24)
+- npm: v9+
+- Python: 3.10+
+- Git: v2.30+
+- Docker & Docker Compose (optional for production deployment)
+
+🚀 Installation & Setup
+
+1. Backend Core Setup
 ```bash
 cd backend-core
 npm install
@@ -75,118 +91,106 @@ cp .env.example .env
 npm run prisma:migrate
 ```
 
-Configure `backend-core/.env`:
+Configure backend-core/.env:
 ```env
 DATABASE_URL="file:./dev.db"
-JWT_SECRET="your-secure-random-jwt-secret"       # >= 32 random chars — validated at startup
+JWT_SECRET="your-secure-random-jwt-secret"
 JWT_EXPIRES_IN="7d"
-DATA_ENCRYPTION_KEY=                              # base64-encoded 32-byte AES-256 key
+DATA_ENCRYPTION_KEY=
 PORT=3000
 MAX_UPLOAD_SIZE_MB=50
 RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-PRIVATE_KEY=0x<YOUR_SEPOLIA_PRIVATE_KEY>          # only used when KMS_PROVIDER=env (default)
-KMS_PROVIDER=env                                  # or "aws-kms"
-ALLOWED_ORIGINS=                                  # required in production (comma-separated)
-FRONTEND_URL=http://localhost:3000                # base URL for OAuth redirects
+PRIVATE_KEY=0x<YOUR_SEPOLIA_PRIVATE_KEY>
+KMS_PROVIDER=env
+ALLOWED_ORIGINS=
+FRONTEND_URL=http://localhost:3000
 ```
 
-### 2. Blockchain Module Setup
+2. Blockchain Module Setup
 ```bash
 cd ../blockchain-module
 npm install
 cp .env.example .env
 ```
 
-Configure `blockchain-module/.env`:
+Configure blockchain-module/.env:
 ```env
 RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 PRIVATE_KEY=0x<YOUR_SEPOLIA_PRIVATE_KEY>
 ```
 
-### 3. Scanner Setup
+3. Scanner Engine Setup
 ```bash
 cd ../scanner
 python -m venv .venv
+
 # On Windows:
 .\.venv\Scripts\activate
+
 # On Linux/macOS:
 source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
----
+🖥️ Running the Application
 
-## 🖥️ Running the Application
-
-### 1. Start Backend API
+1. Start Backend API
 ```bash
 cd backend-core
 npm start
 # Server listens on http://localhost:3000
 ```
 
-### 2. Launch Frontend
-Serve the `frontend/` directory using any static web server:
+2. Launch Frontend UI
 ```bash
 cd frontend
 npx serve . -l 8080
 # Open http://localhost:8080 in your browser
 ```
 
----
-
-## 🐳 Production Deployment (Self-Hosted Docker)
-
-The stack ships with `docker-compose.yml` at the repo root: `nginx` (single ingress on port 80) → `backend-core` (serves API and static frontend from same origin) + `cbom-service`, backed by `redis` (rate-limit storage) and a persisted SQLite volume.
-
+🐳 Production Deployment (Docker Compose)
 ```bash
-# 1. Configure secrets
+# 1. Configure production environment secrets
 cp backend-core/.env.example backend-core/.env
-# Set NODE_ENV=production and configure JWT_SECRET, DATA_ENCRYPTION_KEY, etc.
 
-# 2. Build and start
+# 2. Build and start services
 docker compose up -d --build
 
-# 3. Check health
+# 3. Check health status
 curl http://localhost/health
 ```
 
----
+🔍 Cryptographic Workflows & Verification
 
-## 🔍 Cryptographic Workflows & Verification
+Performing a Scan & Generating Findings
+1. User authenticates via POST /auth/login or POST /auth/signup.
+2. Upload source code repository archive (.zip) via POST /repos/upload.
+3. Trigger AST analysis engine via POST /scan/:repoId.
+4. Retrieve findings via GET /scan/:scanId/findings.
+5. Export CycloneDX CBOM via GET /scan/:scanId/cbom.
 
-### Performing a Scan & Generating Findings
-1. User logs in via `POST /auth/login` or signs up via `POST /auth/signup`.
-2. Upload source code archive (`.zip`) via `POST /repos/upload`.
-3. Trigger cryptographic analysis via `POST /scan/:repoId`.
-4. Retrieve detected findings via `GET /scan/:scanId/findings`.
-5. Retrieve CycloneDX-compliant CBOM via `GET /scan/:scanId/cbom`.
+Merkle Integrity & Sepolia On-Chain Anchoring
+1. Anchor Scan (POST /scan/:scanId/anchor):
+   - CBOM cryptographic assets canonicalized into a deterministic binary Merkle Tree.
+   - Merkle root stamped by DigiCert Trusted G4 RFC 3161 TSA.
+   - Commitment signed via KMS and NIST FIPS 204 ML-DSA-65.
+   - Transaction submits commitment to CryptoAnchor.sol on Sepolia.
+2. On-Chain Verification (GET /scan/:scanId/verify):
+   - Reconstructs Merkle root from current database records.
+   - Queries Sepolia smart contract state live.
+   - Verifies recomputedHash === onChainHash and recovers signing authority.
+3. Tamper Detection:
+   - Any database alteration changes the recomputed Merkle root, yielding a mismatch (onChainHash !== offChainHash) and returning verified: false.
 
-### Merkle Integrity & Sepolia Anchoring
-1. **Anchor Scan:** Call `POST /scan/:scanId/anchor`.
-   - CBOM cryptographic components are canonicalized and structured into a **deterministic binary Merkle Tree**.
-   - The Merkle root is stamped by an **RFC 3161 Time Stamping Authority (DigiCert)**.
-   - The commitment is signed via **KMS-managed credentials** (and optionally NIST FIPS 204 ML-DSA-65).
-   - An on-chain transaction writes `(scanId, contentHash)` to `CryptoAnchor.sol` on Ethereum Sepolia.
-2. **On-Chain Verification:** Call `GET /scan/:scanId/verify`.
-   - Reconstructs current database components into a Merkle root.
-   - Queries the live Sepolia smart contract.
-   - Validates that `recomputedHash === onChainHash` and ECDSA signature recovers the anchoring authority.
-3. **Tamper Detection:**
-   - If any finding (algorithm, severity, file, key size) is altered in the database, recomputing the Merkle root yields an off-chain hash mismatch (`onChainHash !== offChainHash`).
-   - `GET /scan/:scanId/verify` returns `verified: false`, proving data tampering.
-
----
-
-## 🧪 Regression Test Suites
+🧪 Regression Test Suites
 
 CryptoScan includes comprehensive automated tests covering all modules:
 
 ```bash
-# 1. Integrity Service (Merkle, Batch Merkle, KMS, RFC 3161 Timestamp, Hybrid Signatures)
+# 1. Integrity Service Suite
 cd integrity-service
 node hybrid-signature.test.js    # 24 tests
 node merkle.test.js              # 23 tests
@@ -194,14 +198,14 @@ node batch-merkle.test.js        # 9 tests
 node timestamp.test.js           # 19 tests
 node kms.test.js                 # 8 tests
 
-# 2. Blockchain Smart Contract & Anchoring Suite (Hardhat)
+# 2. Blockchain Smart Contract Suite
 cd ../blockchain-module
 npx hardhat test test/CryptoAnchor.test.js test/ipfs.test.js
 
 # 3. Backend Core Integration Suite
 cd ../backend-core
-npm test                         # test/migrationSimulation.test.js — unit tests
-npm run test:integration         # test/scans.test.js — smoke & integration checks
+npm test
+npm run test:integration
 
 # 4. Scanner AST Analysis Suite
 cd ../scanner
@@ -212,5 +216,4 @@ cd ../cbom-service
 npm test
 ```
 
-### ✅ Test Results Summary: **All test suites 100% PASSED**
-All unit, integration, live Sepolia, and regression suites are green.
+✅ Test Results Summary: All test suites 100% PASSED
