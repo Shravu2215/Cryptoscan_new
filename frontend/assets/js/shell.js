@@ -155,6 +155,9 @@ class AppShell {
           <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;display:none;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
           <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </button>
+        <button class="icon-btn" id="compact-toggle-btn" title="Toggle Fit-to-Screen Compact View" style="display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+        </button>
         <button class="icon-btn" title="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
         </button>
@@ -168,6 +171,11 @@ class AppShell {
   }
 
   bindEvents() {
+    // Compact View State Check
+    if (localStorage.getItem('cs_compact') === 'true') {
+      document.documentElement.classList.add('compact-mode');
+    }
+
     // Theme toggle
     const themeBtn = document.getElementById('theme-toggle-btn');
     if (themeBtn) {
@@ -186,6 +194,24 @@ class AppShell {
       });
     }
     this.updateThemeIcons();
+
+    // Compact View Toggle
+    const compactBtn = document.getElementById('compact-toggle-btn');
+    if (compactBtn) {
+      const updateCompactBtnStyle = () => {
+        const isCompact = document.documentElement.classList.contains('compact-mode');
+        compactBtn.style.color = isCompact ? '#c084fc' : '';
+        compactBtn.style.borderColor = isCompact ? '#8b5cf6' : '';
+        compactBtn.style.background = isCompact ? 'rgba(139, 92, 246, 0.2)' : '';
+      };
+      updateCompactBtnStyle();
+
+      compactBtn.addEventListener('click', () => {
+        const isCompact = document.documentElement.classList.toggle('compact-mode');
+        localStorage.setItem('cs_compact', isCompact ? 'true' : 'false');
+        updateCompactBtnStyle();
+      });
+    }
 
     // Mobile Sidebar Toggle
     const mobileBtn = document.getElementById('mobile-menu-btn');

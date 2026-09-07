@@ -802,3 +802,83 @@ input:focus, select:focus, textarea:focus {
   background: rgba(139, 92, 246, 0.15) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;
 }
+
+/* ==========================================================================
+   COMPACT DENSITY MODE (Fit-To-Screen One-Click View)
+   ========================================================================== */
+html.compact-mode, body.compact-mode {
+  --topbar-height: 52px;
+  font-size: 12.5px !important;
+}
+
+html.compact-mode .app-topbar,
+body.compact-mode .app-topbar {
+  height: 52px !important;
+  padding: 0 18px !important;
+}
+
+html.compact-mode .content,
+html.compact-mode .app-page-container,
+body.compact-mode .content,
+body.compact-mode .app-page-container {
+  padding: 12px 18px !important;
+  gap: 12px !important;
+}
+
+html.compact-mode .stats-grid,
+body.compact-mode .stats-grid {
+  gap: 10px !important;
+}
+
+html.compact-mode .scard,
+body.compact-mode .scard {
+  padding: 10px 12px !important;
+}
+
+html.compact-mode .sc-val,
+body.compact-mode .sc-val {
+  font-size: 18px !important;
+}
+
+html.compact-mode .sc-lbl,
+body.compact-mode .sc-lbl {
+  margin-bottom: 4px !important;
+  font-size: 11px !important;
+}
+
+html.compact-mode .gcard,
+html.compact-mode .card,
+body.compact-mode .gcard,
+body.compact-mode .card {
+  padding: 12px 16px !important;
+}
+
+html.compact-mode .gc-hd,
+body.compact-mode .gc-hd {
+  padding: 12px 16px 0 16px !important;
+  margin-bottom: 8px !important;
+}
+
+html.compact-mode table th,
+html.compact-mode table td,
+body.compact-mode table th,
+body.compact-mode table td {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+html.compact-mode .filter-bar,
+body.compact-mode .filter-bar {
+  padding: 8px 16px !important;
+  gap: 8px !important;
+}
+
+html.compact-mode .chips-area,
+body.compact-mode .chips-area {
+  padding: 6px 16px !important;
+}
+
+html.compact-mode .detection-panel,
+body.compact-mode .detection-panel {
+  padding: 10px 16px !important;
+}
