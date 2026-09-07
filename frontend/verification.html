@@ -632,10 +632,25 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
       pointer-events: none;
       z-index: 1;
+      overflow: visible;
+    }
+
+    .merkle-tree-svg path {
+      stroke: var(--purple, #8b5cf6);
+      stroke-width: 2.5px;
+      stroke-opacity: 0.85;
+      fill: none;
+      transition: stroke 0.25s ease, stroke-width 0.25s ease, filter 0.25s ease;
+      filter: drop-shadow(0px 0px 4px rgba(139, 92, 246, 0.6));
+    }
+
+    .merkle-tree-svg path.selected-path {
+      stroke: #38bdf8 !important;
+      stroke-width: 3.5px !important;
+      stroke-opacity: 1 !important;
+      filter: drop-shadow(0px 0px 8px rgba(56, 189, 248, 0.9)) !important;
     }
 
     .merkle-tree-levels {
@@ -1913,9 +1928,16 @@
       const container = document.getElementById('merkle-tree-diagram');
       if (!svg || !container) return;
 
+      const levelsContainer = container.querySelector('.merkle-tree-levels');
+      const fullW = Math.max(container.clientWidth, container.scrollWidth, levelsContainer ? levelsContainer.scrollWidth + 40 : 0);
+      const fullH = Math.max(container.clientHeight, container.scrollHeight, levelsContainer ? levelsContainer.scrollHeight + 40 : 0);
+
+      svg.style.width = fullW + 'px';
+      svg.style.height = fullH + 'px';
+      svg.setAttribute('width', fullW);
+      svg.setAttribute('height', fullH);
       svg.innerHTML = '';
-      svg.setAttribute('width', Math.max(container.clientWidth, container.scrollWidth));
-      svg.setAttribute('height', Math.max(container.clientHeight, container.scrollHeight));
+
       const containerRect = container.getBoundingClientRect();
 
       const nodeEls = container.querySelectorAll('.mt-node');
@@ -1946,9 +1968,17 @@
           const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
           const d = `M ${pX} ${pY} C ${pX} ${midY}, ${cX} ${midY}, ${cX} ${cY}`;
           path.setAttribute('d', d);
-          path.setAttribute('stroke', 'var(--border-color)');
-          path.setAttribute('stroke-width', '1.5');
+          path.setAttribute('data-parent-id', parentEl.getAttribute('data-node-id'));
+          path.setAttribute('data-child-id', childEl.getAttribute('data-node-id'));
+          path.setAttribute('stroke', 'var(--purple, #8b5cf6)');
+          path.setAttribute('stroke-width', '2.5');
+          path.setAttribute('stroke-opacity', '0.85');
           path.setAttribute('fill', 'none');
+
+          if (window.selectedMerkleNodeId && (parentEl.getAttribute('data-node-id') === window.selectedMerkleNodeId || childEl.getAttribute('data-node-id') === window.selectedMerkleNodeId)) {
+            path.classList.add('selected-path');
+          }
+
           svg.appendChild(path);
         });
       });
@@ -1958,14 +1988,33 @@
       if (currentMerkleView === 'tree') drawMerkleTreeLines();
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+      const diagramEl = document.getElementById('merkle-tree-diagram');
+      if (diagramEl) {
+        diagramEl.addEventListener('scroll', () => {
+          if (currentMerkleView === 'tree') drawMerkleTreeLines();
+        }, { passive: true });
+      }
+    });
+
     function selectMerkleNode(nodeId) {
       if (!window.currentMerkleData || !window.currentMerkleData.nodesMap) return;
       const node = window.currentMerkleData.nodesMap[nodeId];
       if (!node) return;
 
+      window.selectedMerkleNodeId = nodeId;
+
       document.querySelectorAll('.mt-node, .merkle-leaf').forEach(el => {
         const isTarget = el.getAttribute('data-node-id') === nodeId || el.getAttribute('onclick')?.includes(nodeId);
         el.classList.toggle('selected', isTarget);
+      });
+
+      // Highlight SVG connector paths connected to this node
+      document.querySelectorAll('#merkle-tree-svg path').forEach(path => {
+        const pId = path.getAttribute('data-parent-id');
+        const cId = path.getAttribute('data-child-id');
+        const isConnected = (pId === nodeId || cId === nodeId);
+        path.classList.toggle('selected-path', isConnected);
       });
 
       const detail = document.getElementById('merkle-leaf-detail');
