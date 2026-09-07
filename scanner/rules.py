@@ -15,8 +15,12 @@ HASH_ALGOS = {
                                      "a memory-hard KDF (argon2id, scrypt, bcrypt) instead of a raw hash."),
     "sha1":    dict(algorithm="SHA-1",   severity=Severity.HIGH, quantum_risk=QuantumRisk.CLASSICAL_RISK,
                      recommendation="SHA-1 has known collision attacks. Replace with SHA-256 or SHA-3-256."),
+    "ripemd160": dict(algorithm="RIPEMD-160", severity=Severity.HIGH, quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                     recommendation="RIPEMD-160 is deprecated and vulnerable. Replace with SHA-256 or SHA-3-256."),
     "sha256":  dict(algorithm="SHA-256", severity=Severity.INFO,    quantum_risk=QuantumRisk.SAFE,
                      recommendation="SHA-256 is strong and quantum-safe against Shor's algorithm."),
+    "sha384":  dict(algorithm="SHA-384", severity=Severity.INFO,   quantum_risk=QuantumRisk.SAFE,
+                     recommendation="SHA-384 is strong and quantum-safe."),
     "sha3":    dict(algorithm="SHA-3",   severity=Severity.INFO,   quantum_risk=QuantumRisk.SAFE,
                      recommendation="SHA-3 is strong and quantum-safe."),
     "sha512":  dict(algorithm="SHA-512", severity=Severity.INFO,   quantum_risk=QuantumRisk.SAFE,
@@ -209,6 +213,43 @@ FERNET_PROFILE = dict(
 )
 
 # ---------------------------------------------------------------------------
+# JWT Algorithms & KDF Profiles
+# ---------------------------------------------------------------------------
+JWT_ALGOS = {
+    "hs256": dict(algorithm="HMAC-SHA256 (JWT)", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                  recommendation="HS256 (HMAC-SHA256) symmetric JWT signing is quantum-safe. Ensure secret key has at least 256 bits of entropy."),
+    "hs384": dict(algorithm="HMAC-SHA384 (JWT)", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                  recommendation="HS384 (HMAC-SHA384) is quantum-safe."),
+    "hs512": dict(algorithm="HMAC-SHA512 (JWT)", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                  recommendation="HS512 (HMAC-SHA512) is quantum-safe."),
+    "rs256": dict(algorithm="RSA-2048-SHA256 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="RS256 uses RSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204) or hybrid signatures."),
+    "rs384": dict(algorithm="RSA-3072-SHA384 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="RS384 uses RSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204)."),
+    "rs512": dict(algorithm="RSA-4096-SHA512 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="RS512 uses RSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204)."),
+    "es256": dict(algorithm="ECDSA-P256-SHA256 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="ES256 uses ECDSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204)."),
+    "es384": dict(algorithm="ECDSA-P384-SHA384 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="ES384 uses ECDSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204)."),
+    "es512": dict(algorithm="ECDSA-P521-SHA512 (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.QUANTUM_BROKEN,
+                  recommendation="ES512 uses ECDSA signatures broken by Shor's algorithm. Plan migration to ML-DSA (FIPS 204)."),
+    "none": dict(algorithm="None (JWT)", severity=Severity.CRITICAL, quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                 recommendation="JWT algorithm 'none' disables signature verification entirely. Reject 'none' algorithm."),
+}
+
+KDF_ALGOS = {
+    "bcrypt": dict(algorithm="bcrypt", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                   recommendation="bcrypt is a secure password-hashing function. Maintain a work factor of at least 12."),
+    "scrypt": dict(algorithm="scrypt", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                   recommendation="scrypt is a memory-hard password-hashing function. Quantum-safe against Grover's algorithm."),
+    "pbkdf2": dict(algorithm="PBKDF2", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                   recommendation="PBKDF2 is acceptable with HMAC-SHA256/SHA512 and >= 600,000 iterations (OWASP recommendation). For new systems prefer Argon2id."),
+    "pbkdf2hmac": dict(algorithm="PBKDF2-HMAC", severity=Severity.INFO, quantum_risk=QuantumRisk.SAFE,
+                       recommendation="PBKDF2-HMAC is acceptable with >= 600,000 iterations (OWASP recommendation). Prefer Argon2id."),
+}
+
+# ---------------------------------------------------------------------------
 # Centralized Algorithm Classification Registry (Weak, Strong, Non-Crypto)
 # ---------------------------------------------------------------------------
 
@@ -223,7 +264,9 @@ MODERN_STRONG_ALGORITHMS = frozenset({
     "sha256", "sha-256", "sha3", "sha-3", "sha384", "sha-384", "sha512", "sha-512",
     "aes-gcm", "aes-256-gcm", "aes-128-gcm", "chacha20-poly1305", "poly1305",
     "ml-kem", "ml-dsa", "slh-dsa", "ed25519", "x25519", "argon2", "argon2id",
-    "bcrypt", "scrypt", "pbkdf2-sha256", "pbkdf2-sha512",
+    "bcrypt", "scrypt", "pbkdf2-sha256", "pbkdf2-sha512", "pbkdf2", "pbkdf2hmac",
+    "hs256", "hs384", "hs512",
+    "tls_aes_256_gcm_sha384", "tls_chacha20_poly1305_sha256", "tls_aes_128_gcm_sha256",
 })
 
 ALL_KNOWN_ALGORITHM_NAMES = NON_CRYPTO_ALGORITHMS | MODERN_STRONG_ALGORITHMS | frozenset({
@@ -231,6 +274,9 @@ ALL_KNOWN_ALGORITHM_NAMES = NON_CRYPTO_ALGORITHMS | MODERN_STRONG_ALGORITHMS | f
     "des", "3des", "des3", "tripledes", "tdes", "rc2", "rc4", "arc4", "blowfish", "cast5", "idea",
     "aes", "aes-128", "aes-256", "aes-gcm", "aes-cbc", "aes-ecb", "rsa", "dsa", "ecdh", "ecdsa", "ecc",
     "lru", "lfu", "fifo", "gzip", "zstd", "snappy", "deflate", "bzip2", "brotli", "lz4",
+    "hs256", "hs384", "hs512", "rs256", "rs384", "rs512", "es256", "es384", "es512",
+    "ps256", "ps384", "ps512", "jwt",
+    "bcrypt", "scrypt", "pbkdf2", "argon2", "argon2id",
 })
 
 def is_known_algorithm_or_benign(val: str) -> bool:

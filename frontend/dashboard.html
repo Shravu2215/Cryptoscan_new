@@ -1349,11 +1349,22 @@
         const algoMap = {};
         allFindings.forEach(f => {
           const algo = f.algorithm || f.ruleId || 'Unknown';
-          if (!algoMap[algo]) algoMap[algo] = { count: 0, severity: f.severity || 'Medium', quant: f.quantumStatus };
+          const file = f.file || f.filePath || '';
+          if (!algoMap[algo]) algoMap[algo] = { count: 0, files: new Set(), severity: f.severity || 'Medium', quant: f.quantumStatus };
           algoMap[algo].count++;
+          if (file) algoMap[algo].files.add(file);
+          if ((f.severity || '').toUpperCase() === 'CRITICAL') algoMap[algo].severity = 'CRITICAL';
+          else if ((f.severity || '').toUpperCase() === 'HIGH' && algoMap[algo].severity !== 'CRITICAL') algoMap[algo].severity = 'HIGH';
+          if (f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln')) {
+            algoMap[algo].quant = 'Quantum Vulnerable';
+          }
         });
 
-        const sortedAlgos = Object.keys(algoMap).sort((a, b) => algoMap[b].count - algoMap[a].count).slice(0, 5);
+        const sortedAlgos = Object.keys(algoMap).sort((a, b) => {
+          const rankA = algoMap[a].severity.toUpperCase() === 'CRITICAL' ? 4 : algoMap[a].severity.toUpperCase() === 'HIGH' ? 3 : 2;
+          const rankB = algoMap[b].severity.toUpperCase() === 'CRITICAL' ? 4 : algoMap[b].severity.toUpperCase() === 'HIGH' ? 3 : 2;
+          return (rankB - rankA) || (algoMap[b].count - algoMap[a].count);
+        }).slice(0, 5);
 
         if (risksList) risksList.innerHTML = sortedAlgos.map(algo => {
           const item = algoMap[algo];
@@ -1366,11 +1377,12 @@
             qTag = `<span class="badge badge-quant" style="margin-left:8px;font-size:10px;">Quantum-Vuln</span>`;
           }
 
+          const fileCount = item.files.size || 1;
           return `
-        <div class="risk-item">
+        <div class="risk-item" style="cursor:pointer;" onclick="window.location.href='findings.html?algo=${encodeURIComponent(algo)}'">
           <div>
             <div class="risk-algo">${algo} ${qTag}</div>
-            <div class="risk-count">${item.count} affected file${item.count > 1 ? 's' : ''}</div>
+            <div class="risk-count">${fileCount} affected file${fileCount > 1 ? 's' : ''} (${item.count} finding${item.count > 1 ? 's' : ''})</div>
           </div>
           <span class="badge ${badgeClass}">${item.severity}</span>
         </div>
@@ -1386,7 +1398,36 @@
       const sysEmpty = document.getElementById('empty-systems-risks');
       const sysList = document.getElementById('systems-risks-list');
 
-      if (allFindings.length > 0) {
+      const systemsData = (currentScan && currentScan.systems && currentScan.systems.length > 0)
+        ? currentScan.systems
+        : null;
+
+      if (systemsData && systemsData.length > 0) {
+        if (sysContent) sysContent.style.display = 'block';
+        if (sysEmpty) sysEmpty.style.display = 'none';
+
+        if (sysList) sysList.innerHTML = systemsData.slice(0, 5).map(sys => {
+          let badgeClass = 'badge-med';
+          let sevLabel = 'MEDIUM';
+          if (sys.critical_count > 0) {
+            badgeClass = 'badge-crit';
+            sevLabel = 'CRITICAL';
+          } else if (sys.high_count > 0) {
+            badgeClass = 'badge-high';
+            sevLabel = 'HIGH';
+          }
+
+          return `
+        <div class="risk-item" style="cursor:pointer;" onclick="window.location.href='findings.html?search=${encodeURIComponent(sys.path || sys.name)}'">
+          <div>
+            <div class="risk-algo">${sys.name}</div>
+            <div class="risk-count">${sys.findings_count} finding(s) • ${sys.quantum_broken_count} quantum-vulnerable</div>
+          </div>
+          <span class="badge ${badgeClass}">${sevLabel}</span>
+        </div>
+      `;
+        }).join('');
+      } else if (allFindings.length > 0) {
         if (sysContent) sysContent.style.display = 'block';
         if (sysEmpty) sysEmpty.style.display = 'none';
 
@@ -1411,7 +1452,7 @@
           if (item.severity.toUpperCase() === 'HIGH') badgeClass = 'badge-high';
 
           return `
-        <div class="risk-item" style="cursor:pointer;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(sys)}'">
+        <div class="risk-item" style="cursor:pointer;" onclick="window.location.href='findings.html?search=${encodeURIComponent(sys)}'">
           <div>
             <div class="risk-algo">${sys}</div>
             <div class="risk-count">${item.count} finding(s) • ${item.quant} quantum-vulnerable</div>

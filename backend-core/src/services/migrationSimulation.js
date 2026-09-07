@@ -361,6 +361,19 @@ function simulateMigration(component) {
       hybridByDefault: pqcGuidance.hybridByDefault,
     },
     cryptoAgilityScore,
+    estimatedEffort: (() => {
+      const fileCount = component.affectedFilesCount || component.occurrences || 1;
+      let scale = 1.0;
+      if (fileCount > 10) scale = 2.5;
+      else if (fileCount > 3) scale = 1.5;
+      const baseWeeks = (pqcGuidance.recommendation || '').includes('DSA') ? [4, 8] :
+                        (pqcGuidance.recommendation || '').includes('KEM') ? [2, 4] :
+                        (pqcGuidance.recommendation || '').includes('AES') ? [1, 2] : [2, 6];
+      const minWeeks = Math.max(1, Math.round(baseWeeks[0] * scale));
+      const maxWeeks = Math.max(minWeeks + 1, Math.round(baseWeeks[1] * scale));
+      return `${minWeeks}-${maxWeeks} weeks`;
+    })(),
+    affectedFilesCount: component.affectedFilesCount || component.occurrences || 1,
     riskExposure: {
       preBusinessRiskScore: riskScore,
       severity: riskSeverity,

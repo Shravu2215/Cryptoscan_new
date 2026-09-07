@@ -1,0 +1,28 @@
+# SSH server configuration — weak algorithms present for testing purposes
+# This file has NO extension to test content-based detection.
+# Scanner must detect this as an SSH config via content keywords,
+# not by filename or extension.
+
+Port 22
+Protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+
+# Weak key exchange — flagged by ssh-weak-kex-algorithm rule
+KexAlgorithms diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,curve25519-sha256
+
+# Weak ciphers — flagged by ssh-weak-cipher-algorithm rule
+Ciphers 3des-cbc,aes128-cbc,aes256-gcm@openssh.com
+
+# Weak MACs — flagged by ssh-weak-mac-algorithm rule
+MACs hmac-md5,hmac-sha1,hmac-sha2-256-etm@openssh.com
+
+# Deprecated host key algorithm — flagged by ssh-weak-hostkey-algorithm rule
+HostKeyAlgorithms ssh-dss,ssh-rsa,ecdsa-sha2-nistp256,ssh-ed25519
+
+PermitRootLogin no
+PasswordAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+StrictModes yes
+MaxAuthTries 6

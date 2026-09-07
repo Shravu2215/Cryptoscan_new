@@ -117,8 +117,34 @@ const PQC_MIGRATION_TABLE = {
     integrity_hashing: { recommendation: 'Replace with SHA-256 or SHA-3-256', standard: 'FIPS 180-4 / FIPS 202', rationale: 'SHA-1 has practical collision attacks; deprecated by NIST since 2011, disallowed since 2030 (already unsafe today).' },
   },
   'SHA-256': {
-    integrity_hashing: { recommendation: 'No change needed', standard: 'FIPS 180-4', rationale: 'Grover\u2019s algorithm only reduces preimage resistance from 256 to ~128 bits, which remains adequate.' },
+    integrity_hashing: { recommendation: 'No change needed', standard: 'FIPS 180-4', rationale: 'Grover’s algorithm only reduces preimage resistance from 256 to ~128 bits, which remains adequate.' },
     mac: { recommendation: 'No change needed (HMAC-SHA256)', standard: 'FIPS 198-1', rationale: 'Hash-based MACs retain adequate post-quantum margin at 256-bit output.' },
+  },
+  JWT: {
+    digital_signature: { recommendation: 'ML-DSA (Dilithium) or Ed25519 (interim)', standard: 'FIPS 204', rationale: 'JWT asymmetric signatures (RS256, ES256) require migration to post-quantum signature schemes.' },
+    mac: { recommendation: 'Keep HS256 / HS384 / HS512', standard: 'RFC 7518', rationale: 'Symmetric HMAC-based JWT tokens have adequate quantum margin.' },
+    unknown: { recommendation: 'Confirm JWT algorithm (prefer HS256 or ML-DSA)', standard: 'RFC 7518 / FIPS 204', rationale: 'Verify whether symmetric HMAC or asymmetric signature is used.' },
+  },
+  KDF: {
+    password_hashing: { recommendation: 'Keep Argon2id / bcrypt / scrypt', standard: 'RFC 9106 / NIST SP 800-132', rationale: 'Memory-hard KDFs provide quantum and classical brute-force resistance.' },
+    unknown: { recommendation: 'Use Argon2id for password storage', standard: 'RFC 9106', rationale: 'Standardize on Argon2id (RFC 9106).' },
+  },
+  bcrypt: {
+    password_hashing: { recommendation: 'Keep bcrypt (work factor >= 12) or migrate to Argon2id', standard: 'RFC 9106', rationale: 'bcrypt is quantum-safe; ensure work factor is high enough against GPUs.' },
+  },
+  scrypt: {
+    password_hashing: { recommendation: 'Keep scrypt or migrate to Argon2id', standard: 'RFC 7914', rationale: 'Memory-hard password hashing function, quantum-safe.' },
+  },
+  PBKDF2: {
+    password_hashing: { recommendation: 'Increase iterations (>= 600k) or migrate to Argon2id', standard: 'NIST SP 800-132', rationale: 'PBKDF2 is quantum-safe but lacks memory-hardness.' },
+  },
+  Argon2id: {
+    password_hashing: { recommendation: 'No change needed (Argon2id)', standard: 'RFC 9106', rationale: 'Argon2id is quantum-safe and resistant to GPU/ASIC cracking.' },
+  },
+  TLS: {
+    key_exchange: { recommendation: 'ML-KEM (X25519+ML-KEM-768 hybrid)', standard: 'FIPS 203 / RFC 9370', rationale: 'TLS key exchange should migrate to hybrid classical+PQC (e.g. X25519MLKEM768).' },
+    digital_signature: { recommendation: 'ML-DSA (Dilithium)', standard: 'FIPS 204', rationale: 'TLS server certificates and handshakes will transition to ML-DSA.' },
+    unknown: { recommendation: 'Enable hybrid post-quantum key exchange (X25519MLKEM768)', standard: 'FIPS 203', rationale: 'Configure TLS stack for hybrid PQC key exchange.' },
   },
 };
 
@@ -129,7 +155,7 @@ const PQC_MIGRATION_TABLE = {
 // interoperability/rollback safety while the PQC side is battle-tested.
 // Symmetric ciphers (AES/ChaCha20) and hashes only need a key-size/algorithm
 // bump, not a hybrid rollout, so they're excluded.
-const HYBRID_BY_DEFAULT_FAMILIES = new Set(['RSA', 'ECC', 'DH', 'DSA']);
+const HYBRID_BY_DEFAULT_FAMILIES = new Set(['RSA', 'ECC', 'DH', 'DSA', 'JWT', 'TLS']);
 const HYBRID_ELIGIBLE_PURPOSES = new Set(['key_exchange', 'digital_signature']);
 
 function isHybridByDefault(primitiveFamily, purpose) {
@@ -153,6 +179,13 @@ const PRIMITIVE_AGILITY_BASE = {
   AES: 45,
   ChaCha20: 45,
   'SHA-256': 45,
+  JWT: 35,
+  KDF: 40,
+  bcrypt: 40,
+  scrypt: 40,
+  PBKDF2: 35,
+  Argon2id: 45,
+  TLS: 35,
   DES: 10,
   MD5: 10,
   SHA1: 15,
@@ -197,7 +230,26 @@ function calculateCryptoAgilityScore(primitiveFamily, purpose) {
   return Math.max(0, Math.min(100, base + purposeScore + guidanceBonus));
 }
 
-function getMigrationGuidance(primitiveFamily, purpose) {
+function getMigrationGuidance(primitiveFamily, purpose, component = {}) {
+  if (component && (component.category === 'hardcoded-secret' || component.algorithm === 'Hardcoded key material')) {
+    return {
+      recommendation: 'Remove hardcoded secret and use a secure Secrets Manager (e.g., Vault, AWS Secrets Manager).',
+      standard: null,
+      rationale: 'Hardcoded secrets are a critical vulnerability and must be remediated immediately, independent of PQC migration.',
+      hybridByDefault: false,
+      cryptoAgilityScore: 0
+    };
+  }
+  if (primitiveFamily === 'MD5') {
+    return {
+      recommendation: 'Replace with SHA-256 or SHA-3-256',
+      standard: 'FIPS 180-4 / FIPS 202',
+      rationale: 'MD5 is broken classically (collision attacks); not a quantum-migration issue, it is already unsafe today.',
+      hybridByDefault: false,
+      cryptoAgilityScore: 25
+    };
+  }
+
   const hybridByDefault = isHybridByDefault(primitiveFamily, purpose);
   const cryptoAgilityScore = calculateCryptoAgilityScore(primitiveFamily, purpose);
 
@@ -219,8 +271,34 @@ function getMigrationGuidance(primitiveFamily, purpose) {
   return { ...guidance, hybridByDefault, cryptoAgilityScore };
 }
 
+const SENSITIVITY_PATTERNS = {
+  HEALTH: { keywords: ['health', 'hipaa', 'patient', 'medical', 'diagnosis', 'ehr', 'prescription'], defaultLifetimeYears: 20.0 },
+  PII: { keywords: ['ssn', 'social_security', 'dob', 'birthdate', 'passport', 'national_id', 'email', 'phone', 'user_address'], defaultLifetimeYears: 15.0 },
+  FINANCIAL: { keywords: ['credit_card', 'card_number', 'cvv', 'iban', 'bank_account', 'pan', 'payment_token', 'billing'], defaultLifetimeYears: 12.0 },
+  AUTH: { keywords: ['password', 'passwd', 'auth_token', 'api_key', 'jwt', 'secret_key', 'session_id'], defaultLifetimeYears: 5.0 }
+};
+
+function detectDataSensitivity(finding = {}) {
+  const text = [
+    finding.snippet,
+    finding.message,
+    finding.code_snippet,
+    finding.raw_call,
+    finding.usage,
+    finding.file
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  for (const [sens, config] of Object.entries(SENSITIVITY_PATTERNS)) {
+    if (config.keywords.some(kw => text.includes(kw))) {
+      return { sensitivity: sens, recommendedLifetimeYears: config.defaultLifetimeYears };
+    }
+  }
+  return { sensitivity: 'GENERAL', recommendedLifetimeYears: 7.0 };
+}
+
 module.exports = {
   detectPurpose,
+  detectDataSensitivity,
   getMigrationGuidance,
   isHybridByDefault,
   calculateCryptoAgilityScore,

@@ -800,14 +800,52 @@
   <script>
     let scans = [];
 
-    function init() {
+    async function init() {
       const data = CryptoEngine.getData();
       scans = data.scans || [];
+
+      // Live-fetch repositories from backend
+      try {
+        const token = localStorage.getItem('cs_token');
+        const res = await fetch('http://localhost:3000/repos', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const liveRepos = await res.json();
+          const repoMap = {};
+          liveRepos.forEach(r => {
+            const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+            if (r.id) repoMap[r.id] = crit;
+            if (r.name) repoMap[r.name] = crit;
+          });
+
+          // Sync into scans & data.repositories
+          scans.forEach(s => {
+            const liveCrit = repoMap[s.repoId] || repoMap[s.repoName] || repoMap[s.name];
+            if (liveCrit) {
+              s.businessCriticality = liveCrit;
+              s.criticality_tier = liveCrit;
+            }
+          });
+          (data.repositories || []).forEach(r => {
+            const liveCrit = repoMap[r.id] || repoMap[r.name];
+            if (liveCrit) {
+              r.businessCriticality = liveCrit;
+              r.criticality_tier = liveCrit;
+            }
+          });
+          CryptoEngine.saveData(data);
+        }
+      } catch (err) {
+        console.warn('Could not fetch live repos:', err);
+      }
+
       if (scans.length === 0 && data.repositories && data.repositories.length > 0) {
         scans = data.repositories.map(r => ({
           repoId: r.id,
           repoName: r.name,
-          businessCriticality: r.businessCriticality || 'MEDIUM',
+          businessCriticality: r.businessCriticality || r.criticality_tier || 'Not tagged',
+          criticality_tier: r.businessCriticality || r.criticality_tier || 'Not tagged',
           language: r.language || 'Multi-language',
           timestamp: r.lastScan || new Date().toISOString(),
           findings: r.findings || [],
@@ -932,7 +970,8 @@
           const isQuant = s.quantumCount > 0 || findings.some(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'));
           const quantBadge = isQuant ? '<span class="badge badge-quant">Vulnerable</span>' : '<span class="badge badge-safe">Safe</span>';
           const cbomStatus = (s.cbom && s.cbom.length > 0) || s.assetsFound > 0 ? '<span class="badge badge-safe">Generated</span>' : '<span class="badge badge-low">Not Generated</span>';
-          const criticality = (s.businessCriticality || 'MEDIUM').toUpperCase();
+          const critRaw = (s.businessCriticality || s.criticality_tier || 'Not tagged').trim();
+          const critUpper = critRaw.toUpperCase();
 
           let displayDate = 'Just now';
           if (s.timestamp) {
@@ -949,11 +988,12 @@
             </div>
           </td>
           <td>
-            <select class="inp-filter" style="padding:2px 6px; font-size:11px; font-weight:600; background:var(--bg-card); color:var(--text-h);" onchange="updateRepoCriticality('${s.repoId || repoName}', this.value)">
-              <option value="CRITICAL" ${criticality==='CRITICAL'?'selected':''}>CRITICAL</option>
-              <option value="HIGH" ${criticality==='HIGH'?'selected':''}>HIGH</option>
-              <option value="MEDIUM" ${criticality==='MEDIUM'?'selected':''}>MEDIUM</option>
-              <option value="LOW" ${criticality==='LOW'?'selected':''}>LOW</option>
+            <select class="inp-filter" style="padding:4px 8px; font-size:12px; font-weight:600; border-radius:4px; background:var(--bg-card); color:var(--text-h);" onfocus="this.dataset.prevVal = this.value" onchange="updateRepoCriticality('${s.repoId || repoName}', this.value, this)">
+              <option value="Critical" ${critUpper==='CRITICAL'?'selected':''}>Critical</option>
+              <option value="Important" ${critUpper==='IMPORTANT'||critUpper==='HIGH'?'selected':''}>Important</option>
+              <option value="Standard" ${critUpper==='STANDARD'||critUpper==='MEDIUM'?'selected':''}>Standard</option>
+              <option value="Low" ${critUpper==='LOW'?'selected':''}>Low</option>
+              <option value="Not tagged" ${critUpper==='NOT TAGGED'||critUpper==='NOT_TAGGED'||critUpper===''?'selected':''}>Not tagged</option>
             </select>
           </td>
           <td><span style="color:var(--text-m);">${s.language || 'Python'}</span></td>
@@ -972,34 +1012,77 @@
       }
     }
 
-    async function updateRepoCriticality(repoId, newCrit) {
+    async function updateRepoCriticality(repoId, newCrit, selectEl) {
+      if (selectEl) selectEl.dataset.prevVal = newCrit;
+      const cleanTarget = String(repoId || '').replace(/\.zip$/i, '').toLowerCase();
+
+      // 1. Instantly and optimistically update client-side state across engine and localStorage
+      if (typeof CryptoEngine !== 'undefined') {
+        try {
+          const data = CryptoEngine.getData();
+          let matched = false;
+
+          (data.repositories || []).forEach(r => {
+            const rIdClean = String(r.id || '').replace(/\.zip$/i, '').toLowerCase();
+            const rNameClean = String(r.name || '').replace(/\.zip$/i, '').toLowerCase();
+            if (r.id === repoId || r.name === repoId || rIdClean === cleanTarget || rNameClean === cleanTarget) {
+              r.businessCriticality = newCrit;
+              r.criticality_tier = newCrit;
+              matched = true;
+            }
+          });
+
+          (data.scans || []).forEach(s => {
+            const sIdClean = String(s.repoId || '').replace(/\.zip$/i, '').toLowerCase();
+            const sNameClean = String(s.repoName || s.name || '').replace(/\.zip$/i, '').toLowerCase();
+            if (s.repoId === repoId || s.repoName === repoId || sIdClean === cleanTarget || sNameClean === cleanTarget || !matched) {
+              s.businessCriticality = newCrit;
+              s.criticality_tier = newCrit;
+              (s.findings || []).forEach(f => {
+                f.businessCriticality = newCrit;
+                f.criticality_tier = newCrit;
+              });
+            }
+          });
+
+          if (data.activeScan) {
+            const aIdClean = String(data.activeScan.repoId || '').replace(/\.zip$/i, '').toLowerCase();
+            const aNameClean = String(data.activeScan.repoName || data.activeScan.name || '').replace(/\.zip$/i, '').toLowerCase();
+            if (data.activeScan.repoId === repoId || data.activeScan.repoName === repoId || aIdClean === cleanTarget || aNameClean === cleanTarget || !matched) {
+              data.activeScan.businessCriticality = newCrit;
+              data.activeScan.criticality_tier = newCrit;
+              (data.activeScan.findings || []).forEach(f => {
+                f.businessCriticality = newCrit;
+                f.criticality_tier = newCrit;
+              });
+            }
+          }
+
+          CryptoEngine.saveData(data);
+          window.dispatchEvent(new Event('cryptoscan_data_updated'));
+        } catch (storageErr) {
+          console.warn('Local state update warning:', storageErr);
+        }
+      }
+
+      // 2. Persist to backend API (sync single source of truth)
       try {
         const token = localStorage.getItem('cs_token');
-        await fetch(`http://localhost:3000/repos/${encodeURIComponent(repoId)}`, {
+        const res = await fetch(`http://localhost:3000/repos/${encodeURIComponent(repoId)}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ businessCriticality: newCrit })
+          body: JSON.stringify({ businessCriticality: newCrit, criticality_tier: newCrit })
         });
+        if (res.ok) {
+          const updated = await res.json();
+          const savedCrit = updated.businessCriticality || updated.criticality_tier || newCrit;
+          if (selectEl) selectEl.dataset.prevVal = savedCrit;
+        }
       } catch (e) {
-        console.warn('Backend update failed:', e);
-      }
-
-      if (typeof CryptoEngine !== 'undefined') {
-        const data = CryptoEngine.getData();
-        (data.scans || []).forEach(s => {
-          if (s.repoId === repoId || s.repoName === repoId || s.name === repoId) {
-            s.businessCriticality = newCrit;
-          }
-        });
-        (data.repositories || []).forEach(r => {
-          if (r.id === repoId || r.name === repoId) {
-            r.businessCriticality = newCrit;
-          }
-        });
-        CryptoEngine.saveData(data);
+        console.warn('Backend API sync skipped (offline mode):', e.message);
       }
     }
 

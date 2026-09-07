@@ -226,6 +226,110 @@ KNOWN_CRYPTO_LIBRARIES: Dict[str, Dict[str, Dict[str, Any]]] = {
 
 
 # ---------------------------------------------------------------------------
+# Lockfile Version Resolver
+# ---------------------------------------------------------------------------
+
+class LockfileVersionResolver:
+    """
+    Resolves precise locked dependency versions from lockfiles
+    (package-lock.json, yarn.lock, pinned requirements.txt, pom.xml).
+    """
+    def __init__(self, repo_dir: str = ""):
+        self.repo_dir = repo_dir
+        self.npm_locked: Dict[str, str] = {}
+        self.pip_locked: Dict[str, str] = {}
+        self.maven_locked: Dict[str, str] = {}
+        if repo_dir and os.path.exists(repo_dir):
+            self.load_from_dir(repo_dir)
+
+    def load_from_dir(self, repo_dir: str):
+        self.repo_dir = repo_dir
+        for root, _, files in os.walk(repo_dir):
+            for fn in files:
+                fn_lower = fn.lower()
+                fp = os.path.join(root, fn)
+                if fn_lower == "package-lock.json":
+                    self._parse_package_lock(fp)
+                elif fn_lower in {"requirements.txt", "requirements-lock.txt"} or (fn_lower.startswith("requirements") and fn_lower.endswith(".txt")):
+                    self._parse_requirements_txt(fp)
+                elif fn_lower == "pom.xml":
+                    self._parse_pom_xml(fp)
+
+    def _parse_package_lock(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                data = json.load(fh)
+            # v2/v3 lockfile format
+            packages = data.get("packages", {})
+            for pkg_path, meta in packages.items():
+                if isinstance(meta, dict) and "version" in meta:
+                    pkg_name = pkg_path.split("node_modules/")[-1].lower()
+                    if pkg_name and pkg_name not in self.npm_locked:
+                        self.npm_locked[pkg_name] = str(meta["version"])
+            # v1 lockfile format
+            dependencies = data.get("dependencies", {})
+            for dep_name, meta in dependencies.items():
+                if isinstance(meta, dict) and "version" in meta:
+                    dep_lower = dep_name.lower()
+                    if dep_lower not in self.npm_locked:
+                        self.npm_locked[dep_lower] = str(meta["version"])
+        except Exception:
+            pass
+
+    def _parse_requirements_txt(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    m = re.match(r'^([A-Za-z0-9_\-\.]+)\s*==\s*([A-Za-z0-9_\-\.]+)', line)
+                    if m:
+                        pkg = m.group(1).lower().replace("-", "").replace("_", "")
+                        self.pip_locked[pkg] = m.group(2)
+        except Exception:
+            pass
+
+    def _parse_pom_xml(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                source = fh.read()
+            xml_clean = re.sub(r' xmlns="[^"]+"', '', source, count=1)
+            root = ET.fromstring(xml_clean)
+            for dep in root.findall(".//dependency"):
+                artifact_id_el = dep.find("artifactId")
+                version_el = dep.find("version")
+                if artifact_id_el is not None and artifact_id_el.text and version_el is not None and version_el.text:
+                    art_id = artifact_id_el.text.strip().lower()
+                    ver = version_el.text.strip()
+                    if not ver.startswith("${"):
+                        self.maven_locked[art_id] = ver
+        except Exception:
+            pass
+
+    def resolve_version(self, ecosystem: str, lib_name: str, fallback_version: str = "") -> str:
+        """Returns the precise locked version, or a normalized version from manifest."""
+        if ecosystem == "npm":
+            lib_lower = lib_name.lower()
+            if lib_lower in self.npm_locked:
+                return self.npm_locked[lib_lower]
+        elif ecosystem == "pip":
+            norm = lib_name.lower().replace("-", "").replace("_", "")
+            if norm in self.pip_locked:
+                return self.pip_locked[norm]
+        elif ecosystem == "maven":
+            lib_lower = lib_name.lower()
+            if lib_lower in self.maven_locked:
+                return self.maven_locked[lib_lower]
+
+        if fallback_version:
+            # Strip prefixes like ^, ~, >=, ==, v
+            cleaned = re.sub(r'^[^\d]*', '', fallback_version.strip())
+            return cleaned if cleaned else fallback_version
+        return ""
+
+
+# ---------------------------------------------------------------------------
 # Version Comparison Helper
 # ---------------------------------------------------------------------------
 
@@ -391,6 +495,8 @@ class SCAAnalyzer:
     Software Composition Analysis (SCA) Analyzer for dependency manifests.
     Extracts cryptography dependencies from package.json, requirements.txt, and pom.xml.
     """
+    def __init__(self, resolver: Optional[LockfileVersionResolver] = None):
+        self.resolver = resolver or LockfileVersionResolver()
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
         """Analyze a single dependency manifest. Returns list of Finding objects."""
@@ -434,6 +540,9 @@ class SCAAnalyzer:
             if profile.get("note"):
                 msg += f" {profile['note']}"
 
+            resolved_version = self.resolver.resolve_version(ecosystem, lib_name, version)
+            version_to_record = resolved_version or (str(version).strip() if version else "")
+
             finding = Finding(
                 file=file_path,
                 line=line_no,
@@ -452,7 +561,7 @@ class SCAAnalyzer:
                 generic=False,
                 confidence=Confidence.LIKELY,
                 tags=["sca", ecosystem, lib_name],
-                version=str(version or ""),
+                version=version_to_record,
             )
             findings.append(finding)
 

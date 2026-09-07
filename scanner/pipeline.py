@@ -5,6 +5,8 @@ import tempfile
 import zipfile
 import os
 import shutil
+import re
+from typing import Dict, Any, List
 
 # Make sure we can import from scanner
 _scanner_dir = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +22,7 @@ from scanner.dedup import dedup
 from scanner.regex_analyzer import RegexAnalyzer
 from scanner.entropy_analyzer import EntropyAnalyzer
 from scanner.confidence import promote_confirmed
-from scanner.sca_analyzer import SCAAnalyzer
+from scanner.sca_analyzer import SCAAnalyzer, LockfileVersionResolver
 from scanner.config_infra_analyzer import ConfigInfraAnalyzer, detect_exposure
 from scanner.container_analyzer import ContainerAnalyzer
 from scanner.binary_analyzer import BinaryAnalyzer
@@ -69,6 +71,24 @@ def _infer_library(f) -> str:
     return "Standard Crypto API"
 
 
+SENSITIVITY_PATTERNS = {
+    "HEALTH": ["health", "hipaa", "patient", "medical", "diagnosis", "ehr", "prescription"],
+    "PII": ["ssn", "social_security", "dob", "birthdate", "passport", "national_id", "email", "phone", "user_address"],
+    "FINANCIAL": ["credit_card", "card_number", "cvv", "iban", "bank_account", "pan", "payment_token", "billing"],
+    "AUTH": ["password", "passwd", "auth_token", "api_key", "jwt", "secret_key", "session_id"]
+}
+
+def _detect_data_sensitivity(f) -> str:
+    text = " ".join(filter(bool, [
+        getattr(f, "message", ""),
+        getattr(f, "code_snippet", ""),
+        getattr(f, "file", "")
+    ])).lower()
+    
+    for sens, keywords in SENSITIVITY_PATTERNS.items():
+        if any(kw in text for kw in keywords):
+            return sens
+    return "GENERAL"
 
 def _infer_key_size(f):
     alg = (f.algorithm or "").upper()
@@ -95,6 +115,256 @@ def _infer_key_size(f):
     return None
 
 
+def _build_repo_surface_map(all_files, target_dir) -> Dict[str, Any]:
+    """
+    Scans repo infrastructure and configuration files to build an external exposure map.
+    Identifies exposed services, port mappings, ingresses, and public modules.
+
+    Returns:
+        {
+          "exposed_dirs": set of relative directory paths confirmed externally reachable,
+          "exposed_service_names": set of service identifier strings (lowercase) from
+                                    K8s Service metadata.name, Ingress backend service names,
+                                    Terraform target names, or docker-compose service names.
+        }
+    """
+    exposed_dirs = set()
+    exposed_service_names: set = set()
+    COMPOSE_FILES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
+
+    for path in all_files:
+        fn = os.path.basename(path).lower()
+        rel = os.path.relpath(path, target_dir).replace("\\", "/")
+        rel_dir = os.path.dirname(rel).replace("\\", "/")
+
+        # 1. Docker Compose port exposures
+        if fn in COMPOSE_FILES or "compose" in fn:
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                    content = fh.read()
+                if re.search(r'(?:ports|expose)\s*:\s*\n(?:\s*-\s*["\']?[0-9]+[:0-9]*["\']?\s*\n)+', content, re.IGNORECASE) or \
+                   re.search(r'["\']?(?:80|443|8080|8443|3000|5000)[:/]', content):
+                    build_dirs = re.findall(r'build\s*:\s*(?:\./|context\s*:\s*(?:\./)?)([a-zA-Z0-9_\-\./]+)', content)
+                    for bdir in build_dirs:
+                        clean_bdir = bdir.strip("./\\ ").replace("\\", "/")
+                        if clean_bdir:
+                            exposed_dirs.add(clean_bdir)
+                    if rel_dir:
+                        exposed_dirs.add(rel_dir)
+                    # Extract docker-compose service names with port mappings
+                    svc_names = re.findall(r'^([a-zA-Z0-9_\-]+):\s*$', content, re.MULTILINE)
+                    for svc in svc_names:
+                        exposed_service_names.add(svc.lower())
+            except Exception:
+                pass
+
+        # 2. Kubernetes Service / Ingress — content-based, no path filter
+        # Parse ANY yaml/yml that contains K8s resources regardless of where it lives.
+        if fn.endswith(".yaml") or fn.endswith(".yml"):
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                    content = fh.read()
+
+                # Split multi-document YAML on --- separators
+                documents = re.split(r'^---\s*$', content, flags=re.MULTILINE)
+                for doc in documents:
+                    if not doc.strip():
+                        continue
+
+                    # Extract kind
+                    kind_m = re.search(r'^kind\s*:\s*(\S+)', doc, re.MULTILINE)
+                    kind = (kind_m.group(1) if kind_m else "").strip()
+
+                    # Extract metadata.name
+                    name_m = re.search(r'^metadata\s*:\s*$.*?^\s+name\s*:\s*(\S+)', doc, re.MULTILINE | re.DOTALL)
+                    if not name_m:
+                        name_m = re.search(r'name\s*:\s*(\S+)', doc, re.MULTILINE)
+                    svc_name = (name_m.group(1).strip() if name_m else "").lower()
+
+                    if kind == "Service":
+                        # Only LoadBalancer / NodePort are externally reachable
+                        if re.search(r'type\s*:\s*(?:LoadBalancer|NodePort)', doc, re.MULTILINE):
+                            if rel_dir:
+                                exposed_dirs.add(rel_dir)
+                            if svc_name:
+                                exposed_service_names.add(svc_name)
+                                # Also add hyphenated <-> underscore variants
+                                exposed_service_names.add(svc_name.replace("-", "_"))
+                                exposed_service_names.add(svc_name.replace("_", "-"))
+
+                    elif kind == "Ingress":
+                        if rel_dir:
+                            exposed_dirs.add(rel_dir)
+                        # Extract backend service names from Ingress rules
+                        backend_names = re.findall(
+                            r'service\s*:\s*\n\s+name\s*:\s*(\S+)',
+                            doc, re.MULTILINE
+                        )
+                        # Also match inline: backend.serviceName (v1beta1 style)
+                        backend_names += re.findall(
+                            r'serviceName\s*:\s*(\S+)',
+                            doc, re.MULTILINE
+                        )
+                        for bname in backend_names:
+                            bname_lower = bname.strip().lower()
+                            if bname_lower:
+                                exposed_service_names.add(bname_lower)
+                                exposed_service_names.add(bname_lower.replace("-", "_"))
+                                exposed_service_names.add(bname_lower.replace("_", "-"))
+            except Exception:
+                pass
+
+        # 3. Terraform Ingress / Security Groups open to the internet
+        if fn.endswith(".tf"):
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                    content = fh.read()
+                # Any resource that permits inbound 0.0.0.0/0 or ::/0
+                if re.search(
+                    r'cidr_blocks\s*=\s*\[[^]]*(?:0\.0\.0\.0/0|::/0)[^]]*\]|'
+                    r'source_ranges\s*=\s*\[[^]]*(?:0\.0\.0\.0/0|::/0)[^]]*\]|'
+                    r'source_address_prefix\s*=\s*["\']\*["\']',
+                    content, re.IGNORECASE
+                ):
+                    if rel_dir:
+                        exposed_dirs.add(rel_dir)
+                    # Extract named resources that are publicly exposed
+                    resource_names = re.findall(
+                        r'resource\s+"[^"]+"\s+"([^"]+)"', content
+                    )
+                    for rname in resource_names:
+                        # Normalise: public_gateway_sg -> public-gateway, public_gateway
+                        base = re.sub(r'[_-](sg|tg|lb|alb|nlb|group|rule|asg)$', '', rname.lower())
+                        for variant in (base, base.replace("_", "-"), base.replace("-", "_")):
+                            if variant:
+                                exposed_service_names.add(variant)
+            except Exception:
+                pass
+
+    return {"exposed_dirs": exposed_dirs, "exposed_service_names": exposed_service_names}
+
+
+def _is_file_exposed(rel_path: str, source: str, surface_map: Dict[str, Any]) -> str:
+    """
+    Ranked strategies to determine if a finding's file is externally reachable.
+
+    Strategy 1 (strongest): Explicit service name match.
+      If any path component (directory or filename stem) matches a service identifier
+      extracted from infra config (K8s metadata.name, Ingress backend, Terraform resource),
+      classify as External.
+
+    Strategy 2: Directory prefix match.
+      If any path prefix is in the set of directories confirmed exposed by infra signals.
+
+    Default: Internal — no infra evidence means not External.
+    """
+    norm_path = rel_path.replace("\\", "/")
+    parts = [p.lower() for p in norm_path.split("/")]
+    # Include stem of the filename (e.g. "public_gateway" from "public_gateway.js")
+    stems = set(parts)
+    for part in parts:
+        stem = part.rsplit(".", 1)[0] if "." in part else part
+        stems.add(stem)
+        stems.add(stem.replace("_", "-"))
+        stems.add(stem.replace("-", "_"))
+
+    # Strategy 1: explicit service name match from infra signals
+    service_names = surface_map.get("exposed_service_names", set())
+    if service_names and stems & service_names:
+        return "external-facing"
+
+    # Strategy 2: directory prefix match
+    for exp_dir in surface_map.get("exposed_dirs", set()):
+        if exp_dir and (norm_path.startswith(exp_dir + "/") or norm_path == exp_dir or exp_dir in parts):
+            return "external-facing"
+
+    # Default: internal (correct safe default — no infra evidence)
+    return "internal"
+
+
+def _compute_systems_rollup(all_files, findings, target_dir) -> List[Dict[str, Any]]:
+    """
+    Detects distinct system/service boundaries based on manifests and directory structure,
+    and rolls up findings per system.
+    """
+    system_map = {}
+    MANIFEST_NAMES = {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"}
+
+    for path in all_files:
+        fn = os.path.basename(path).lower()
+        rel = os.path.relpath(path, target_dir).replace("\\", "/")
+        parts = rel.split("/")
+
+        if fn in MANIFEST_NAMES or fn.startswith("dockerfile") or fn == "dockerfile":
+            if len(parts) > 1:
+                dir_name = parts[0]
+                if dir_name not in system_map:
+                    system_map[dir_name] = dir_name
+
+    top_dirs = set()
+    for path in all_files:
+        rel = os.path.relpath(path, target_dir).replace("\\", "/")
+        parts = rel.split("/")
+        if len(parts) > 1:
+            top_dirs.add(parts[0])
+
+    for d in top_dirs:
+        if d not in system_map and d not in {"docs", "tests", ".github", "scripts"}:
+            system_map[d] = d
+
+    if not system_map:
+        system_map["root"] = "main"
+
+    stats = {}
+    for sys_id, sys_name in system_map.items():
+        stats[sys_id] = {
+            "name": sys_name,
+            "path": sys_id,
+            "findings_count": 0,
+            "critical_count": 0,
+            "high_count": 0,
+            "quantum_broken_count": 0,
+            "algorithms": set(),
+        }
+
+    for f in findings:
+        rel = os.path.relpath(f.file, target_dir).replace("\\", "/")
+        parts = rel.split("/")
+        first_dir = parts[0] if len(parts) > 1 else "root"
+
+        matched_sys = first_dir if first_dir in stats else ("root" if "root" in stats else list(stats.keys())[0])
+        st = stats[matched_sys]
+        st["findings_count"] += 1
+        sev = (f.severity.value if hasattr(f.severity, 'value') else str(f.severity)).upper()
+        if sev == "CRITICAL":
+            st["critical_count"] += 1
+        elif sev == "HIGH":
+            st["high_count"] += 1
+
+        q = (f.quantum_risk.value if hasattr(f.quantum_risk, 'value') else str(f.quantum_risk)).lower()
+        if "broken" in q or "vuln" in q:
+            st["quantum_broken_count"] += 1
+        if f.algorithm:
+            st["algorithms"].add(f.algorithm)
+
+    result = []
+    for sys_id, st in stats.items():
+        if st["findings_count"] > 0 or len(stats) <= 3:
+            result.append({
+                "name": st["name"],
+                "path": st["path"],
+                "findings_count": st["findings_count"],
+                "critical_count": st["critical_count"],
+                "high_count": st["high_count"],
+                "quantum_broken_count": st["quantum_broken_count"],
+                "algorithms": sorted(list(st["algorithms"])),
+                "risk_score": (st["critical_count"] * 10) + (st["high_count"] * 5) + max(0, st["findings_count"] - st["critical_count"] - st["high_count"]),
+            })
+
+    result.sort(key=lambda s: s["risk_score"], reverse=True)
+    return result
+
+
 def scan_repo(repo_path, scan_id=None):
     scan_id = scan_id or str(uuid.uuid4())
     temp_dir = None
@@ -111,86 +381,120 @@ def scan_repo(repo_path, scan_id=None):
                 temp_dir.cleanup()
             return {"status": "FAILED", "error": str(e)}
 
+    lockfile_resolver = LockfileVersionResolver(target_dir)
     py = PythonAnalyzer()
     js = JSAnalyzer()
     rx = RegexAnalyzer()
     ent = EntropyAnalyzer()
-    sca = SCAAnalyzer()
+    sca = SCAAnalyzer(lockfile_resolver)
     infra = ConfigInfraAnalyzer()
     cnt = ContainerAnalyzer()
     bin_analyzer = BinaryAnalyzer()
     cert_analyzer = CertificateAnalyzer()
     findings = []
     
+    file_manifest = []
+    files_scanned = 0
+    files_skipped = 0
+    files_error = 0
+
+    all_files = []
     for root, dirs, files in os.walk(target_dir):
-        # exclude common dirs
         dirs[:] = [d for d in dirs if d not in {"node_modules", ".git", "venv", ".venv", "__pycache__", "vendor", "vendors", "bower_components", "dist", "build"}]
         for fn in files:
-            path = os.path.join(root, fn)
-            ext = os.path.splitext(fn)[1].lower()
-            fn_lower = fn.lower()
+            all_files.append(os.path.join(root, fn))
 
-            # Identify SCA manifests
-            is_sca_manifest = (
-                fn_lower in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"}
-                or (fn_lower.startswith("requirements") and fn_lower.endswith(".txt"))
-            )
+    surface_map = _build_repo_surface_map(all_files, target_dir)
 
-            # Exclusion filter for documentation, text, and non-source files
-            DOC_EXTS = {".md", ".markdown", ".rst", ".doc", ".docx", ".pdf", ".rtf", ".csv", ".log", ".txt", ".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg"}
-            DOC_NAMES = {"readme", "license", "changelog", "contributing", "blind_test_checklist", "checklist"}
-            rel_p = os.path.relpath(path, target_dir).replace("\\", "/").lower()
-            in_doc_dir = any(part in rel_p.split("/") for part in ["docs", "doc", "documentation", "man", "guides"])
+    for path in all_files:
+        fn = os.path.basename(path)
+        ext = os.path.splitext(fn)[1].lower()
+        fn_lower = fn.lower()
+        rel_path = os.path.relpath(path, target_dir).replace("\\", "/")
 
-            if (ext in DOC_EXTS and not is_sca_manifest) or fn_lower in DOC_NAMES or any(fn_lower.startswith(d + ".") for d in DOC_NAMES) or in_doc_dir:
-                if not is_sca_manifest:
-                    continue
+        is_sca_manifest = (
+            fn_lower in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"}
+            or (fn_lower.startswith("requirements") and fn_lower.endswith(".txt"))
+        )
 
-            # 0. Binary / Compiled-Artifact Layer
-            if ext in {".jar", ".class", ".so", ".dll", ".pyc", ".wasm", ".exe", ".dylib", ".o", ".a", ".lib"}:
-                findings.extend(bin_analyzer.analyze(path))
+        DOC_EXTS = {".md", ".markdown", ".rst", ".doc", ".docx", ".pdf", ".rtf", ".csv", ".log", ".txt", ".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg"}
+        DOC_NAMES = {"readme", "license", "changelog", "contributing", "blind_test_checklist", "checklist"}
+        in_doc_dir = any(part in rel_path.lower().split("/") for part in ["docs", "doc", "documentation", "man", "guides"])
+
+        if (ext in DOC_EXTS and not is_sca_manifest) or fn_lower in DOC_NAMES or any(fn_lower.startswith(d + ".") for d in DOC_NAMES) or in_doc_dir:
+            if not is_sca_manifest:
+                file_manifest.append({"file": rel_path, "status": "SKIPPED-UNSUPPORTED"})
+                files_skipped += 1
                 continue
 
+        if ext in {".jar", ".class", ".so", ".dll", ".pyc", ".wasm", ".exe", ".dylib", ".o", ".a", ".lib"}:
             try:
-                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-                    source = fh.read()
-            except OSError:
-                continue
+                findings.extend(bin_analyzer.analyze(path))
+                file_manifest.append({"file": rel_path, "status": "SCANNED"})
+                files_scanned += 1
+            except Exception as e:
+                file_manifest.append({"file": rel_path, "status": "ERROR", "error_msg": str(e)})
+                files_error += 1
+            continue
 
-            # Certificate & Key Layer
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                source = fh.read()
+        except OSError as e:
+            file_manifest.append({"file": rel_path, "status": "ERROR", "error_msg": str(e)})
+            files_error += 1
+            continue
+
+        try:
+            old_len = len(findings)
+
             if ext in {".pem", ".crt", ".cer", ".cert", ".key", ".pfx", ".p12"} or "-----BEGIN " in source:
                 findings.extend(cert_analyzer.analyze(path, source))
             
-            # Always run container layer check for Dockerfiles, Compose, and K8s manifests
             if fn.lower().startswith("dockerfile") or "compose" in fn.lower() or ext in {".yaml", ".yml"}:
                 findings.extend(cnt.analyze(path, source))
 
-            # 1. SCA Manifest Layer
-            if fn.lower() in {"package.json", "requirements.txt", "pom.xml", "build.gradle", "go.mod", "cargo.toml"} or (fn.lower().startswith("requirements") and fn.lower().endswith(".txt")):
+            if is_sca_manifest:
                 findings.extend(sca.analyze(path, source))
 
-            # 2. Infra / Config / Cert Layer
-            if ext in {".tf", ".conf", ".yaml", ".yml", ".ini", ".env", ".properties", ".xml"} or fn.lower() in {"nginx.conf", "httpd.conf", "apache2.conf", "dockerfile"} or fn.startswith("Dockerfile"):
+            # Infra/config analyzer — triggered for known config extensions AND for
+            # extensionless files (e.g. sshd_config, ipsec.conf without extension).
+            # The ConfigInfraAnalyzer gates itself by content, so false-positive risk
+            # from calling it on arbitrary extensionless files is negligible.
+            if ext in {".tf", ".conf", ".yaml", ".yml", ".ini", ".env", ".properties", ".xml"} \
+                    or fn.lower() in {"nginx.conf", "httpd.conf", "apache2.conf", "dockerfile"} \
+                    or fn.startswith("Dockerfile") \
+                    or ext == "":  # extensionless: sshd_config, ipsec.conf, etc.
                 findings.extend(infra.analyze(path, source))
-                findings.extend(rx.analyze(path, source))
-                findings.extend(ent.analyze(path, source))
 
-            # 3. Source Code / Regex / Entropy Layers
             if ext == ".py":
                 findings.extend(py.analyze(path, source))
+                findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
             elif ext in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
                 findings.extend(js.analyze(path, source))
-                findings.extend(ent.analyze(path, source))
-            elif ext in {".java", ".c", ".cpp", ".cc", ".h", ".hpp", ".cs", ".go", ".php", ".rb", ".rs", ".kt", ".swift", ".sql", ".sh", ".bash", ".pem", ".key", ".crt", ".pfx", ".p12"}:
                 findings.extend(rx.analyze(path, source))
                 findings.extend(ent.analyze(path, source))
+            else:
+                findings.extend(rx.analyze(path, source))
+                findings.extend(ent.analyze(path, source))
+
+            new_findings = findings[old_len:]
+            file_exposure = _is_file_exposed(rel_path, source, surface_map)
+            for f in new_findings:
+                if getattr(f, "exposure", "internal") == "internal":
+                    f.exposure = file_exposure
+
+            file_manifest.append({"file": rel_path, "status": "SCANNED"})
+            files_scanned += 1
+        except Exception as e:
+            file_manifest.append({"file": rel_path, "status": "ERROR", "error_msg": str(e)})
+            files_error += 1
                 
     findings = dedup(findings)
     findings = promote_confirmed(findings)
     findings = correlate_sca_with_source(findings)
 
-    # Apply allow-list / suppressions from .cryptoscan-ignore
     suppressions = load_suppressions(target_dir)
     _, suppressed_count = apply_suppressions(findings, suppressions, repo_path=target_dir)
     
@@ -200,11 +504,13 @@ def scan_repo(repo_path, scan_id=None):
 
         out_findings.append({
             "id": f"f{i+1}",
+            "rule_id": getattr(f, 'rule_id', None) or "",
             "file": rel_path,
             "line": f.line,
             "algorithm": f.algorithm,
             "category": f.category,
             "library": _infer_library(f),
+            "version": getattr(f, 'version', '') or '',
             "key_size": _infer_key_size(f),
             "severity": f.severity.value,
             "quantum_risk": f.quantum_risk.value,
@@ -213,10 +519,13 @@ def scan_repo(repo_path, scan_id=None):
             "raw_call": getattr(f, 'code_snippet', ''),
             "confidence": f.confidence.value,
             "detection_method": f.detection_method,
-            "exposure": getattr(f, 'exposure', None) or detect_exposure(rel_path),
+            "exposure": getattr(f, 'exposure', 'internal'),
+            "dataSensitivity": _detect_data_sensitivity(f),
             "suppressed": f.suppressed,
             "suppression_reason": f.suppression_reason,
         })
+
+    systems = _compute_systems_rollup(all_files, findings, target_dir)
 
     if temp_dir:
         temp_dir.cleanup()
@@ -224,7 +533,12 @@ def scan_repo(repo_path, scan_id=None):
     return {
         "status": "COMPLETED",
         "findings": out_findings,
+        "systems": systems,
         "suppressed_count": suppressed_count,
+        "files_scanned": files_scanned,
+        "files_skipped": files_skipped,
+        "files_error": files_error,
+        "file_manifest": file_manifest,
     }
 
 if __name__ == "__main__":

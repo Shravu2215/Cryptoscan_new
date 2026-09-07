@@ -7,6 +7,7 @@ Tests for Detection-Layer Bug Fixes:
 """
 import os
 import sys
+# pyrefly: ignore [missing-import]
 import pytest
 
 # Ensure scanner directory is on sys.path

@@ -31,6 +31,41 @@ _APACHE_CIPHER_RE = re.compile(r'^\s*SSLCipherSuite\s+(.+)$', re.IGNORECASE)
 _HAPROXY_CIPHER_RE = re.compile(r'^\s*(?:ssl-default-bind-ciphers|ciphers)\s+([^#\n]+)', re.IGNORECASE)
 _HAPROXY_PROTO_RE = re.compile(r'^\s*(?:ssl-default-bind-options|options)\s+([^#\n]+)', re.IGNORECASE)
 
+# ---------------------------------------------------------------------------
+# Fix 7: SSH / IPsec weak-algorithm patterns
+# ---------------------------------------------------------------------------
+
+# SSH directives that carry algorithm lists (sshd_config / ssh_config style)
+_SSH_ALGO_DIRECTIVES_RE = re.compile(
+    r'^[ \t]*(KexAlgorithms|Ciphers|MACs|HostKeyAlgorithms|PubkeyAcceptedAlgorithms|CASignatureAlgorithms)'
+    r'[ \t]+([^\n#]+)',
+    re.IGNORECASE
+)
+
+# Weak SSH KEX / cipher / MAC algorithm patterns
+_SSH_WEAK_KEX_RE = re.compile(
+    r'diffie-hellman-group1-sha1|diffie-hellman-group14-sha1|gss-gex-sha1|gss-group1-sha1',
+    re.IGNORECASE
+)
+_SSH_WEAK_CIPHER_RE = re.compile(
+    r'3des-cbc|blowfish-cbc|cast128-cbc|arcfour|arcfour128|arcfour256|aes128-cbc|aes192-cbc|aes256-cbc',
+    re.IGNORECASE
+)
+_SSH_WEAK_MAC_RE = re.compile(
+    r'hmac-md5|hmac-sha1(?!-etm)|hmac-ripemd160|umac-64(?!@)',
+    re.IGNORECASE
+)
+_SSH_WEAK_HOST_RE = re.compile(r'ssh-dss|ssh-rsa(?!-sha2)', re.IGNORECASE)
+
+# IPsec ike= / esp= lines (strongswan / libreswan style)
+_IPSEC_IKE_RE = re.compile(r'^[ \t]*ike[ \t]*=[ \t]*([^\n#]+)', re.IGNORECASE)
+_IPSEC_ESP_RE = re.compile(r'^[ \t]*esp[ \t]*=[ \t]*([^\n#]+)', re.IGNORECASE)
+_IPSEC_IKEV1_RE = re.compile(r'^[ \t]*(?:keyexchange|ikeversion)[ \t]*=[ \t]*ikev?1', re.IGNORECASE)
+_IPSEC_WEAK_ALGO_RE = re.compile(
+    r'(?:3des|des|md5|sha1(?!96)|modp768|modp1024|modp1536)',
+    re.IGNORECASE
+)
+
 _TF_SECRET_ASSIGN_RE = re.compile(
     r'^[ \t]*([A-Za-z0-9_\-]+)[ \t]*=[ \t]*"([^"$][^"]*)"'
 )
@@ -54,6 +89,34 @@ def _is_web_server_config(file_path: str) -> bool:
 
 def _is_terraform_file(file_path: str) -> bool:
     return file_path.lower().endswith(".tf")
+
+
+def _is_ssh_config(file_path: str, source: str) -> bool:
+    """True for sshd_config / ssh_config style files detected by content."""
+    # Content-first: look for hallmark SSH directive keywords regardless of filename
+    ssh_keywords = ("kexalgorithms", "hostkeyalgorithms", "ciphers", "macs",
+                    "authorizedkeysfile", "permitrootlogin", "allowusers",
+                    "pubkeyauthentication", "passwordauthentication",
+                    "stricthostkeychecking", "userknownhostsfile", "identityfile")
+    src_lower = source[:3000].lower()
+    matches = sum(1 for kw in ssh_keywords if kw in src_lower)
+    if matches >= 2:
+        return True
+    if any(core in src_lower for core in ("kexalgorithms", "hostkeyalgorithms")) and ("host " in src_lower or "match " in src_lower or "port " in src_lower or matches >= 1):
+        return True
+    # Filename heuristic as secondary signal
+    fn = os.path.basename(file_path).lower()
+    return fn in {"sshd_config", "ssh_config", "ssh_known_hosts"} or fn.startswith("sshd_config") or fn.startswith("ssh_config") or "sshd" in fn or "ssh_config" in fn
+
+
+def _is_ipsec_config(file_path: str, source: str) -> bool:
+    """True for ipsec.conf / strongswan.conf style files detected by content."""
+    # Content-first: look for ike= / esp= / keyexchange= lines
+    ipsec_patterns = ("keyexchange", "ike=", "esp=", "leftsubnet", "rightsubnet", "conn ")
+    if sum(1 for p in ipsec_patterns if p in source.lower()) >= 2:
+        return True
+    fn = os.path.basename(file_path).lower()
+    return fn in {"ipsec.conf", "ipsec.secrets", "strongswan.conf"} or fn.endswith(".conf") and "ipsec" in fn
 
 
 def _is_k8s_manifest(file_path: str, source: str) -> bool:
@@ -274,17 +337,192 @@ def _analyze_k8s_manifests(file_path: str, source: str) -> List[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# Fix 7: SSH Config Analyzer
+# ---------------------------------------------------------------------------
+
+def _analyze_ssh_config(file_path: str, source: str) -> List[Finding]:
+    """
+    Detects weak KexAlgorithms, Ciphers, MACs, and HostKeyAlgorithms in
+    sshd_config / ssh_config style configuration files.
+    Detection is content-based (not filename-based).
+    """
+    findings: List[Finding] = []
+    lines = source.splitlines()
+
+    _DIRECTIVE_CHECKS = [
+        ("KexAlgorithms", _SSH_WEAK_KEX_RE, "diffie-hellman-group1-sha1", "KEX"),
+        ("Ciphers", _SSH_WEAK_CIPHER_RE, "3des-cbc / arcfour / aes-cbc modes", "Cipher"),
+        ("MACs", _SSH_WEAK_MAC_RE, "hmac-md5 / hmac-sha1", "MAC"),
+        ("HostKeyAlgorithms", _SSH_WEAK_HOST_RE, "ssh-dss / ssh-rsa", "HostKey"),
+        ("PubkeyAcceptedAlgorithms", _SSH_WEAK_HOST_RE, "ssh-dss / ssh-rsa", "PubkeyAccepted"),
+        ("CASignatureAlgorithms", _SSH_WEAK_HOST_RE, "ssh-dss / ssh-rsa", "CASignature"),
+    ]
+
+    for line_no, raw_line in enumerate(lines, 1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        m = _SSH_ALGO_DIRECTIVES_RE.match(raw_line)
+        if m:
+            directive = m.group(1).strip()
+            algo_list = m.group(2).strip()
+
+            for dir_name, weak_re, weak_example, label in _DIRECTIVE_CHECKS:
+                if directive.lower() != dir_name.lower():
+                    continue
+                weak_matches = weak_re.findall(algo_list)
+                if weak_matches:
+                    weak_list = ", ".join(sorted(set(weak_matches)))
+                    findings.append(Finding(
+                        file=file_path,
+                        line=line_no,
+                        column=0,
+                        language="infra",
+                        rule_id=f"ssh-weak-{label.lower()}-algorithm",
+                        rule_name=f"Weak SSH {label} Algorithm in Config",
+                        category="tls",
+                        algorithm=f"SSH ({weak_list})" if weak_list else "SSH",
+                        severity=Severity.HIGH,
+                        quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                        message=f"SSH config {directive} includes weak algorithm(s): {weak_list}.",
+                        recommendation=(
+                            f"Remove deprecated SSH {label} algorithms ({weak_example}). "
+                            "Use: KexAlgorithms curve25519-sha256, ecdh-sha2-nistp256; "
+                            "Ciphers aes256-gcm@openssh.com,chacha20-poly1305@openssh.com; "
+                            "MACs hmac-sha2-256-etm@openssh.com; "
+                            "HostKeyAlgorithms ssh-ed25519,ecdsa-sha2-nistp256."
+                        ),
+                        code_snippet=stripped[:120],
+                        specificity=3,
+                        generic=False,
+                        confidence=Confidence.LIKELY,
+                        tags=["infra", "ssh", "weak-algorithm"],
+                    ))
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Fix 7: IPsec Config Analyzer
+# ---------------------------------------------------------------------------
+
+def _analyze_ipsec_config(file_path: str, source: str) -> List[Finding]:
+    """
+    Detects IKEv1 usage and weak ike=/esp= algorithm strings in ipsec.conf
+    / strongswan.conf style configuration files.
+    Detection is content-based (not filename-based).
+    """
+    findings: List[Finding] = []
+    lines = source.splitlines()
+
+    for line_no, raw_line in enumerate(lines, 1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#") or stripped.startswith(";"):
+            continue
+
+        # IKEv1 explicit declaration
+        if _IPSEC_IKEV1_RE.match(raw_line):
+            findings.append(Finding(
+                file=file_path,
+                line=line_no,
+                column=0,
+                language="infra",
+                rule_id="ipsec-ikev1-deprecated",
+                rule_name="IKEv1 Deprecated in IPsec Config",
+                category="tls",
+                algorithm="IKEv1",
+                severity=Severity.HIGH,
+                quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                message="IPsec config explicitly enables IKEv1 which is deprecated and has known vulnerabilities (Logjam, SWEET32).",
+                recommendation="Switch to IKEv2 (keyexchange=ikev2). IKEv1 suffers from aggressive mode vulnerabilities and is no longer recommended by NIST SP 800-77r1.",
+                code_snippet=stripped[:120],
+                specificity=3,
+                generic=False,
+                confidence=Confidence.LIKELY,
+                tags=["infra", "ipsec", "ikev1"],
+            ))
+
+        # Weak IKE proposal algorithms
+        m_ike = _IPSEC_IKE_RE.match(raw_line)
+        if m_ike:
+            ike_val = m_ike.group(1).strip()
+            weak_matches = _IPSEC_WEAK_ALGO_RE.findall(ike_val)
+            if weak_matches:
+                weak_list = ", ".join(sorted(set(weak_matches)))
+                findings.append(Finding(
+                    file=file_path,
+                    line=line_no,
+                    column=0,
+                    language="infra",
+                    rule_id="ipsec-weak-ike-algorithm",
+                    rule_name="Weak IKE Algorithm in IPsec Config",
+                    category="tls",
+                    algorithm="IKE",
+                    severity=Severity.HIGH,
+                    quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                    message=f"IPsec IKE proposal includes weak algorithms: {weak_list}.",
+                    recommendation="Use AES-256-GCM with SHA-256 and DH group 14 or higher (e.g. ike=aes256gcm16-sha256-modp2048).",
+                    code_snippet=stripped[:120],
+                    specificity=3,
+                    generic=False,
+                    confidence=Confidence.LIKELY,
+                    tags=["infra", "ipsec", "weak-algorithm"],
+                ))
+
+        # Weak ESP proposal algorithms
+        m_esp = _IPSEC_ESP_RE.match(raw_line)
+        if m_esp:
+            esp_val = m_esp.group(1).strip()
+            weak_matches = _IPSEC_WEAK_ALGO_RE.findall(esp_val)
+            if weak_matches:
+                weak_list = ", ".join(sorted(set(weak_matches)))
+                findings.append(Finding(
+                    file=file_path,
+                    line=line_no,
+                    column=0,
+                    language="infra",
+                    rule_id="ipsec-weak-esp-algorithm",
+                    rule_name="Weak ESP Algorithm in IPsec Config",
+                    category="tls",
+                    algorithm="ESP",
+                    severity=Severity.HIGH,
+                    quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                    message=f"IPsec ESP proposal includes weak algorithms: {weak_list}.",
+                    recommendation="Use AES-256-GCM for ESP (e.g. esp=aes256gcm16-sha256).",
+                    code_snippet=stripped[:120],
+                    specificity=3,
+                    generic=False,
+                    confidence=Confidence.LIKELY,
+                    tags=["infra", "ipsec", "weak-algorithm"],
+                ))
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
 # Exposure Detection Helper
 # ---------------------------------------------------------------------------
 
-EXTERNAL_PATH_PATTERNS = re.compile(r'(?:routes|api|controllers|views|endpoints|public|server|gateway|proxy|ingress|loadbalancer|web)\b', re.IGNORECASE)
-EXTERNAL_INFRA_PATTERNS = re.compile(r'(?:LoadBalancer|NodePort|Ingress|0\.0\.0\.0\/0|listen\s+(?:80|443|0\.0\.0\.0)|ServerName)\b', re.IGNORECASE)
+EXTERNAL_INFRA_PATTERNS = re.compile(
+    r'(?:LoadBalancer|NodePort|kind\s*:\s*Ingress|0\.0\.0\.0\/0|'
+    r'listen\s+(?:80|443|0\.0\.0\.0)|ServerName|proxy_pass\s+http)',
+    re.IGNORECASE
+)
 
 def detect_exposure(file_path: str, source: str = "") -> str:
-    """Classifies finding exposure as 'external-facing' or 'internal' based on real signals."""
-    norm_path = file_path.replace("\\", "/")
-    if EXTERNAL_PATH_PATTERNS.search(norm_path):
-        return "external-facing"
+    """
+    Content-based exposure classification fallback.
+
+    Returns 'external-facing' ONLY if the file's own source content contains
+    explicit infra signals (K8s LoadBalancer/Ingress directives, security group
+    0.0.0.0/0, web server listen directives pointing to public ports).
+
+    Path/directory names are NOT used as a signal here — that caused false positives
+    where any file under api/ or routes/ was marked External with zero infra evidence.
+    The primary classifier is pipeline._is_file_exposed() which uses the repo-wide
+    surface map built from actual infra config files.
+    """
     if source and EXTERNAL_INFRA_PATTERNS.search(source):
         return "external-facing"
     return "internal"
@@ -317,4 +555,9 @@ class ConfigInfraAnalyzer:
             return _analyze_terraform(file_path, source)
         if _is_k8s_manifest(file_path, source):
             return _analyze_k8s_manifests(file_path, source)
+        # Fix 7: SSH and IPsec config detection (content-based, not filename-based)
+        if _is_ssh_config(file_path, source):
+            return _analyze_ssh_config(file_path, source)
+        if _is_ipsec_config(file_path, source):
+            return _analyze_ipsec_config(file_path, source)
         return []

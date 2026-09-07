@@ -145,6 +145,25 @@ function calculateCryptoAgilityScore(primitiveFamily, purpose, component = {}) {
 }
 
 function getMigrationGuidance(primitiveFamily, purpose, component = {}) {
+  if (component && (component.category === 'hardcoded-secret' || component.algorithm === 'Hardcoded key material')) {
+    return {
+      recommendation: 'Remove hardcoded secret and use a secure Secrets Manager (e.g., Vault, AWS Secrets Manager).',
+      standard: null,
+      rationale: 'Hardcoded secrets are a critical vulnerability and must be remediated immediately, independent of PQC migration.',
+      hybridByDefault: false,
+      cryptoAgilityScore: 0
+    };
+  }
+  if (primitiveFamily === 'MD5') {
+    return {
+      recommendation: 'Replace with SHA-256 or SHA-3-256',
+      standard: 'FIPS 180-4 / FIPS 202',
+      rationale: 'MD5 is broken classically (collision attacks); not a quantum-migration issue, it is already unsafe today.',
+      hybridByDefault: false,
+      cryptoAgilityScore: 25
+    };
+  }
+
   const family = PQC_MIGRATION_TABLE[primitiveFamily];
   if (!family) {
     return {

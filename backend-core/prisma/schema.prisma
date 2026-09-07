@@ -31,7 +31,7 @@ model Repo {
   uploadedBy          String
   user                User          @relation(fields: [uploadedBy], references: [id])
   businessContext     String?       @default("STANDARD") // CRITICAL, IMPORTANT, STANDARD
-  businessCriticality String        @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  businessCriticality String        @default("Not tagged") // CRITICAL, HIGH, MEDIUM, LOW
   createdAt           DateTime      @default(now())
 
   scans        Scan[]

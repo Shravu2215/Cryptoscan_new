@@ -136,7 +136,7 @@ router.post('/github', requireAuth, async (req, res) => {
           name: metadata.full_name || `${github.owner}/${github.repo}`,
           filePath: repositoryPath,
           uploadedBy: req.user.id,
-          businessCriticality: req.body.businessCriticality || 'MEDIUM',
+          businessCriticality: req.body.businessCriticality || 'Not tagged',
         },
       });
     } catch (dbErr) {
@@ -146,13 +146,19 @@ router.post('/github', requireAuth, async (req, res) => {
         name: metadata.full_name || `${github.owner}/${github.repo}`,
         filePath: repositoryPath,
         uploadedBy: req.user.id,
-        businessCriticality: req.body.businessCriticality || 'MEDIUM',
+        businessCriticality: req.body.businessCriticality || 'Not tagged',
         createdAt: new Date()
       };
     }
     saveRepo(repo);
 
-    return res.status(201).json({ id: repo.id, name: repo.name, createdAt: repo.createdAt, source: 'github' });
+    return res.status(201).json({
+      id: repo.id,
+      name: repo.name,
+      createdAt: repo.createdAt,
+      businessCriticality: repo.businessCriticality || 'Not tagged',
+      source: 'github',
+    });
   } catch (err) {
     if (extractDir) fs.rmSync(extractDir, { recursive: true, force: true });
     console.error('GitHub import error:', err);
@@ -175,7 +181,7 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
           name: req.body.name || req.file.originalname,
           filePath: req.file.path,
           uploadedBy: req.user.id,
-          businessCriticality: req.body.businessCriticality || 'MEDIUM',
+          businessCriticality: req.body.businessCriticality || 'Not tagged',
         },
       });
     } catch (dbErr) {
@@ -185,7 +191,7 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
         name: req.body.name || req.file.originalname,
         filePath: req.file.path,
         uploadedBy: req.user.id,
-        businessCriticality: req.body.businessCriticality || 'MEDIUM',
+        businessCriticality: req.body.businessCriticality || 'Not tagged',
         createdAt: new Date()
       };
     }
@@ -195,9 +201,146 @@ router.post('/upload', requireAuth, upload.single('repo'), async (req, res) => {
       id: repo.id,
       name: repo.name,
       createdAt: repo.createdAt,
+      businessCriticality: repo.businessCriticality || 'Not tagged',
     });
   } catch (err) {
     console.error('Repo upload error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+const VALID_CRITICALITY_TIERS = new Set(['Critical', 'Important', 'Standard', 'Low', 'Not tagged']);
+
+function normalizeCriticality(tier) {
+  if (!tier) return 'Not tagged';
+  const u = String(tier).trim().toUpperCase();
+  if (u === 'CRITICAL' || u === 'TIER 1') return 'Critical';
+  if (u === 'IMPORTANT' || u === 'HIGH' || u === 'TIER 2') return 'Important';
+  if (u === 'STANDARD' || u === 'MEDIUM' || u === 'TIER 3') return 'Standard';
+  if (u === 'LOW' || u === 'TIER 4') return 'Low';
+  if (u === 'NOT TAGGED' || u === 'NOT_TAGGED' || u === 'NONE' || u === 'UNKNOWN' || u === '') return 'Not tagged';
+  return null;
+}
+
+// GET /repos - list repositories
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const { devRepos } = require('../utils/devStore');
+    try {
+      const repos = await prisma.repo.findMany({
+        where: { uploadedBy: req.user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+      const enriched = repos.map(r => ({
+        ...r,
+        criticality_tier: normalizeCriticality(r.businessCriticality) || 'Not tagged',
+      }));
+      return res.json(enriched);
+    } catch (_) {
+      const repos = Array.from(devRepos.values()).map(r => {
+        const crit = normalizeCriticality(r.businessCriticality || r.criticality_tier) || 'Not tagged';
+        return {
+          id: r.id,
+          name: r.name,
+          businessCriticality: crit,
+          criticality_tier: crit,
+          createdAt: r.createdAt,
+        };
+      });
+      return res.json(repos);
+    }
+  } catch (err) {
+    console.error('List repos error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /repos/:id - get single repository
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const { getRepo } = require('../utils/devStore');
+    let repo;
+    try {
+      repo = await prisma.repo.findUnique({ where: { id: req.params.id } });
+      if (!repo) {
+        repo = await prisma.repo.findFirst({ where: { name: req.params.id } });
+      }
+    } catch (_) {}
+    if (!repo) {
+      repo = getRepo(req.params.id);
+    }
+    if (!repo) return res.status(404).json({ error: 'Repository not found' });
+    const crit = normalizeCriticality(repo.businessCriticality || repo.criticality_tier) || 'Not tagged';
+    return res.json({
+      ...repo,
+      businessCriticality: crit,
+      criticality_tier: crit,
+    });
+  } catch (err) {
+    console.error('Get repo error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /repos/:id - update businessCriticality / criticality_tier
+router.patch('/:id', requireAuth, async (req, res) => {
+  try {
+    const { getRepo, updateRepoCriticality } = require('../utils/devStore');
+    const rawTier = req.body.criticality_tier || req.body.businessCriticality;
+    if (!rawTier) {
+      return res.status(400).json({ error: 'criticality_tier or businessCriticality is required' });
+    }
+    const tier = normalizeCriticality(rawTier);
+    if (!tier || !VALID_CRITICALITY_TIERS.has(tier)) {
+      return res.status(400).json({ 
+        error: 'Invalid criticality tier. Accepted tiers: Critical, Important, Standard, Low, Not tagged' 
+      });
+    }
+    let repo;
+
+    try {
+      // Try lookup by id first, then name with and without .zip
+      const cleanName = req.params.id.replace(/\.zip$/i, '');
+      repo = await prisma.repo.findUnique({ where: { id: req.params.id } });
+      if (!repo) {
+        repo = await prisma.repo.findFirst({ 
+          where: { 
+            OR: [
+              { name: req.params.id },
+              { name: cleanName },
+              { name: cleanName + '.zip' }
+            ] 
+          } 
+        });
+      }
+      if (repo) {
+        repo = await prisma.repo.update({
+          where: { id: repo.id },
+          data: { businessCriticality: tier },
+        });
+      }
+    } catch (err) {
+      console.warn('Prisma repo update failed, using devStore:', err.message);
+    }
+
+    // Always keep devStore in sync
+    const devUpdated = updateRepoCriticality(req.params.id, tier);
+    if (!repo) {
+      repo = devUpdated;
+    } else if (devUpdated) {
+      repo.businessCriticality = tier;
+    }
+
+    if (!repo) return res.status(404).json({ error: 'Repository not found' });
+
+    return res.json({
+      id: repo.id,
+      name: repo.name,
+      businessCriticality: tier,
+      criticality_tier: tier,
+    });
+  } catch (err) {
+    console.error('Update repo error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

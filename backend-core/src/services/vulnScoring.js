@@ -212,7 +212,17 @@ function scoreFinding(finding, purpose, options = {}) {
   const score = Math.round(Math.min(100, Math.max(0, raw)));
 
   // HNDL exposure folded into a pre-business-context risk score.
-  const normLifetime = normalizeDataLifetime(options.dataLifetime);
+  let normLifetime = normalizeDataLifetime(options.dataLifetime);
+  if (normLifetime.isDefault && finding) {
+    const { detectDataSensitivity } = require('./purposeDetection');
+    if (detectDataSensitivity) {
+      const { recommendedLifetimeYears } = detectDataSensitivity(finding);
+      if (recommendedLifetimeYears) {
+        normLifetime.value = recommendedLifetimeYears;
+        normLifetime.isDefault = false;
+      }
+    }
+  }
   const exposureWindow = calculateQuantumExposureWindow(normLifetime);
   const exposureBonus = quantumExposureScore(quantumVulnerability, exposureWindow);
   const preBusinessRiskScore = Math.round(Math.min(100, Math.max(0, score * 0.7 + exposureBonus * 0.3)));

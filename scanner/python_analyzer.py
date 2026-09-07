@@ -302,6 +302,32 @@ class PythonAnalyzer:
             out.append(self._mk_finding(file_path, line, col, "python", "argon2id-kdf",
                                           "Argon2id Password KDF", "kdf", profile, snippet, specificity=2, generic=False, library="argon2-cffi"))
 
+        # -- AWS KMS / Cloud KMS -----------------------------------------------
+        if fname in ("boto3.client", "client", "Session.client") or fname.endswith(".client"):
+            service_name = None
+            if node.args:
+                lit = _resolve(node.args[0], table)
+                if isinstance(lit, ast.Constant) and isinstance(lit.value, str):
+                    service_name = lit.value.lower()
+            if not service_name:
+                for kw in node.keywords:
+                    if kw.arg == "service_name":
+                        lit = _resolve(kw.value, table)
+                        if isinstance(lit, ast.Constant) and isinstance(lit.value, str):
+                            service_name = lit.value.lower()
+            if service_name == "kms":
+                profile = {
+                    "algorithm": "AWS KMS",
+                    "severity": Severity.INFO,
+                    "quantum_risk": QuantumRisk.SAFE,
+                    "recommendation": "Hardware-backed / Cloud KMS key custody verified. Ensure key rotation policies and PQC migration readiness are enabled on KMS keys.",
+                    "tags": ["kms", "hsm", "hardware-custody", "aws"],
+                }
+                out.append(self._mk_finding(file_path, line, col, "python", "kms-hsm-aws-kms",
+                                              "AWS KMS Hardware/Cloud Custody", "Cloud KMS / HSM",
+                                              profile, snippet, specificity=2, generic=False,
+                                              tags=profile.get("tags", []), library="boto3"))
+
         # -- HMAC digest checking ----------------------------------------------
         if fname in ("hmac.new", "new") and ("hmac" in fname or aliases.get("new", "").startswith("hmac")):
             out.extend(self._check_hmac_digest(node, file_path, table, source_lines, aliases))
@@ -691,6 +717,7 @@ class PythonAnalyzer:
             rule_name=rule_name, category=category, algorithm=profile["algorithm"],
             severity=profile["severity"], quantum_risk=profile["quantum_risk"],
             message=f"{rule_name} at line {line}.", recommendation=profile["recommendation"],
-            code_snippet=snippet, specificity=specificity, generic=generic, tags=tags or [],
+            code_snippet=snippet, specificity=specificity, generic=generic,
+            tags=tags or profile.get("tags", []) or [],
             library=library,
         )

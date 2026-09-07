@@ -79,6 +79,7 @@ class Finding:
     exposure: str = "internal"        # "external-facing" | "internal"
     version: str = ""
     library: str = ""
+    dataSensitivity: str = ""
 
     def __post_init__(self):
         if not self.call_site:
@@ -129,4 +130,5 @@ class Finding:
         d["exposure"] = self.exposure
         d["version"] = self.version
         d["library"] = self.library
+        d["dataSensitivity"] = self.dataSensitivity
         return d

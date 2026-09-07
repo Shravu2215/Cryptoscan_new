@@ -414,12 +414,128 @@ def _analyze_ini_conf(file_path: str, source: str) -> List[Finding]:
 # ---------------------------------------------------------------------------
 
 _KMS_HSM_PATTERNS = [
-    (re.compile(r'\b(?:boto3\.client\([\'"]kms[\'"]\)|aws_kms_key|aws_kms_alias)\b', re.IGNORECASE), "AWS KMS", "AWS Key Management Service (KMS) integration detected."),
+    (re.compile(r'\b(?:boto3\.client\([\'"]kms[\'"]\)|boto3\.Session\(\)\.client\([\'"]kms[\'"]\)|aws_kms_key|aws_kms_alias)\b', re.IGNORECASE), "AWS KMS", "AWS Key Management Service (KMS) integration detected."),
     (re.compile(r'\b(?:KeyClient|SecretClient|azure_key_vault|vault\.azure\.net)\b', re.IGNORECASE), "Azure Key Vault", "Azure Key Vault HSM/KMS integration detected."),
     (re.compile(r'\b(?:KeyManagementServiceClient|google_kms_crypto_key|cloudkms\.googleapis\.com)\b', re.IGNORECASE), "GCP Cloud KMS", "Google Cloud KMS integration detected."),
     (re.compile(r'\b(?:PyKCS11|pkcs11|libsofthsm2\.so|libCryptoki|C_Initialize|C_OpenSession)\b', re.IGNORECASE), "PKCS#11 HSM", "Hardware Security Module (HSM) PKCS#11 interface detected."),
     (re.compile(r'\b(?:tpm2-tools|tss2|tpm2_createprimary|tpm2_evictcontrol)\b', re.IGNORECASE), "TPM 2.0", "Trusted Platform Module (TPM 2.0) hardware interface detected."),
 ]
+
+# ---------------------------------------------------------------------------
+# Fix 9: Source-code crypto patterns (Java factory, CryptoJS HMAC)
+# These patterns fire on any file — they are language-agnostic regex patterns
+# that cover constructs the AST analyzers cannot detect.
+# ---------------------------------------------------------------------------
+
+# Java factory: MessageDigest.getInstance("MD5"), Cipher.getInstance("DES/ECB/PKCS5Padding"), etc.
+_JAVA_FACTORY_PATTERNS = [
+    (
+        re.compile(r'MessageDigest\.getInstance\s*\(\s*["\'](?P<algo>MD5|SHA-?1|SHA1)["\']', re.IGNORECASE),
+        lambda m: ("hash", m.group("algo").upper().replace("SHA-1", "SHA-1"), Severity.CRITICAL if "MD5" in m.group("algo").upper() else Severity.HIGH),
+        "java-messagedigest-weak",
+        "Weak Java MessageDigest Algorithm",
+    ),
+    (
+        re.compile(r'Cipher\.getInstance\s*\(\s*["\'](?P<algo>[^"\']*(?:DES|RC4|RC2|BLOWFISH|AES/ECB|AES/CBC)[^"\']*)["\']', re.IGNORECASE),
+        lambda m: ("symmetric-cipher", m.group("algo"), Severity.CRITICAL),
+        "java-cipher-weak",
+        "Weak Java Cipher.getInstance Algorithm",
+    ),
+    (
+        re.compile(r'Mac\.getInstance\s*\(\s*["\'](?P<algo>HmacMD5|HmacSHA1)["\']', re.IGNORECASE),
+        lambda m: ("hash", m.group("algo").upper(), Severity.HIGH),
+        "java-mac-weak",
+        "Weak Java Mac.getInstance HMAC Algorithm",
+    ),
+]
+
+# CryptoJS HMAC constructs: CryptoJS.HmacMD5(...), CryptoJS.HmacSHA1(...)
+_CRYPTOJS_HMAC_PATTERNS = [
+    (
+        re.compile(r'CryptoJS\.Hmac(?P<algo>MD5|SHA1|SHA(?:224|384))\s*\(', re.IGNORECASE),
+        lambda m: ("hash", f"HMAC-{m.group('algo').upper()}", Severity.CRITICAL if "MD5" in m.group("algo").upper() else Severity.HIGH),
+        "cryptojs-hmac-weak",
+        "Weak CryptoJS HMAC Algorithm",
+    ),
+]
+
+
+def _analyze_source_code_patterns(file_path: str, source: str) -> List[Finding]:
+    """Fix 9: Detect Java factory-pattern and CryptoJS HMAC patterns in any source file."""
+    findings: List[Finding] = []
+    lines = source.splitlines()
+    total_lines = len(lines)
+
+    for line_no, raw_line in enumerate(lines, 1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("//") or stripped.startswith("*") or stripped.startswith("#"):
+            continue
+
+        # Java factory patterns
+        for compiled_re, info_fn, rule_id, rule_name in _JAVA_FACTORY_PATTERNS:
+            m = compiled_re.search(raw_line)
+            if m:
+                category, algo_name, severity = info_fn(m)
+                qr = QuantumRisk.CLASSICAL_RISK
+                if "SHA-1" in algo_name or "SHA1" in algo_name:
+                    rec = "Replace SHA-1 with SHA-256 or SHA-3."
+                elif "MD5" in algo_name or "HmacMD5" in algo_name:
+                    rec = "Replace MD5 with SHA-256 or SHA-3. Do not use MD5 for security purposes."
+                elif "DES" in algo_name or "RC4" in algo_name or "RC2" in algo_name or "BLOWFISH" in algo_name:
+                    rec = "Replace deprecated cipher with AES-256-GCM."
+                elif "ECB" in algo_name:
+                    rec = "ECB mode leaks plaintext structure. Use AES-256-GCM instead."
+                elif "CBC" in algo_name:
+                    rec = "CBC mode has padding oracle risk. Use AES-256-GCM with authenticated encryption."
+                else:
+                    rec = "Review algorithm for cryptographic strength."
+                findings.append(Finding(
+                    file=file_path,
+                    line=_validate_line_bounds(line_no, total_lines),
+                    column=0,
+                    language="config",
+                    rule_id=rule_id,
+                    rule_name=rule_name,
+                    category=category,
+                    algorithm=algo_name,
+                    severity=severity,
+                    quantum_risk=qr,
+                    message=f"{rule_name}: {algo_name} detected in source code.",
+                    recommendation=rec,
+                    code_snippet=stripped[:120],
+                    confidence=Confidence.LIKELY,
+                    specificity=3,
+                    generic=False,
+                    tags=["java", "factory-pattern", "weak-algorithm"],
+                ))
+
+        # CryptoJS HMAC patterns
+        for compiled_re, info_fn, rule_id, rule_name in _CRYPTOJS_HMAC_PATTERNS:
+            m = compiled_re.search(raw_line)
+            if m:
+                category, algo_name, severity = info_fn(m)
+                rec = "Replace with HMAC-SHA-256 or HMAC-SHA-512 (CryptoJS.HmacSHA256 / CryptoJS.HmacSHA512)."
+                findings.append(Finding(
+                    file=file_path,
+                    line=_validate_line_bounds(line_no, total_lines),
+                    column=0,
+                    language="config",
+                    rule_id=rule_id,
+                    rule_name=rule_name,
+                    category=category,
+                    algorithm=algo_name,
+                    severity=severity,
+                    quantum_risk=QuantumRisk.CLASSICAL_RISK,
+                    message=f"{rule_name}: {algo_name} detected.",
+                    recommendation=rec,
+                    code_snippet=stripped[:120],
+                    confidence=Confidence.LIKELY,
+                    specificity=3,
+                    generic=False,
+                    tags=["cryptojs", "hmac", "weak-algorithm"],
+                ))
+
+    return findings
 
 def _analyze_kms_hsm(file_path: str, source: str) -> List[Finding]:
     findings: List[Finding] = []
@@ -457,7 +573,8 @@ def _analyze_kms_hsm(file_path: str, source: str) -> List[Finding]:
 class RegexAnalyzer:
     """
     Structural config-file detection layer.
-    Pure offline analyzer for Dockerfiles, YAML, JSON, .env, .ini, .conf, .toml, and KMS/HSM code references.
+    Pure offline analyzer for Dockerfiles, YAML, JSON, .env, .ini, .conf, .toml,
+    KMS/HSM code references, and Java/CryptoJS source-code crypto patterns.
     """
 
     def analyze(self, file_path: str, source: str) -> List[Finding]:
@@ -473,12 +590,16 @@ class RegexAnalyzer:
             return []
 
         kms_findings = _analyze_kms_hsm(file_path, source)
+        # Fix 9: Always run source-code pattern detection (Java, CryptoJS, etc.)
+        src_code_findings = _analyze_source_code_patterns(file_path, source)
+
         if _is_dockerfile(file_path):
-            return _analyze_dockerfile(file_path, source) + kms_findings
+            return _analyze_dockerfile(file_path, source) + kms_findings + src_code_findings
         if _is_env_file(file_path):
-            return _analyze_env_file(file_path, source) + kms_findings
+            return _analyze_env_file(file_path, source) + kms_findings + src_code_findings
         if _is_yaml_file(file_path) or _is_json_config(file_path):
-            return _analyze_yaml_json(file_path, source) + kms_findings
+            return _analyze_yaml_json(file_path, source) + kms_findings + src_code_findings
         if _is_ini_conf(file_path):
-            return _analyze_ini_conf(file_path, source) + kms_findings
-        return kms_findings
+            return _analyze_ini_conf(file_path, source) + kms_findings + src_code_findings
+        return kms_findings + src_code_findings
+

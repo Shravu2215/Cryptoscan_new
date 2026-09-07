@@ -213,11 +213,17 @@ const CryptoEngine = {
   ],
 
   processRealBackendFindings: function(repo, scanId, dbFindings) {
+    const bizCrit = repo.businessCriticality || 'Not tagged';
     const allMappedFindings = dbFindings.map(f => ({
       id: f.id,
       title: f.algorithm + ' ' + (f.usage || ''),
       category: f.library || 'Standard API',
       library: f.library || 'Standard API',
+      version: f.version || f.libraryVersion || '',
+      exposure: f.exposure || 'internal',
+      dataSensitivity: f.dataSensitivity || 'GENERAL',
+      businessCriticality: f.businessCriticality || bizCrit,
+      repoCriticality: bizCrit,
       severity: f.severity.toLowerCase(),
       quantum: (f.quantumStatus || '').toLowerCase().includes('vulnerable') ? 'yes' : 'safe',
       file: f.filePath,
@@ -248,6 +254,7 @@ const CryptoEngine = {
           name: algo,
           operations: new Set(),
           libraries: new Set(),
+          versions: new Set(),
           locations: [],
           keySizes: new Set(),
           quantumRisk: (f.quantumStatus || '').toLowerCase().includes('vulnerable') ? 'Vulnerable' : 'Quantum-Ready',
@@ -259,6 +266,7 @@ const CryptoEngine = {
       const comp = componentMap[algo];
       if (f.usage) comp.operations.add(f.usage);
       if (f.library) comp.libraries.add(f.library);
+      if (f.version) comp.versions.add(f.version);
       
       const locStr = f.filePath + ':' + (f.lineNumber || '?');
       comp.locations.push(locStr);
@@ -271,6 +279,7 @@ const CryptoEngine = {
       name: c.name,
       operations: Array.from(c.operations),
       library: Array.from(c.libraries).filter(l => l && l !== 'Standard API').join(', ') || (Array.from(c.libraries)[0] || 'Standard Crypto API'),
+      version: Array.from(c.versions).filter(Boolean).join(', ') || '—',
       locations: c.locations,
       keySize: Array.from(c.keySizes).join(', ') || 'N/A',
       quantumRisk: c.quantumRisk,
@@ -299,6 +308,9 @@ const CryptoEngine = {
       scanId: scanId,
       repoId: repo.id || 'repo-1',
       repoName: repoName,
+      businessCriticality: bizCrit,
+      criticality_tier: bizCrit,
+      systems: repo.systems || [],
       fileSize: 0,
       timestamp: new Date().toLocaleString(),
       scanDate: new Date().toISOString(),
@@ -319,10 +331,12 @@ const CryptoEngine = {
     };
 
     const currentData = this.getData();
-    const existingRepoIdx = currentData.repositories.findIndex(r => r.name === repoName);
+    const existingRepoIdx = currentData.repositories.findIndex(r => r.name === repoName || r.id === scanResult.repoId || (r.name && r.name.replace(/\.zip$/i, '') === repoName.replace(/\.zip$/i, '')));
     const repoSummary = {
       id: scanResult.repoId,
       name: repoName,
+      businessCriticality: bizCrit,
+      criticality_tier: bizCrit,
       size: 0,
       lastScan: 'Just now',
       status: 'completed',
