@@ -1164,8 +1164,13 @@
 
       async function importGitHubRepository() {
         const urlInput = document.getElementById('github-url');
-        const url = urlInput.value.trim();
+        let url = urlInput.value.trim();
         if (!url) return;
+
+        // Auto-sanitize mistyped URL suffixes (e.g. .gi instead of .git)
+        if (url.toLowerCase().endsWith('.gi')) {
+          url = url.substring(0, url.length - 3) + '.git';
+        }
 
         // Always resolve the real backend base, regardless of which port the frontend is on
         const API_BASE = (window.Auth && window.Auth.API_BASE)

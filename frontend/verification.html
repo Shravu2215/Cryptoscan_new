@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verify — CryptoScan</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify — CryptoScan</title>
   <script>
     function initTheme() {
       if (localStorage.getItem('cs_theme') === 'light') {
@@ -12,428 +13,823 @@
     }
     initTheme();
   </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/global.css">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  /* Dark theme variables */
-  --bg-main: #050505;
-  --bg-sidebar: #050505;
-  --bg-card: #0F0F11;
-  --bg-card-hover: #16161A;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.08);
-  
-  --text-h: #f8fafc; /* Headers text */
-  --text-b: #cbd5e1; /* Body text */
-  --text-m: #94a3b8; /* Muted text */
-  --text-s: #64748b; /* Subtle text */
-  
-  /* State Colors */
-  --green: #10b981; /* Secure/Verified */
-  --green-bg: rgba(16, 185, 129, 0.1);
-  --red: #ef4444; /* Critical */
-  --red-bg: rgba(239, 68, 68, 0.1);
-  --amber: #f59e0b; /* High/Warning */
-  --amber-bg: rgba(245, 158, 11, 0.1);
-  --yellow: #eab308; /* Medium */
-  --yellow-bg: rgba(234, 179, 8, 0.1);
-  --gray: #94a3b8; /* Low */
-  --gray-bg: rgba(148, 163, 184, 0.1);
-  
-  --purple: #8b5cf6; /* Quantum / Merkle */
-  --purple-bg: rgba(139, 92, 246, 0.1);
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 16px;
-  --sb-w: 240px;
-  --t: .2s ease;
-}
-:root.light-mode {
-  --bg-main: #f8fafc;
-  --bg-sidebar: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --border-color: #e2e8f0;
-  --border-light: #e2e8f0;
+    :root {
+      /* Dark theme variables */
+      --bg-main: #050505;
+      --bg-sidebar: #050505;
+      --bg-card: #0F0F11;
+      --bg-card-hover: #16161A;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.08);
 
-  --text-h: #0f172a;
-  --text-b: #334155;
-  --text-m: #475569;
-  --text-s: #64748b;
-}
+      --text-h: #f8fafc;
+      /* Headers text */
+      --text-b: #cbd5e1;
+      /* Body text */
+      --text-m: #94a3b8;
+      /* Muted text */
+      --text-s: #64748b;
+      /* Subtle text */
 
-html, body { 
-  font-size: 14px; 
-  overflow-x: hidden;
-  max-width: 100vw;
-  width: 100%;
-}
+      /* State Colors */
+      --green: #10b981;
+      /* Secure/Verified */
+      --green-bg: rgba(16, 185, 129, 0.1);
+      --red: #ef4444;
+      /* Critical */
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --amber: #f59e0b;
+      /* High/Warning */
+      --amber-bg: rgba(245, 158, 11, 0.1);
+      --yellow: #eab308;
+      /* Medium */
+      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --gray: #94a3b8;
+      /* Low */
+      --gray-bg: rgba(148, 163, 184, 0.1);
 
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 100vh;
-  margin-left: 240px;
-  overflow-x: hidden;
-}
+      --purple: #8b5cf6;
+      /* Quantum / Merkle */
+      --purple-bg: rgba(139, 92, 246, 0.1);
 
-/* Buttons */
-.btn-p {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-  background: var(--red); border: none; border-radius: var(--r-sm);
-  font-size: 13px; font-weight: 600; color: #ffffff; cursor: pointer;
-  transition: opacity var(--t); text-decoration: none;
-}
-.btn-p:hover { opacity: 0.9; }
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 16px;
+      --sb-w: 240px;
+      --t: .2s ease;
+    }
 
-.btn-sec {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
-  background: transparent; border: 1px solid var(--border-color);
-  border-radius: var(--r-sm); font-size: 12px; font-weight: 500; color: var(--text-b);
-  cursor: pointer; text-decoration: none; transition: all var(--t);
-}
-.btn-sec:hover { background: var(--bg-card); border-color: var(--text-s); }
-.btn-sec.active {
-  background: var(--purple-bg);
-  border-color: var(--purple);
-  color: var(--purple);
-}
+    :root.light-mode {
+      --bg-main: #f8fafc;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-light: #e2e8f0;
 
-/* Dashboard Grid */
-.content { 
-  padding: 32px; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 24px; 
-  max-width: 1400px; 
-  margin: 0 auto; 
-  width: 100%; 
-  min-width: 0;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-.row { display: flex; gap: 24px; }
-.col { display: flex; flex-direction: column; gap: 24px; }
-.col-2 { flex: 2; } .col-1 { flex: 1; }
+      --text-h: #0f172a;
+      --text-b: #334155;
+      --text-m: #475569;
+      --text-s: #64748b;
+    }
 
-/* Cards */
-.gcard {
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--r-lg); padding: 24px; position: relative;
-}
-.gc-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.gc-ttl { font-size: 14px; font-weight: 600; color: var(--text-h); }
-.gc-sub { font-size: 12px; color: var(--text-m); margin-top: 4px; }
+    html,
+    body {
+      font-size: 14px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+    }
 
-/* Plain-Language Explanation Banner */
-.explain-banner {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--purple);
-  border-radius: var(--r-md);
-  padding: 16px 20px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-.eb-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--purple);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.eb-icon svg { width: 24px; height: 24px; }
-.eb-content { display: flex; flex-direction: column; gap: 4px; }
-.eb-title { font-size: 14px; font-weight: 600; color: var(--text-h); }
-.eb-text { font-size: 13px; color: var(--text-m); line-height: 1.5; }
-.eb-text strong { color: var(--text-h); font-weight: 600; }
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 100vh;
+      margin-left: 240px;
+      overflow-x: hidden;
+    }
 
-/* Hero Card */
-.verify-hero {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--r-lg);
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.verify-hero.status-verified {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 15, 17, 0.95));
-  border-color: rgba(16, 185, 129, 0.3);
-}
-.verify-hero.status-failed {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 15, 17, 0.95));
-  border-color: rgba(239, 68, 68, 0.3);
-}
-.verify-hero.status-incomplete {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 15, 17, 0.95));
-  border-color: rgba(245, 158, 11, 0.3);
-}
+    /* Buttons */
+    .btn-p {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--red);
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+      transition: opacity var(--t);
+      text-decoration: none;
+    }
 
-.vh-icon {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px;
-}
-.vh-icon svg { width: 32px; height: 32px; }
-.vh-icon.verified { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-.vh-icon.failed { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
-.vh-icon.incomplete { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
-.vh-icon.unverified { background: var(--border-color); color: var(--text-m); }
+    .btn-p:hover {
+      opacity: 0.9;
+    }
 
-.vh-title { font-size: 22px; font-weight: 700; color: var(--text-h); letter-spacing: -0.02em; }
-.vh-desc { font-size: 13px; color: var(--text-m); max-width: 600px; margin-top: 8px; line-height: 1.5; }
+    .btn-sec {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-b);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--t);
+    }
 
-/* Pipeline Progress */
-.pipeline {
-  display: flex; align-items: center; justify-content: space-between;
-  position: relative; padding: 0 16px; margin: 12px 0 24px;
-}
-.pl-line {
-  position: absolute; top: 18px; left: 40px; right: 40px;
-  height: 2px; background: var(--border-color); z-index: 1;
-}
-.pl-progress {
-  position: absolute; top: 18px; left: 40px;
-  height: 2px; background: var(--purple); z-index: 2;
-  transition: width 0.4s ease; width: 0%;
-}
-.pl-step {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  position: relative; z-index: 3;
-}
-.pl-icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--bg-card); border: 2px solid var(--border-color);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: var(--text-m); transition: all var(--t);
-}
-.pl-step.active .pl-icon { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
-.pl-step.done .pl-icon { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.pl-step.fail .pl-icon { border-color: var(--red); color: var(--red); background: var(--red-bg); }
-.pl-lbl { font-size: 11px; font-weight: 600; color: var(--text-s); }
-.pl-step.active .pl-lbl { color: var(--purple); }
-.pl-step.done .pl-lbl { color: var(--green); }
-.pl-step.fail .pl-lbl { color: var(--red); }
+    .btn-sec:hover {
+      background: var(--bg-card);
+      border-color: var(--text-s);
+    }
 
-/* Details & Hash Cards */
-.dl-list { display: flex; flex-direction: column; gap: 12px; }
-.dl-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-.dl-lbl { color: var(--text-m); }
-.dl-val { font-weight: 600; color: var(--text-h); }
+    .btn-sec.active {
+      background: var(--purple-bg);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
 
-.hash-box {
-  background: var(--bg-main); border: 1px solid var(--border-color);
-  border-radius: var(--r-md); padding: 16px;
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; word-break: break-all;
-  color: var(--text-h); position: relative; margin-bottom: 16px;
-}
-.hash-box.match { border-color: rgba(16, 185, 129, 0.4); background: var(--green-bg); }
-.hash-box.mismatch { border-color: rgba(239, 68, 68, 0.4); background: var(--red-bg); }
-.hash-box.amber-box { border-color: rgba(245, 158, 11, 0.4); background: var(--amber-bg); }
+    /* Dashboard Grid */
+    .content {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
 
-.copy-btn {
-  position: absolute; top: 12px; right: 12px;
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  color: var(--text-m); font-size: 11px; font-weight: 500;
-  padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all var(--t);
-}
-.copy-btn:hover { color: var(--text-h); border-color: var(--text-s); }
+    .row {
+      display: flex;
+      gap: 24px;
+    }
 
-.status-badge {
-  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.sb-none { background: var(--border-color); color: var(--text-m); }
-.sb-valid { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-.sb-invalid { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
-.sb-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
-.comp-row { display: flex; justify-content: space-between; align-items: center; }
-.comp-lbl { font-size: 12px; color: var(--text-m); }
-.comp-res { font-size: 13px; font-weight: 700; color: var(--text-h); }
-.comp-res.match { color: var(--green); }
-.comp-res.mismatch { color: var(--red); }
-.comp-res.amber-res { color: var(--amber); }
+    .col-2 {
+      flex: 2;
+    }
 
-/* Merkle Tree Section & Visualizer */
-.merkle-panel {
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--r-lg); padding: 24px;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-.merkle-root-box {
-  background: var(--bg-main); border: 1px solid var(--border-color);
-  border-radius: var(--r-md); padding: 16px 20px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.merkle-root-lbl { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.merkle-root-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text-h); word-break: break-all; }
+    .col-1 {
+      flex: 1;
+    }
 
-/* Tree Diagram Container */
-.merkle-tree-container {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-  padding: 32px 16px;
-  background: var(--bg-main);
-  border: 1px solid var(--border-color);
-  border-radius: var(--r-md);
-  margin-top: 16px;
-  min-height: 340px;
-}
-.merkle-tree-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-.merkle-tree-levels {
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-  position: relative;
-  z-index: 2;
-  align-items: center;
-  min-width: max-content;
-  width: max-content;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-.merkle-tree-level {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  width: 100%;
-}
-.mt-node {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--r-sm);
-  padding: 12px 16px;
-  min-width: 160px;
-  max-width: 220px;
-  cursor: pointer;
-  transition: all var(--t);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  user-select: none;
-  position: relative;
-}
-.mt-node:hover {
-  border-color: var(--purple);
-  transform: translateY(-2px);
-  background: var(--bg-card-hover);
-}
-.mt-node.selected {
-  border-color: var(--green);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-}
-.mt-node.is-root {
-  border: 2px solid var(--green);
-  background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(15,15,17,0.95));
-  box-shadow: 0 0 16px rgba(16,185,129,0.25);
-  min-width: 200px;
-}
-.mt-node-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.mt-node-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.mt-node-badge.badge-root {
-  background: var(--green-bg);
-  color: var(--green);
-  border: 1px solid rgba(16,185,129,0.3);
-}
-.mt-node-badge.badge-combined {
-  background: var(--purple-bg);
-  color: var(--purple);
-}
-.mt-node-badge.badge-leaf {
-  background: rgba(255,255,255,0.06);
-  color: var(--text-b);
-}
-.mt-node-hash {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-h);
-  word-break: break-all;
-}
-.mt-node-meta {
-  font-size: 11px;
-  color: var(--text-m);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    /* Cards */
+    .gcard {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      position: relative;
+    }
 
-/* Secondary List View Layout */
-.merkle-depth-label { font-size: 11px; font-weight: 600; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 12px; }
-.merkle-leaves { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.merkle-leaf {
-  background: var(--bg-main); border: 1px solid var(--border-color);
-  border-radius: var(--r-sm); padding: 12px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-b);
-  cursor: pointer; transition: all var(--t);
-}
-.merkle-leaf:hover { border-color: var(--purple); background: var(--bg-card); }
-.merkle-leaf.selected { border-color: var(--green); background: var(--green-bg); }
+    .gc-hd {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
 
-/* Blockchain History */
-.bh-item {
-  display: flex; align-items: center; gap: 16px; padding: 16px;
-  background: var(--bg-main); border: 1px solid var(--border-color);
-  border-radius: var(--r-md); margin-top: 12px;
-}
-.bh-icon-wrap {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.bh-algo { font-size: 13px; font-weight: 600; color: var(--text-h); }
-.bh-meta { font-size: 11px; color: var(--text-m); margin-top: 2px; }
-.bh-status { margin-left: auto; }
+    .gc-ttl {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
 
-/* Loader Spinner */
-.loader-spinner {
-  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #ffffff; border-radius: 50%; display: inline-block;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
+    .gc-sub {
+      font-size: 12px;
+      color: var(--text-m);
+      margin-top: 4px;
+    }
+
+    /* Plain-Language Explanation Banner */
+    .explain-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--purple);
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .eb-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--purple);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .eb-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .eb-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eb-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .eb-text {
+      font-size: 13px;
+      color: var(--text-m);
+      line-height: 1.5;
+    }
+
+    .eb-text strong {
+      color: var(--text-h);
+      font-weight: 600;
+    }
+
+    /* Hero Card */
+    .verify-hero {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verify-hero.status-verified {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 15, 17, 0.95));
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .verify-hero.status-failed {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 15, 17, 0.95));
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .verify-hero.status-incomplete {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 15, 17, 0.95));
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .vh-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .vh-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .vh-icon.verified {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .vh-icon.failed {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .vh-icon.incomplete {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .vh-icon.unverified {
+      background: var(--border-color);
+      color: var(--text-m);
+    }
+
+    .vh-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-h);
+      letter-spacing: -0.02em;
+    }
+
+    .vh-desc {
+      font-size: 13px;
+      color: var(--text-m);
+      max-width: 600px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* Pipeline Progress */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding: 0 16px;
+      margin: 12px 0 24px;
+    }
+
+    .pl-line {
+      position: absolute;
+      top: 18px;
+      left: 40px;
+      right: 40px;
+      height: 2px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+
+    .pl-progress {
+      position: absolute;
+      top: 18px;
+      left: 40px;
+      height: 2px;
+      background: var(--purple);
+      z-index: 2;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .pl-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .pl-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-m);
+      transition: all var(--t);
+    }
+
+    .pl-step.active .pl-icon {
+      border-color: var(--purple);
+      color: var(--purple);
+      background: var(--purple-bg);
+    }
+
+    .pl-step.done .pl-icon {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-bg);
+    }
+
+    .pl-step.fail .pl-icon {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .pl-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-s);
+    }
+
+    .pl-step.active .pl-lbl {
+      color: var(--purple);
+    }
+
+    .pl-step.done .pl-lbl {
+      color: var(--green);
+    }
+
+    .pl-step.fail .pl-lbl {
+      color: var(--red);
+    }
+
+    /* Details & Hash Cards */
+    .dl-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .dl-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .dl-lbl {
+      color: var(--text-m);
+    }
+
+    .dl-val {
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .hash-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      word-break: break-all;
+      color: var(--text-h);
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .hash-box.match {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: var(--green-bg);
+    }
+
+    .hash-box.mismatch {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: var(--red-bg);
+    }
+
+    .hash-box.amber-box {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: var(--amber-bg);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-m);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--t);
+    }
+
+    .copy-btn:hover {
+      color: var(--text-h);
+      border-color: var(--text-s);
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sb-none {
+      background: var(--border-color);
+      color: var(--text-m);
+    }
+
+    .sb-valid {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .sb-invalid {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .sb-amber {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .comp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .comp-lbl {
+      font-size: 12px;
+      color: var(--text-m);
+    }
+
+    .comp-res {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-h);
+    }
+
+    .comp-res.match {
+      color: var(--green);
+    }
+
+    .comp-res.mismatch {
+      color: var(--red);
+    }
+
+    .comp-res.amber-res {
+      color: var(--amber);
+    }
+
+    /* Merkle Tree Section & Visualizer */
+    .merkle-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .merkle-root-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .merkle-root-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .merkle-root-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-h);
+      word-break: break-all;
+    }
+
+    /* Tree Diagram Container */
+    .merkle-tree-container {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+      padding: 32px 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      margin-top: 16px;
+      min-height: 340px;
+    }
+
+    .merkle-tree-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .merkle-tree-levels {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      position: relative;
+      z-index: 2;
+      align-items: center;
+      min-width: max-content;
+      width: max-content;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .merkle-tree-level {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+    }
+
+    .mt-node {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      padding: 12px 16px;
+      min-width: 160px;
+      max-width: 220px;
+      cursor: pointer;
+      transition: all var(--t);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      user-select: none;
+      position: relative;
+    }
+
+    .mt-node:hover {
+      border-color: var(--purple);
+      transform: translateY(-2px);
+      background: var(--bg-card-hover);
+    }
+
+    .mt-node.selected {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .mt-node.is-root {
+      border: 2px solid var(--green);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 15, 17, 0.95));
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+      min-width: 200px;
+    }
+
+    .mt-node-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .mt-node-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mt-node-badge.badge-root {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .mt-node-badge.badge-combined {
+      background: var(--purple-bg);
+      color: var(--purple);
+    }
+
+    .mt-node-badge.badge-leaf {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-b);
+    }
+
+    .mt-node-hash {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-h);
+      word-break: break-all;
+    }
+
+    .mt-node-meta {
+      font-size: 11px;
+      color: var(--text-m);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Secondary List View Layout */
+    .merkle-depth-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-m);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 12px;
+    }
+
+    .merkle-leaves {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .merkle-leaf {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-b);
+      cursor: pointer;
+      transition: all var(--t);
+    }
+
+    .merkle-leaf:hover {
+      border-color: var(--purple);
+      background: var(--bg-card);
+    }
+
+    .merkle-leaf.selected {
+      border-color: var(--green);
+      background: var(--green-bg);
+    }
+
+    /* Blockchain History */
+    .bh-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      margin-top: 12px;
+    }
+
+    .bh-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .bh-algo {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .bh-meta {
+      font-size: 11px;
+      color: var(--text-m);
+      margin-top: 2px;
+    }
+
+    .bh-status {
+      margin-left: auto;
+    }
+
+    /* Loader Spinner */
+    .loader-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
+
 <body>
   <aside class="app-sidebar" id="app-sidebar"></aside>
 
@@ -443,958 +839,1038 @@ html, body {
     <div class="content">
 
       <!-- Verification Header & Actions -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; flex-wrap:wrap; gap:16px;">
+      <div
+        style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; flex-wrap:wrap; gap:16px;">
         <div>
-          <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Blockchain & Merkle Verification</h1>
-          <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Cryptographic integrity check against Merkle tree and public ledger</div>
+          <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Blockchain & Merkle
+            Verification</h1>
+          <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Cryptographic integrity check against Merkle
+            tree and public ledger</div>
         </div>
         <div id="header-actions" style="display:flex; align-items:center; gap:12px;">
-          <div id="topbar-verify-duration" style="display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div id="topbar-verify-duration"
+            style="display: none; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
             <span id="topbar-verify-duration-text">Verified in 0s</span>
           </div>
           <button class="btn-sec" id="btn-reverify" onclick="startVerification()">Re-run Integrity Check</button>
         </div>
       </div>
-    
-    <!-- Empty State -->
-    <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        <div style="font-size:18px; font-weight:600; color:var(--text-h);">No CBOM Available</div>
-        <div class="empty-msg">Generate a CBOM by scanning a repository before verifying its integrity.</div>
-        <div style="margin-top:16px;">
-          <button class="btn-p" onclick="window.location.href='scan.html'">Scan Repository</button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Active View -->
-    <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
-      
-      <!-- Plain-Language Explanation Banner -->
-      <div class="explain-banner">
-        <div class="eb-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div class="eb-content">
-          <div class="eb-title">What is Verification & Blockchain Anchoring?</div>
-          <div class="eb-text">
-            Every security finding in your repository receives a unique cryptographic fingerprint. These fingerprints are combined level-by-level into a single master fingerprint called a <strong>Merkle Root</strong>. By storing or checking this master fingerprint against a public blockchain, you can prove that your scan results are genuine and have not been altered or tampered with.
+      <!-- Empty State -->
+      <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <div style="font-size:18px; font-weight:600; color:var(--text-h);">No CBOM Available</div>
+          <div class="empty-msg">Generate a CBOM by scanning a repository before verifying its integrity.</div>
+          <div style="margin-top:16px;">
+            <button class="btn-p" onclick="window.location.href='scan.html'">Scan Repository</button>
           </div>
         </div>
       </div>
 
-      <!-- Primary Status -->
-      <div class="verify-hero status-unverified" id="hero-card">
-        <svg id="hero-icon" class="vh-icon unverified" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-          <div class="vh-title" id="hero-title">NOT VERIFIED</div>
-          <div id="verify-duration-badge" style="display: none; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span id="verify-duration-text">Verified in 0s</span>
-          </div>
-        </div>
-        <div class="vh-desc" id="hero-desc">Verification required</div>
-        <div style="margin-top:20px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
-          <button id="btn-verify" class="btn-p" onclick="startVerification()" style="padding: 12px 24px; font-size: 14px;">Verify Scan Integrity</button>
-          <button id="btn-full-report" class="btn-sec" onclick="generateFullReport()" style="padding: 12px 24px; font-size: 14px; display:inline-flex; align-items:center; gap:8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            Generate Full Report (PDF)
-          </button>
-        </div>
-      </div>
+      <!-- Active View -->
+      <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
 
-      <!-- Pipeline (6 stages) -->
-      <div class="gc-hd"><div class="gc-ttl">Verification Process</div></div>
-      <div class="pipeline">
-        <div class="pl-line"></div>
-        <div class="pl-progress" id="pl-progress"></div>
-        
-        <div class="pl-step done" id="step-0">
-          <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="pl-lbl">01 CBOM Loaded</div>
-        </div>
-        <div class="pl-step" id="step-1">
-          <div class="pl-icon">02</div>
-          <div class="pl-lbl">Component Hashing</div>
-        </div>
-        <div class="pl-step" id="step-2">
-          <div class="pl-icon">03</div>
-          <div class="pl-lbl">Merkle Tree</div>
-        </div>
-        <div class="pl-step" id="step-3">
-          <div class="pl-icon">04</div>
-          <div class="pl-lbl">Digital Signature</div>
-        </div>
-        <div class="pl-step" id="step-4">
-          <div class="pl-icon">05</div>
-          <div class="pl-lbl">Blockchain Anchor</div>
-        </div>
-        <div class="pl-step" id="step-5">
-          <div class="pl-icon">06</div>
-          <div class="pl-lbl">Integrity Verified</div>
-        </div>
-      </div>
-      
-      <!-- Details Grid -->
-      <div class="row">
-        
-        <div class="col col-1">
-          <div class="gcard" style="height:100%;">
-            <div class="gc-hd"><div class="gc-ttl">CBOM Metadata & Identity</div></div>
-            <div class="dl-list" style="margin-top:16px;">
-              <div class="dl-item"><span class="dl-lbl">Repository</span><span class="dl-val" id="det-repo">—</span></div>
-              <div class="dl-item"><span class="dl-lbl">Scan ID</span><span class="dl-val" id="det-scan">—</span></div>
-              <div class="dl-item"><span class="dl-lbl">CBOM Spec</span><span class="dl-val">v1.5 (CycloneDX)</span></div>
-              <div class="dl-item"><span class="dl-lbl">Generated At</span><span class="dl-val" id="det-time">—</span></div>
-              <div class="dl-item"><span class="dl-lbl">Assets Inventory</span><span class="dl-val" id="det-count">0</span></div>
+        <!-- Plain-Language Explanation Banner -->
+        <div class="explain-banner">
+          <div class="eb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="eb-content">
+            <div class="eb-title">What is Verification & Blockchain Anchoring?</div>
+            <div class="eb-text">
+              Every security finding in your repository receives a unique cryptographic fingerprint. These fingerprints
+              are combined level-by-level into a single master fingerprint called a <strong>Merkle Root</strong>. By
+              storing or checking this master fingerprint against a public blockchain, you can prove that your scan
+              results are genuine and have not been altered or tampered with.
             </div>
           </div>
         </div>
-        
-        <div class="col col-2">
-          <div class="gcard" style="height:100%;">
-            <div class="gc-hd"><div class="gc-ttl">Merkle Tree Canonical Root</div></div>
-            <div style="margin-top:16px;">
-              <div class="hash-box" id="hash-box">
-                <span id="hash-text" style="color:var(--text-m)">Merkle Root will be computed during verification.</span>
-                <button class="copy-btn" id="hash-copy" style="display:none;" onclick="copyHash()">Copy Root</button>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:13px; color:var(--text-m); font-weight:500;">Merkle Integrity Status</span>
-                <span class="status-badge sb-none" id="hash-status">Not Verified</span>
-              </div>
+
+        <!-- Primary Status -->
+        <div class="verify-hero status-unverified" id="hero-card">
+          <svg id="hero-icon" class="vh-icon unverified" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" />
+          </svg>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <div class="vh-title" id="hero-title">NOT VERIFIED</div>
+            <div id="verify-duration-badge"
+              style="display: none; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:14px;height:14px;">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span id="verify-duration-text">Verified in 0s</span>
             </div>
           </div>
-        </div>
-        
-      </div>
-      
-      <div class="row">
-        
-        <div class="col col-1">
-          <div class="gcard" style="height:100%;">
-            <div class="gc-hd"><div class="gc-ttl">Merkle Root Ledger Comparison</div></div>
-            <div style="margin-top:16px;">
-              <div class="comp-row">
-                <span class="comp-lbl">Computed Merkle Root</span>
-              </div>
-              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-h); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis;" id="comp-current">—</div>
-              
-              <div style="display:flex; justify-content:center; color:var(--text-s); margin-bottom:12px;">=</div>
-              
-              <div class="comp-row">
-                <span class="comp-lbl">On-Chain Anchored Root</span>
-              </div>
-              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-m); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis;" id="comp-chain">—</div>
-              
-              <div class="comp-row" style="margin-top:16px; border-top:1px solid var(--border-color); padding-top:16px;">
-                <span class="comp-lbl" style="color:var(--text-h)">Verification Outcome</span>
-                <span class="comp-res" id="comp-result">—</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col col-1">
-          <div class="gcard" style="height:100%;">
-            <div class="gc-hd"><div class="gc-ttl">Blockchain Anchor & Proof</div></div>
-            <div style="margin-top:16px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <span style="font-size:13px; font-weight:500; color:var(--text-m);">Anchor Status</span>
-                <span class="status-badge sb-none" id="anch-status">— Not Anchored</span>
-              </div>
-              <div class="dl-list">
-                <div class="dl-item"><span class="dl-lbl">Ledger Network</span><span class="dl-val" id="anch-network">—</span></div>
-                <div class="dl-item"><span class="dl-lbl">Tx Hash / ID</span><span class="dl-val" id="anch-tx">—</span></div>
-                <div class="dl-item"><span class="dl-lbl">Block Number</span><span class="dl-val" id="anch-block">—</span></div>
-                <div class="dl-item"><span class="dl-lbl">Anchored Time</span><span class="dl-val" id="anch-time">—</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-      </div>
-
-      <!-- Merkle Tree Structural Visualizer Panel -->
-      <div class="merkle-panel" id="merkle-panel" style="display:none;">
-        <div class="gc-hd" style="margin-bottom:0; flex-wrap:wrap; gap:16px;">
-          <div>
-            <div class="gc-ttl">Merkle Tree Structural Visualizer</div>
-            <div class="gc-sub">Each finding fingerprint is hashed into a leaf node. Pairs are combined recursively up to the top ROOT hash.</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="display:flex; gap:6px; background:var(--bg-main); padding:4px; border-radius:var(--r-sm); border:1px solid var(--border-color);">
-              <button class="btn-sec active" id="btn-tree-view" onclick="switchMerkleView('tree')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 3v6m0 0L8 5m4 4l4-4M5 13v6m0 0l-2-2m2 2l2-2m12-4v6m0 0l-2-2m2 2l2-2M12 9v12"/></svg>
-                Tree View
-              </button>
-              <button class="btn-sec" id="btn-list-view" onclick="switchMerkleView('list')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                List View
-              </button>
-            </div>
-            <span class="status-badge sb-none" id="merkle-status">Not Built</span>
+          <div class="vh-desc" id="hero-desc">Verification required</div>
+          <div
+            style="margin-top:20px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button id="btn-verify" class="btn-p" onclick="startVerification()"
+              style="padding: 12px 24px; font-size: 14px;">Verify Scan Integrity</button>
+            <button id="btn-full-report" class="btn-sec" onclick="generateFullReport()"
+              style="padding: 12px 24px; font-size: 14px; display:inline-flex; align-items:center; gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:16px;height:16px;">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Generate Full Report (PDF)
+            </button>
           </div>
         </div>
 
-        <div class="merkle-root-box" style="margin-top:20px;">
-          <div style="flex:1; overflow:hidden;">
-            <div class="merkle-root-lbl">🔑 Master Fingerprint (Merkle Root)</div>
-            <div class="merkle-root-val" id="merkle-root">—</div>
-          </div>
-          <button class="copy-btn" style="position:static; margin-left:16px;" onclick="copyMerkleRoot()">Copy Root</button>
-        </div>
-
-        <!-- Tree View Diagram -->
-        <div class="merkle-tree-container" id="merkle-tree-diagram">
-          <svg class="merkle-tree-svg" id="merkle-tree-svg"></svg>
-          <div class="merkle-tree-levels" id="merkle-tree-levels"></div>
-        </div>
-
-        <!-- List View -->
-        <div id="merkle-list-container" style="display:none;">
-          <div class="merkle-depth-label">Leaf Nodes — click any leaf to inspect component hash</div>
-          <div class="merkle-leaves" id="merkle-leaves"></div>
-        </div>
-
-        <!-- Detail Inspection Panel -->
-        <div id="merkle-leaf-detail" style="display:none; margin-top:20px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-md); padding:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.5px;" id="node-detail-title">Node Detail Inspection</div>
-            <button class="copy-btn" id="node-hash-copy" style="position:static;" onclick="copySelectedNodeHash()">Copy Full Hash</button>
-          </div>
-          <div class="dl-list">
-            <div class="dl-item"><span class="dl-lbl">Node Type & Label</span><span class="dl-val" id="node-detail-label">—</span></div>
-            <div class="dl-item"><span class="dl-lbl">Full SHA-256 Hash</span><span class="dl-val" id="node-detail-hash" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); word-break:break-all;">—</span></div>
-            <div class="dl-item" id="node-detail-file-row" style="display:none;"><span class="dl-lbl">Associated Asset</span><span class="dl-val" id="node-detail-file">—</span></div>
-            <div class="dl-item" id="node-detail-children-row" style="display:none;"><span class="dl-lbl">Child Hashes (Combined)</span><span class="dl-val" id="node-detail-children" style="font-family:'JetBrains Mono',monospace; font-size:11px;">—</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Blockchain Verification History -->
-      <div class="gcard" id="bh-panel" style="display:none;">
+        <!-- Pipeline (6 stages) -->
         <div class="gc-hd">
-          <div class="gc-ttl">Blockchain Ledger Record</div>
-          <div class="gc-sub">Anchored verification history on-chain</div>
+          <div class="gc-ttl">Verification Process</div>
         </div>
-        <div id="bh-list"></div>
+        <div class="pipeline">
+          <div class="pl-line"></div>
+          <div class="pl-progress" id="pl-progress"></div>
+
+          <div class="pl-step done" id="step-0">
+            <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                style="width:16px;height:16px">
+                <path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg></div>
+            <div class="pl-lbl">01 CBOM Loaded</div>
+          </div>
+          <div class="pl-step" id="step-1">
+            <div class="pl-icon">02</div>
+            <div class="pl-lbl">Component Hashing</div>
+          </div>
+          <div class="pl-step" id="step-2">
+            <div class="pl-icon">03</div>
+            <div class="pl-lbl">Merkle Tree</div>
+          </div>
+          <div class="pl-step" id="step-3">
+            <div class="pl-icon">04</div>
+            <div class="pl-lbl">Digital Signature</div>
+          </div>
+          <div class="pl-step" id="step-4">
+            <div class="pl-icon">05</div>
+            <div class="pl-lbl">Blockchain Anchor</div>
+          </div>
+          <div class="pl-step" id="step-5">
+            <div class="pl-icon">06</div>
+            <div class="pl-lbl">Integrity Verified</div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row">
+
+          <div class="col col-1">
+            <div class="gcard" style="height:100%;">
+              <div class="gc-hd">
+                <div class="gc-ttl">CBOM Metadata & Identity</div>
+              </div>
+              <div class="dl-list" style="margin-top:16px;">
+                <div class="dl-item"><span class="dl-lbl">Repository</span><span class="dl-val" id="det-repo">—</span>
+                </div>
+                <div class="dl-item"><span class="dl-lbl">Scan ID</span><span class="dl-val" id="det-scan">—</span>
+                </div>
+                <div class="dl-item"><span class="dl-lbl">CBOM Spec</span><span class="dl-val">v1.5 (CycloneDX)</span>
+                </div>
+                <div class="dl-item"><span class="dl-lbl">Generated At</span><span class="dl-val" id="det-time">—</span>
+                </div>
+                <div class="dl-item"><span class="dl-lbl">Assets Inventory</span><span class="dl-val"
+                    id="det-count">0</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col col-2">
+            <div class="gcard" style="height:100%;">
+              <div class="gc-hd">
+                <div class="gc-ttl">Merkle Tree Canonical Root</div>
+              </div>
+              <div style="margin-top:16px;">
+                <div class="hash-box" id="hash-box">
+                  <span id="hash-text" style="color:var(--text-m)">Merkle Root will be computed during
+                    verification.</span>
+                  <button class="copy-btn" id="hash-copy" style="display:none;" onclick="copyHash()">Copy Root</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; color:var(--text-m); font-weight:500;">Merkle Integrity Status</span>
+                  <span class="status-badge sb-none" id="hash-status">Not Verified</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="col col-1">
+            <div class="gcard" style="height:100%;">
+              <div class="gc-hd">
+                <div class="gc-ttl">Merkle Root Ledger Comparison</div>
+              </div>
+              <div style="margin-top:16px;">
+                <div class="comp-row">
+                  <span class="comp-lbl">Computed Merkle Root</span>
+                </div>
+                <div
+                  style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-h); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis;"
+                  id="comp-current">—</div>
+
+                <div style="display:flex; justify-content:center; color:var(--text-s); margin-bottom:12px;">=</div>
+
+                <div class="comp-row">
+                  <span class="comp-lbl">On-Chain Anchored Root</span>
+                </div>
+                <div
+                  style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-m); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis;"
+                  id="comp-chain">—</div>
+
+                <div class="comp-row"
+                  style="margin-top:16px; border-top:1px solid var(--border-color); padding-top:16px;">
+                  <span class="comp-lbl" style="color:var(--text-h)">Verification Outcome</span>
+                  <span class="comp-res" id="comp-result">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col col-1">
+            <div class="gcard" style="height:100%;">
+              <div class="gc-hd">
+                <div class="gc-ttl">Blockchain Anchor & Proof</div>
+              </div>
+              <div style="margin-top:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                  <span style="font-size:13px; font-weight:500; color:var(--text-m);">Anchor Status</span>
+                  <span class="status-badge sb-none" id="anch-status">— Not Anchored</span>
+                </div>
+                <div class="dl-list">
+                  <div class="dl-item"><span class="dl-lbl">Ledger Network</span><span class="dl-val"
+                      id="anch-network">—</span></div>
+                  <div class="dl-item"><span class="dl-lbl">Tx Hash / ID</span><span class="dl-val"
+                      id="anch-tx">—</span></div>
+                  <div class="dl-item"><span class="dl-lbl">Block Number</span><span class="dl-val"
+                      id="anch-block">—</span></div>
+                  <div class="dl-item"><span class="dl-lbl">Anchored Time</span><span class="dl-val"
+                      id="anch-time">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Merkle Tree Structural Visualizer Panel -->
+        <div class="merkle-panel" id="merkle-panel" style="display:none;">
+          <div class="gc-hd" style="margin-bottom:0; flex-wrap:wrap; gap:16px;">
+            <div>
+              <div class="gc-ttl">Merkle Tree Structural Visualizer</div>
+              <div class="gc-sub">Each finding fingerprint is hashed into a leaf node. Pairs are combined recursively up
+                to the top ROOT hash.</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div
+                style="display:flex; gap:6px; background:var(--bg-main); padding:4px; border-radius:var(--r-sm); border:1px solid var(--border-color);">
+                <button class="btn-sec active" id="btn-tree-view" onclick="switchMerkleView('tree')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:14px;height:14px;">
+                    <path d="M12 3v6m0 0L8 5m4 4l4-4M5 13v6m0 0l-2-2m2 2l2-2m12-4v6m0 0l-2-2m2 2l2-2M12 9v12" />
+                  </svg>
+                  Tree View
+                </button>
+                <button class="btn-sec" id="btn-list-view" onclick="switchMerkleView('list')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:14px;height:14px;">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  List View
+                </button>
+              </div>
+              <span class="status-badge sb-none" id="merkle-status">Not Built</span>
+            </div>
+          </div>
+
+          <div class="merkle-root-box" style="margin-top:20px;">
+            <div style="flex:1; overflow:hidden;">
+              <div class="merkle-root-lbl">🔑 Master Fingerprint (Merkle Root)</div>
+              <div class="merkle-root-val" id="merkle-root">—</div>
+            </div>
+            <button class="copy-btn" style="position:static; margin-left:16px;" onclick="copyMerkleRoot()">Copy
+              Root</button>
+          </div>
+
+          <!-- Tree View Diagram -->
+          <div class="merkle-tree-container" id="merkle-tree-diagram">
+            <svg class="merkle-tree-svg" id="merkle-tree-svg"></svg>
+            <div class="merkle-tree-levels" id="merkle-tree-levels"></div>
+          </div>
+
+          <!-- List View -->
+          <div id="merkle-list-container" style="display:none;">
+            <div class="merkle-depth-label">Leaf Nodes — click any leaf to inspect component hash</div>
+            <div class="merkle-leaves" id="merkle-leaves"></div>
+          </div>
+
+          <!-- Detail Inspection Panel -->
+          <div id="merkle-leaf-detail"
+            style="display:none; margin-top:20px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-md); padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div
+                style="font-size:12px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.5px;"
+                id="node-detail-title">Node Detail Inspection</div>
+              <button class="copy-btn" id="node-hash-copy" style="position:static;"
+                onclick="copySelectedNodeHash()">Copy Full Hash</button>
+            </div>
+            <div class="dl-list">
+              <div class="dl-item"><span class="dl-lbl">Node Type & Label</span><span class="dl-val"
+                  id="node-detail-label">—</span></div>
+              <div class="dl-item"><span class="dl-lbl">Full SHA-256 Hash</span><span class="dl-val"
+                  id="node-detail-hash"
+                  style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); word-break:break-all;">—</span>
+              </div>
+              <div class="dl-item" id="node-detail-file-row" style="display:none;"><span class="dl-lbl">Associated
+                  Asset</span><span class="dl-val" id="node-detail-file">—</span></div>
+              <div class="dl-item" id="node-detail-children-row" style="display:none;"><span class="dl-lbl">Child Hashes
+                  (Combined)</span><span class="dl-val" id="node-detail-children"
+                  style="font-family:'JetBrains Mono',monospace; font-size:11px;">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blockchain Verification History -->
+        <div class="gcard" id="bh-panel" style="display:none;">
+          <div class="gc-hd">
+            <div class="gc-ttl">Blockchain Ledger Record</div>
+            <div class="gc-sub">Anchored verification history on-chain</div>
+          </div>
+          <div id="bh-list"></div>
+        </div>
+
       </div>
-
     </div>
-  </div>
-</main>
+  </main>
 
-<script src="assets/js/engine.js"></script>
-<script>
-const API_BASE = (window.location.port === '3000') 
-  ? window.location.origin 
-  : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-      ? 'http://' + window.location.hostname + ':3000' 
-      : 'https://cryptoscan-new-backend.onrender.com');
+  <script src="assets/js/engine.js"></script>
+  <script>
+    const API_BASE = (window.location.port === '3000')
+      ? window.location.origin
+      : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://' + window.location.hostname + ':3000'
+        : 'https://cryptoscan-new-backend.onrender.com');
 
-function getToken() {
-  const token = localStorage.getItem('cs_token') || localStorage.getItem('cs_auth_token') || '';
-  if (token) return token;
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({
-    id: "usr_demo",
-    email: "demo@cryptoscan.io",
-    role: "Developer",
-    exp: Math.floor(Date.now() / 1000) + (30 * 86400)
-  }));
-  return `${header}.${payload}.demo_signature`;
-}
-
-let activeScan = null;
-let currentHashHex = '';
-let merkleRootHex = '';
-let lastVerifyResult = null;
-let currentMerkleView = 'tree';
-window.selectedNodeHash = '';
-window.currentMerkleData = null;
-
-function restoreSavedVerification(record, cachedMerkleData) {
-  if (!record) return;
-
-  merkleRootHex = record.merkleRoot || '';
-  currentHashHex = merkleRootHex;
-
-  document.getElementById('hash-text').textContent = merkleRootHex || 'N/A';
-  document.getElementById('hash-text').style.color = 'var(--text-h)';
-  document.getElementById('hash-copy').style.display = merkleRootHex ? 'block' : 'none';
-  document.getElementById('hash-status').className = record.verified ? 'status-badge sb-valid' : 'status-badge sb-amber';
-  document.getElementById('hash-status').textContent = record.verified ? 'Merkle Root Verified' : 'Merkle Root Computed (Local)';
-  document.getElementById('comp-current').textContent = merkleRootHex || '—';
-
-  for (let i = 1; i <= 5; i++) updateStep(i, 'done');
-  document.getElementById('pl-progress').style.width = '100%';
-
-  if (record.verified && !record.localOnly) {
-    document.getElementById('comp-chain').textContent = record.merkleRoot || merkleRootHex || '—';
-    document.getElementById('comp-chain').style.color = 'var(--text-m)';
-    document.getElementById('anch-status').className = 'status-badge sb-valid';
-    document.getElementById('anch-status').textContent = '✅ Verified & Anchored';
-    document.getElementById('anch-network').textContent = record.network || 'Ethereum Sepolia';
-    document.getElementById('anch-tx').textContent = record.txHash ? (record.txHash.substring(0, 18) + '…') : '0x7f8a9c2b4d1e3f...';
-    document.getElementById('anch-block').textContent = record.blockNumber || '1084291';
-    document.getElementById('anch-time').textContent = record.anchoredAt ? new Date(record.anchoredAt).toLocaleString() : new Date().toLocaleString();
-
-    document.getElementById('hash-box').className = 'hash-box match';
-    document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED ON-CHAIN';
-    document.getElementById('comp-result').className = 'comp-res match';
-    setHero(record.heroStatus || 'verified', record.heroTitle || '✅ VERIFIED & ANCHORED ON-CHAIN', record.heroDesc || 'CBOM Merkle Tree Root confirmed against live public blockchain ledger. Integrity 100% intact.');
-  } else {
-    document.getElementById('comp-chain').textContent = 'Not Anchored on Public Ledger';
-    document.getElementById('comp-chain').style.color = 'var(--amber)';
-    document.getElementById('anch-status').className = record.statusClass || 'status-badge sb-amber';
-    document.getElementById('anch-status').textContent = record.statusLabel || '⚠️ Verified Locally — Not Anchored On-Chain';
-    document.getElementById('anch-network').textContent = record.network || 'Local Engine (Offline / Unreachable)';
-    document.getElementById('anch-tx').textContent = record.txHash || 'N/A';
-    document.getElementById('anch-block').textContent = record.blockNumber || 'N/A';
-    document.getElementById('anch-time').textContent = record.anchoredAt ? new Date(record.anchoredAt).toLocaleString() : new Date().toLocaleString();
-
-    document.getElementById('hash-box').className = 'hash-box amber-box';
-    document.getElementById('comp-result').innerHTML = '⚠️ LOCAL ONLY — NOT ANCHORED';
-    document.getElementById('comp-result').className = 'comp-res amber-res';
-    setHero(record.heroStatus || 'incomplete', record.heroTitle || '⚠️ VERIFIED LOCALLY — NOT ANCHORED ON-CHAIN', record.heroDesc || 'The Merkle Tree root and finding fingerprints were computed correctly, but could not be verified against a live blockchain ledger (backend service unreachable or not anchored).');
-  }
-
-  if (cachedMerkleData) {
-    renderMerkleTree(cachedMerkleData);
-  }
-}
-
-let liveVerifyTimerInterval = null;
-let verifyStartTime = 0;
-
-function formatDuration(ms) {
-  const totalSeconds = Math.max(1, Math.round(ms / 1000));
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  if (m === 0) {
-    return `${s}s`;
-  }
-  return `${m}m ${s}s`;
-}
-
-function startLiveVerifyTimer(startTime) {
-  verifyStartTime = startTime || Date.now();
-  if (liveVerifyTimerInterval) clearInterval(liveVerifyTimerInterval);
-
-  const badge = document.getElementById('verify-duration-badge');
-  const text = document.getElementById('verify-duration-text');
-  if (badge) {
-    badge.style.display = 'inline-flex';
-    badge.style.color = 'var(--purple)';
-    badge.style.background = 'var(--purple-bg)';
-    badge.style.border = '1px solid rgba(139, 92, 246, 0.3)';
-  }
-
-  const btn = document.getElementById('btn-verify');
-  const btnReverify = document.getElementById('btn-reverify');
-
-  const update = () => {
-    const elapsedSec = Math.floor((Date.now() - verifyStartTime) / 1000);
-    const m = Math.floor(elapsedSec / 60);
-    const s = elapsedSec % 60;
-    const timeStr = `${m}:${s < 10 ? '0' : ''}${s}`;
-    
-    if (btn) btn.innerHTML = `<span class="loader-spinner"></span> Verifying... ${timeStr}`;
-    if (btnReverify) btnReverify.innerHTML = `<span class="loader-spinner" style="border-top-color:var(--text-h);"></span> Verifying... ${timeStr}`;
-    if (text) text.textContent = `Verifying... ${timeStr}`;
-  };
-  update();
-  liveVerifyTimerInterval = setInterval(update, 200);
-}
-
-function stopLiveVerifyTimer() {
-  if (liveVerifyTimerInterval) {
-    clearInterval(liveVerifyTimerInterval);
-    liveVerifyTimerInterval = null;
-  }
-  const btnReverify = document.getElementById('btn-reverify');
-  if (btnReverify) btnReverify.innerHTML = 'Re-run Integrity Check';
-}
-
-function displayVerifyDuration(durationMs, isSuccess) {
-  const durationFormatted = formatDuration(durationMs);
-  const badge = document.getElementById('verify-duration-badge');
-  const text = document.getElementById('verify-duration-text');
-  const topbarBadge = document.getElementById('topbar-verify-duration');
-  const topbarText = document.getElementById('topbar-verify-duration-text');
-
-  if (isSuccess) {
-    if (badge && text) {
-      badge.style.display = 'inline-flex';
-      badge.style.color = 'var(--green)';
-      badge.style.background = 'var(--green-bg)';
-      badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-      text.textContent = `Verified in ${durationFormatted}`;
-    }
-    if (topbarBadge && topbarText) {
-      topbarBadge.style.display = 'inline-flex';
-      topbarBadge.style.color = 'var(--green)';
-      topbarBadge.style.background = 'var(--green-bg)';
-      topbarBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-      topbarText.textContent = `Verified in ${durationFormatted}`;
-    }
-  } else {
-    if (badge && text) {
-      badge.style.display = 'inline-flex';
-      badge.style.color = 'var(--red)';
-      badge.style.background = 'var(--red-bg)';
-      badge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-      text.textContent = `Verification halted after ${durationFormatted}`;
-    }
-    if (topbarBadge && topbarText) {
-      topbarBadge.style.display = 'inline-flex';
-      topbarBadge.style.color = 'var(--red)';
-      topbarBadge.style.background = 'var(--red-bg)';
-      topbarBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      topbarText.textContent = `Halted after ${durationFormatted}`;
-    }
-  }
-
-  // Store per-scan verification duration
-  try {
-    if (activeScan) {
-      activeScan.verificationDuration = durationFormatted;
-      activeScan.verificationDurationMs = durationMs;
-      activeScan.verificationSuccess = isSuccess;
-      activeScan.verificationCompletedAt = new Date().toISOString();
-      localStorage.setItem('cs_verify_duration_' + (activeScan.scanId || 'current'), JSON.stringify({
-        scanId: activeScan.scanId,
-        durationMs,
-        durationFormatted,
-        isSuccess,
-        verifiedAt: activeScan.verificationCompletedAt
+    function getToken() {
+      const token = localStorage.getItem('cs_token') || localStorage.getItem('cs_auth_token') || '';
+      if (token) return token;
+      const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+      const payload = btoa(JSON.stringify({
+        id: "usr_demo",
+        email: "demo@cryptoscan.io",
+        role: "Developer",
+        exp: Math.floor(Date.now() / 1000) + (30 * 86400)
       }));
-    }
-  } catch(e) {
-    console.warn('Could not persist verification duration:', e);
-  }
-}
-
-function init() {
-  const data = CryptoEngine.getData();
-  const noDataEl = document.getElementById('view-no-data');
-  const activeEl = document.getElementById('view-active');
-  const headerActionsEl = document.getElementById('header-actions');
-  
-  if (!data.activeScan) {
-    if (noDataEl) noDataEl.style.display = 'block';
-    if (activeEl) activeEl.style.display = 'none';
-    if (headerActionsEl) headerActionsEl.style.display = 'none';
-    return;
-  }
-  
-  if (noDataEl) noDataEl.style.display = 'none';
-  if (activeEl) activeEl.style.display = 'flex';
-  if (headerActionsEl) headerActionsEl.style.display = 'flex';
-  
-  activeScan = data.activeScan;
-  
-  // Populate CBOM Details
-  document.getElementById('det-repo').textContent = activeScan.repoName || 'Scanned Repository';
-  document.getElementById('det-scan').textContent = activeScan.scanId ? activeScan.scanId.substring(0, 12) : 'scan_default';
-  document.getElementById('det-time').textContent = activeScan.timestamp || new Date().toLocaleString();
-  document.getElementById('det-count').textContent = activeScan.assetsFound || (activeScan.findings ? activeScan.findings.length : 0);
-
-  if (activeScan.verificationResult) {
-    restoreSavedVerification(activeScan.verificationResult, activeScan.merkleData);
-    renderBlockchainHistory(activeScan.verificationHistory || [activeScan.verificationResult]);
-  } else {
-    startVerification();
-  }
-}
-
-// ─── Merkle Tree Generator ───
-async function sha256(str) {
-  const buffer = new TextEncoder().encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function buildMerkleTreeFromCBOM(items) {
-  if (!items || items.length === 0) {
-    const emptyHash = await sha256("EMPTY_CBOM_INVENTORY");
-    const fullHash = emptyHash.startsWith('0x') ? emptyHash : ('0x' + emptyHash);
-    const node = {
-      id: 'leaf-0',
-      level: 0,
-      index: 0,
-      label: 'Empty Inventory',
-      type: 'root',
-      hash: fullHash,
-      children: []
-    };
-    return {
-      root: fullHash,
-      leaves: [node],
-      treeLevels: [[node]],
-      nodesMap: { [node.id]: node }
-    };
-  }
-
-  // Level 0: Leaf nodes for each finding/component
-  const leafNodes = await Promise.all(items.map(async (item, idx) => {
-    const algo = item.algorithm || item.name || 'Crypto Asset';
-    const file = item.file || item.filePath || '';
-    const line = item.line || item.lineNumber || 0;
-    const rawStr = typeof item === 'string' ? item : JSON.stringify({
-      algo: algo,
-      type: item.type || item.category || 'Asset',
-      file: file || 'unknown',
-      line: line || 0
-    });
-    const hashStr = await sha256(rawStr);
-    const fullHash = hashStr.startsWith('0x') ? hashStr : ('0x' + hashStr);
-    return {
-      id: `leaf-${idx}`,
-      level: 0,
-      index: idx,
-      label: `Finding ${idx + 1}`,
-      meta: algo,
-      fileInfo: file ? `${file.split('/').pop()}:${line}` : `Asset #${idx+1}`,
-      fullFile: file,
-      type: 'leaf',
-      hash: fullHash,
-      children: []
-    };
-  }));
-
-  const treeLevels = [leafNodes];
-  const nodesMap = {};
-  leafNodes.forEach(n => { nodesMap[n.id] = n; });
-
-  let currentLevel = leafNodes;
-  let levelIdx = 1;
-
-  while (currentLevel.length > 1) {
-    const nextLevel = [];
-    for (let i = 0; i < currentLevel.length; i += 2) {
-      const left = currentLevel[i];
-      const right = (i + 1 < currentLevel.length) ? currentLevel[i + 1] : currentLevel[i];
-      const parentHash = await sha256(left.hash + right.hash);
-      const parentFullHash = parentHash.startsWith('0x') ? parentHash : ('0x' + parentHash);
-      const parentNode = {
-        id: `node-${levelIdx}-${Math.floor(i / 2)}`,
-        level: levelIdx,
-        index: Math.floor(i / 2),
-        label: `Combined Node`,
-        type: 'combined',
-        hash: parentFullHash,
-        children: [left.id, right.id],
-        leftHash: left.hash,
-        rightHash: right.hash
-      };
-      nodesMap[parentNode.id] = parentNode;
-      nextLevel.push(parentNode);
-    }
-    treeLevels.push(nextLevel);
-    currentLevel = nextLevel;
-    levelIdx++;
-  }
-
-  // Mark top node as root
-  const rootNode = currentLevel[0];
-  rootNode.type = 'root';
-  rootNode.label = 'ROOT';
-
-  return {
-    root: rootNode.hash,
-    leaves: leafNodes,
-    treeLevels: treeLevels,
-    nodesMap: nodesMap
-  };
-}
-
-function updateStep(stepId, state) {
-  const el = document.getElementById('step-' + stepId);
-  if (!el) return;
-  el.className = 'pl-step ' + state;
-  if(state === 'done') {
-    el.querySelector('.pl-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  } else if (state === 'fail') {
-    el.querySelector('.pl-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  }
-}
-
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function setHero(status, title, desc) {
-  const hero = document.getElementById('hero-card');
-  if (!hero) return;
-  hero.className = 'verify-hero status-' + status;
-  document.getElementById('hero-icon').className = 'vh-icon ' + status;
-  
-  const iconPaths = {
-    verified: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
-    failed: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>',
-    incomplete: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
-    unverified: '<circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/>'
-  };
-  document.getElementById('hero-icon').innerHTML = iconPaths[status] || iconPaths.unverified;
-  document.getElementById('hero-title').textContent = title;
-  document.getElementById('hero-desc').textContent = desc;
-}
-
-async function startVerification() {
-  if (!activeScan) return;
-
-  const startTimestamp = Date.now();
-  startLiveVerifyTimer(startTimestamp);
-
-  const btn = document.getElementById('btn-verify');
-  if (btn) {
-    btn.disabled = true;
-  }
-  
-  document.getElementById('pl-progress').style.width = '0%';
-  
-  // Reset UI
-  document.getElementById('hash-text').textContent = 'Computing Merkle Tree Root...';
-  document.getElementById('hash-copy').style.display = 'none';
-  document.getElementById('hash-status').className = 'status-badge sb-none';
-  document.getElementById('hash-status').textContent = 'Computing...';
-  document.getElementById('hash-box').className = 'hash-box';
-  document.getElementById('comp-current').textContent = '—';
-  document.getElementById('comp-chain').textContent = '—';
-  document.getElementById('comp-result').textContent = '—';
-  document.getElementById('comp-result').className = 'comp-res';
-  
-  setHero('unverified', 'VERIFYING', 'Computing Merkle Tree Root and checking blockchain anchor...');
-  
-  // Reset pipeline steps
-  for (let i = 1; i <= 5; i++) updateStep(i, '');
-
-  // ─── Step 1 & 2: Build Merkle Tree Root ───
-  updateStep(1, 'active');
-  document.getElementById('pl-progress').style.width = '20%';
-  await delay(400);
-
-  let merkleData = null;
-  try {
-    const components = activeScan.cbom || activeScan.findings || [];
-    merkleData = await buildMerkleTreeFromCBOM(components);
-    merkleRootHex = merkleData.root.startsWith('0x') ? merkleData.root : ('0x' + merkleData.root);
-    currentHashHex = merkleRootHex;
-
-    document.getElementById('hash-text').textContent = merkleRootHex;
-    document.getElementById('hash-text').style.color = 'var(--text-h)';
-    document.getElementById('hash-copy').style.display = 'block';
-    document.getElementById('hash-status').className = 'status-badge sb-valid';
-    document.getElementById('hash-status').textContent = 'Merkle Root Built';
-    document.getElementById('comp-current').textContent = merkleRootHex;
-
-    renderMerkleTree(merkleData);
-    updateStep(1, 'done');
-    updateStep(2, 'done');
-    document.getElementById('pl-progress').style.width = '45%';
-  } catch(e) {
-    console.error('Merkle Tree calculation failed:', e);
-    const failDuration = Date.now() - startTimestamp;
-    stopLiveVerifyTimer();
-    displayVerifyDuration(failDuration, false);
-    updateStep(1, 'fail');
-    setHero('failed', '❌ VERIFICATION FAILED', 'Could not compute Merkle Tree root for the CBOM.');
-    
-    const failRecord = {
-      id: 'vh_' + Date.now(),
-      scanId: activeScan.scanId,
-      repoName: activeScan.repoName || 'Scanned Repository',
-      timestamp: new Date().toISOString(),
-      verified: false,
-      localOnly: false,
-      failed: true,
-      txHash: 'N/A',
-      network: 'N/A',
-      blockNumber: 'N/A',
-      anchoredAt: new Date().toISOString(),
-      merkleRoot: null,
-      statusLabel: '❌ Verification Failed',
-      statusClass: 'sb-invalid',
-      heroStatus: 'failed',
-      heroTitle: '❌ VERIFICATION FAILED',
-      heroDesc: 'Could not compute Merkle Tree root or confirm scan payload.'
-    };
-
-    activeScan.verificationResult = failRecord;
-    activeScan.verificationHistory = activeScan.verificationHistory || [];
-    activeScan.verificationHistory.unshift(failRecord);
-    
-    const currentData = CryptoEngine.getData();
-    currentData.activeScan = activeScan;
-    if (currentData.scans && Array.isArray(currentData.scans)) {
-      const idx = currentData.scans.findIndex(s => s.scanId === activeScan.scanId);
-      if (idx >= 0) currentData.scans[idx] = activeScan;
-    }
-    CryptoEngine.saveData(currentData);
-    renderBlockchainHistory(activeScan.verificationHistory);
-
-    if (btn) {
-      btn.textContent = 'Verify Again';
-      btn.disabled = false;
-    }
-    return;
-  }
-
-  await delay(300);
-
-  // ─── Step 3: Digital Signature Check ───
-  updateStep(3, 'active');
-  document.getElementById('pl-progress').style.width = '60%';
-  await delay(300);
-  updateStep(3, 'done');
-
-  // ─── Step 4 & 5: Backend API Blockchain Anchor Call ───
-  updateStep(4, 'active');
-  updateStep(5, 'active');
-  document.getElementById('pl-progress').style.width = '80%';
-
-  let verifyResult = null;
-  let anchorResult = null;
-  let apiSuccess = false;
-
-  try {
-    const token = getToken();
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-
-    // Call /scan/:scanId/anchor with payload
-    const anchorRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/anchor`, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({
-        repoId: activeScan.repoId,
-        repoName: activeScan.repoName,
-        findings: activeScan.findings || activeScan.cbom || [],
-        cbom: activeScan.cbom || activeScan.findings || []
-      })
-    }).catch(() => null);
-
-    if (anchorRes && anchorRes.ok) {
-      anchorResult = await anchorRes.json().catch(() => null);
-      if (anchorResult && anchorResult.verified) apiSuccess = true;
+      return `${header}.${payload}.demo_signature`;
     }
 
-    // Call /scan/:scanId/verify
-    const verifyRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/verify`, {
-      method: 'GET',
-      headers: headers
-    }).catch(() => null);
+    let activeScan = null;
+    let currentHashHex = '';
+    let merkleRootHex = '';
+    let lastVerifyResult = null;
+    let currentMerkleView = 'tree';
+    window.selectedNodeHash = '';
+    window.currentMerkleData = null;
 
-    if (verifyRes && verifyRes.ok) {
-      verifyResult = await verifyRes.json().catch(() => null);
-    }
+    function restoreSavedVerification(record, cachedMerkleData) {
+      if (!record) return;
 
-    const finalTxHash = (verifyResult && verifyResult.txHash) || (anchorResult && anchorResult.txHash);
-    const isVerified = (verifyResult && verifyResult.verified !== false) || (anchorResult && anchorResult.verified !== false);
+      merkleRootHex = record.merkleRoot || '';
+      currentHashHex = merkleRootHex;
 
-    if (finalTxHash && finalTxHash !== '0x' && isVerified) {
-      verifyResult = verifyResult || anchorResult;
-      verifyResult.txHash = finalTxHash;
-      apiSuccess = true;
-    } else if (verifyResult && verifyResult.verified !== false) {
-      apiSuccess = true;
-    }
-  } catch(e) {
-    console.warn('API Verification error, continuing with verified cryptographic anchor proof:', e);
-  }
+      document.getElementById('hash-text').textContent = merkleRootHex || 'N/A';
+      document.getElementById('hash-text').style.color = 'var(--text-h)';
+      document.getElementById('hash-copy').style.display = merkleRootHex ? 'block' : 'none';
+      document.getElementById('hash-status').className = record.verified ? 'status-badge sb-valid' : 'status-badge sb-amber';
+      document.getElementById('hash-status').textContent = record.verified ? 'Merkle Root Verified' : 'Merkle Root Computed (Local)';
+      document.getElementById('comp-current').textContent = merkleRootHex || '—';
 
-  updateStep(4, 'done');
-  updateStep(5, 'done');
-  document.getElementById('pl-progress').style.width = '100%';
+      for (let i = 1; i <= 5; i++) updateStep(i, 'done');
+      document.getElementById('pl-progress').style.width = '100%';
 
-  let record = null;
-  const hashSeed = await sha256(activeScan.scanId + merkleRootHex);
-  const fallbackTx = '0x' + hashSeed;
-  const fallbackBlock = 6482914 + (Math.abs(parseInt(hashSeed.substring(0, 6), 16)) % 1000);
+      if (record.verified && !record.localOnly) {
+        document.getElementById('comp-chain').textContent = record.merkleRoot || merkleRootHex || '—';
+        document.getElementById('comp-chain').style.color = 'var(--text-m)';
+        document.getElementById('anch-status').className = 'status-badge sb-valid';
+        document.getElementById('anch-status').textContent = '✅ Verified & Anchored';
+        document.getElementById('anch-network').textContent = record.network || 'Ethereum Sepolia';
+        document.getElementById('anch-tx').textContent = record.txHash ? (record.txHash.substring(0, 18) + '…') : '0x7f8a9c2b4d1e3f...';
+        document.getElementById('anch-block').textContent = record.blockNumber || '1084291';
+        document.getElementById('anch-time').textContent = record.anchoredAt ? new Date(record.anchoredAt).toLocaleString() : new Date().toLocaleString();
 
-  const onChainTx = (verifyResult && verifyResult.txHash && verifyResult.txHash !== '0x') 
-    ? verifyResult.txHash 
-    : ((anchorResult && anchorResult.txHash && anchorResult.txHash !== '0x') ? anchorResult.txHash : fallbackTx);
+        document.getElementById('hash-box').className = 'hash-box match';
+        document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED ON-CHAIN';
+        document.getElementById('comp-result').className = 'comp-res match';
+        setHero(record.heroStatus || 'verified', record.heroTitle || '✅ VERIFIED & ANCHORED ON-CHAIN', record.heroDesc || 'CBOM Merkle Tree Root confirmed against live public blockchain ledger. Integrity 100% intact.');
+      } else {
+        document.getElementById('comp-chain').textContent = 'Not Anchored on Public Ledger';
+        document.getElementById('comp-chain').style.color = 'var(--amber)';
+        document.getElementById('anch-status').className = record.statusClass || 'status-badge sb-amber';
+        document.getElementById('anch-status').textContent = record.statusLabel || '⚠️ Verified Locally — Not Anchored On-Chain';
+        document.getElementById('anch-network').textContent = record.network || 'Local Engine (Offline / Unreachable)';
+        document.getElementById('anch-tx').textContent = record.txHash || 'N/A';
+        document.getElementById('anch-block').textContent = record.blockNumber || 'N/A';
+        document.getElementById('anch-time').textContent = record.anchoredAt ? new Date(record.anchoredAt).toLocaleString() : new Date().toLocaleString();
 
-  const onChainNetwork = (verifyResult && verifyResult.network) 
-    ? verifyResult.network 
-    : ((anchorResult && anchorResult.network) ? anchorResult.network : 'Ethereum Sepolia (0x1cA9...359a)');
+        document.getElementById('hash-box').className = 'hash-box amber-box';
+        document.getElementById('comp-result').innerHTML = '⚠️ LOCAL ONLY — NOT ANCHORED';
+        document.getElementById('comp-result').className = 'comp-res amber-res';
+        setHero(record.heroStatus || 'incomplete', record.heroTitle || '⚠️ VERIFIED LOCALLY — NOT ANCHORED ON-CHAIN', record.heroDesc || 'The Merkle Tree root and finding fingerprints were computed correctly, but could not be verified against a live blockchain ledger (backend service unreachable or not anchored).');
+      }
 
-  const onChainBlock = (verifyResult && verifyResult.blockNumber) 
-    ? verifyResult.blockNumber 
-    : ((anchorResult && anchorResult.blockNumber) ? anchorResult.blockNumber : fallbackBlock);
-
-  const chainRoot = (verifyResult && verifyResult.onChainHash) 
-    ? verifyResult.onChainHash 
-    : ((anchorResult && anchorResult.merkleRoot) ? anchorResult.merkleRoot : merkleRootHex);
-
-  const chainRootFormatted = chainRoot.startsWith('0x') ? chainRoot : ('0x' + chainRoot);
-  document.getElementById('comp-chain').textContent = chainRootFormatted;
-  document.getElementById('comp-chain').style.color = 'var(--text-m)';
-
-  document.getElementById('anch-status').className = 'status-badge sb-valid';
-  document.getElementById('anch-status').textContent = '✅ Verified & Anchored';
-  document.getElementById('anch-network').textContent = onChainNetwork;
-  document.getElementById('anch-tx').textContent = onChainTx.substring(0, 18) + '…';
-  document.getElementById('anch-block').textContent = onChainBlock.toString();
-  document.getElementById('anch-time').textContent = (verifyResult && verifyResult.anchoredAt) 
-    ? new Date(verifyResult.anchoredAt).toLocaleString() 
-    : new Date().toLocaleString();
-
-  document.getElementById('hash-box').className = 'hash-box match';
-  document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED ON-CHAIN';
-  document.getElementById('comp-result').className = 'comp-res match';
-  setHero('verified', '✅ VERIFIED & ANCHORED ON-CHAIN', 
-    'CBOM Merkle Tree Root confirmed against public blockchain ledger. Cryptographic integrity 100% intact.');
-
-  record = {
-    id: 'vh_' + Date.now(),
-    scanId: activeScan.scanId,
-    repoName: activeScan.repoName || 'Scanned Repository',
-    timestamp: new Date().toISOString(),
-    verified: true,
-    localOnly: false,
-    txHash: onChainTx,
-    network: onChainNetwork,
-    blockNumber: onChainBlock.toString(),
-    anchoredAt: new Date().toISOString(),
-    merkleRoot: merkleRootHex,
-    statusLabel: '✅ Verified & Anchored',
-    statusClass: 'sb-valid',
-    heroStatus: 'verified',
-    heroTitle: '✅ VERIFIED & ANCHORED ON-CHAIN',
-    heroDesc: 'CBOM Merkle Tree Root confirmed against public blockchain ledger. Cryptographic integrity 100% intact.'
-  };
-
-  // Save to activeScan and CryptoEngine storage!
-  if (record) {
-    activeScan.verificationResult = record;
-    activeScan.verificationHistory = activeScan.verificationHistory || [];
-    activeScan.verificationHistory.unshift(record);
-    if (activeScan.verificationHistory.length > 20) {
-      activeScan.verificationHistory = activeScan.verificationHistory.slice(0, 20);
-    }
-    activeScan.merkleData = merkleData;
-
-    const currentData = CryptoEngine.getData();
-    currentData.activeScan = activeScan;
-    if (currentData.scans && Array.isArray(currentData.scans)) {
-      const idx = currentData.scans.findIndex(s => s.scanId === activeScan.scanId);
-      if (idx >= 0) {
-        currentData.scans[idx] = activeScan;
+      if (cachedMerkleData) {
+        renderMerkleTree(cachedMerkleData);
       }
     }
-    CryptoEngine.saveData(currentData);
-    renderBlockchainHistory(activeScan.verificationHistory);
-  }
 
-  const endTimestamp = Date.now();
-  stopLiveVerifyTimer();
-  const isVerified = record && record.verified && !record.localOnly;
-  displayVerifyDuration(endTimestamp - startTimestamp, isVerified);
+    let liveVerifyTimerInterval = null;
+    let verifyStartTime = 0;
 
-  if (btn) {
-    btn.innerHTML = 'Verify Again';
-    btn.disabled = false;
-  }
-}
-
-function copyHash() {
-  if (merkleRootHex || currentHashHex) {
-    navigator.clipboard.writeText(merkleRootHex || currentHashHex);
-    const btn = document.getElementById('hash-copy');
-    if (btn) {
-      btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy Root', 2000);
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(1, Math.round(ms / 1000));
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      if (m === 0) {
+        return `${s}s`;
+      }
+      return `${m}m ${s}s`;
     }
-  }
-}
 
-function copyMerkleRoot() {
-  if (merkleRootHex) {
-    navigator.clipboard.writeText(merkleRootHex);
-    alert('Merkle Root copied to clipboard!');
-  }
-}
+    function startLiveVerifyTimer(startTime) {
+      verifyStartTime = startTime || Date.now();
+      if (liveVerifyTimerInterval) clearInterval(liveVerifyTimerInterval);
 
-function copySelectedNodeHash() {
-  if (window.selectedNodeHash) {
-    navigator.clipboard.writeText(window.selectedNodeHash);
-    const btn = document.getElementById('node-hash-copy');
-    if (btn) {
-      btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy Full Hash', 2000);
+      const badge = document.getElementById('verify-duration-badge');
+      const text = document.getElementById('verify-duration-text');
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.style.color = 'var(--purple)';
+        badge.style.background = 'var(--purple-bg)';
+        badge.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+      }
+
+      const btn = document.getElementById('btn-verify');
+      const btnReverify = document.getElementById('btn-reverify');
+
+      const update = () => {
+        const elapsedSec = Math.floor((Date.now() - verifyStartTime) / 1000);
+        const m = Math.floor(elapsedSec / 60);
+        const s = elapsedSec % 60;
+        const timeStr = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+        if (btn) btn.innerHTML = `<span class="loader-spinner"></span> Verifying... ${timeStr}`;
+        if (btnReverify) btnReverify.innerHTML = `<span class="loader-spinner" style="border-top-color:var(--text-h);"></span> Verifying... ${timeStr}`;
+        if (text) text.textContent = `Verifying... ${timeStr}`;
+      };
+      update();
+      liveVerifyTimerInterval = setInterval(update, 200);
     }
-  }
-}
 
-// ─── Merkle Tree Renderer & Switcher ───
-function switchMerkleView(view) {
-  currentMerkleView = view;
-  const diagram = document.getElementById('merkle-tree-diagram');
-  const listContainer = document.getElementById('merkle-list-container');
-  const btnTree = document.getElementById('btn-tree-view');
-  const btnList = document.getElementById('btn-list-view');
-
-  if (view === 'tree') {
-    if (diagram) diagram.style.display = 'block';
-    if (listContainer) listContainer.style.display = 'none';
-    if (btnTree) btnTree.className = 'btn-sec active';
-    if (btnList) btnList.className = 'btn-sec';
-    setTimeout(drawMerkleTreeLines, 60);
-  } else {
-    if (diagram) diagram.style.display = 'none';
-    if (listContainer) listContainer.style.display = 'block';
-    if (btnTree) btnTree.className = 'btn-sec';
-    if (btnList) btnList.className = 'btn-sec active';
-  }
-}
-
-function renderMerkleTree(merkleData) {
-  const panel = document.getElementById('merkle-panel');
-  if (!panel) return;
-  panel.style.display = 'block';
-
-  window.currentMerkleData = merkleData;
-
-  const root = merkleData.root || null;
-  if (root) {
-    merkleRootHex = root.startsWith('0x') ? root : ('0x' + root);
-    const mrEl = document.getElementById('merkle-root');
-    if (mrEl) mrEl.textContent = merkleRootHex;
-    const msEl = document.getElementById('merkle-status');
-    if (msEl) {
-      msEl.className = 'status-badge sb-valid';
-      msEl.textContent = '✅ Merkle Root Computed';
+    function stopLiveVerifyTimer() {
+      if (liveVerifyTimerInterval) {
+        clearInterval(liveVerifyTimerInterval);
+        liveVerifyTimerInterval = null;
+      }
+      const btnReverify = document.getElementById('btn-reverify');
+      if (btnReverify) btnReverify.innerHTML = 'Re-run Integrity Check';
     }
-  }
 
-  renderMerkleTreeDiagram(merkleData);
-  renderMerkleListView(merkleData);
-  switchMerkleView(currentMerkleView);
-}
+    function displayVerifyDuration(durationMs, isSuccess) {
+      const durationFormatted = formatDuration(durationMs);
+      const badge = document.getElementById('verify-duration-badge');
+      const text = document.getElementById('verify-duration-text');
+      const topbarBadge = document.getElementById('topbar-verify-duration');
+      const topbarText = document.getElementById('topbar-verify-duration-text');
 
-function renderMerkleTreeDiagram(merkleData) {
-  const levelsContainer = document.getElementById('merkle-tree-levels');
-  if (!levelsContainer || !merkleData.treeLevels) return;
+      if (isSuccess) {
+        if (badge && text) {
+          badge.style.display = 'inline-flex';
+          badge.style.color = 'var(--green)';
+          badge.style.background = 'var(--green-bg)';
+          badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+          text.textContent = `Verified in ${durationFormatted}`;
+        }
+        if (topbarBadge && topbarText) {
+          topbarBadge.style.display = 'inline-flex';
+          topbarBadge.style.color = 'var(--green)';
+          topbarBadge.style.background = 'var(--green-bg)';
+          topbarBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          topbarText.textContent = `Verified in ${durationFormatted}`;
+        }
+      } else {
+        if (badge && text) {
+          badge.style.display = 'inline-flex';
+          badge.style.color = 'var(--red)';
+          badge.style.background = 'var(--red-bg)';
+          badge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+          text.textContent = `Verification halted after ${durationFormatted}`;
+        }
+        if (topbarBadge && topbarText) {
+          topbarBadge.style.display = 'inline-flex';
+          topbarBadge.style.color = 'var(--red)';
+          topbarBadge.style.background = 'var(--red-bg)';
+          topbarBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+          topbarText.textContent = `Halted after ${durationFormatted}`;
+        }
+      }
 
-  const levels = merkleData.treeLevels;
-  let html = '';
-  for (let l = levels.length - 1; l >= 0; l--) {
-    const levelNodes = levels[l];
-    html += `<div class="merkle-tree-level">`;
-    levelNodes.forEach(node => {
-      const isRoot = node.type === 'root';
-      const isCombined = node.type === 'combined';
-      const shortHash = node.hash.substring(0, 10) + '…' + node.hash.substring(node.hash.length - 4);
-      const badgeClass = isRoot ? 'badge-root' : (isCombined ? 'badge-combined' : 'badge-leaf');
-      
-      html += `
+      // Store per-scan verification duration
+      try {
+        if (activeScan) {
+          activeScan.verificationDuration = durationFormatted;
+          activeScan.verificationDurationMs = durationMs;
+          activeScan.verificationSuccess = isSuccess;
+          activeScan.verificationCompletedAt = new Date().toISOString();
+          localStorage.setItem('cs_verify_duration_' + (activeScan.scanId || 'current'), JSON.stringify({
+            scanId: activeScan.scanId,
+            durationMs,
+            durationFormatted,
+            isSuccess,
+            verifiedAt: activeScan.verificationCompletedAt
+          }));
+        }
+      } catch (e) {
+        console.warn('Could not persist verification duration:', e);
+      }
+    }
+
+    function init() {
+      const data = CryptoEngine.getData();
+      const noDataEl = document.getElementById('view-no-data');
+      const activeEl = document.getElementById('view-active');
+      const headerActionsEl = document.getElementById('header-actions');
+
+      if (!data.activeScan) {
+        if (noDataEl) noDataEl.style.display = 'block';
+        if (activeEl) activeEl.style.display = 'none';
+        if (headerActionsEl) headerActionsEl.style.display = 'none';
+        return;
+      }
+
+      if (noDataEl) noDataEl.style.display = 'none';
+      if (activeEl) activeEl.style.display = 'flex';
+      if (headerActionsEl) headerActionsEl.style.display = 'flex';
+
+      activeScan = data.activeScan;
+
+      // Populate CBOM Details
+      document.getElementById('det-repo').textContent = activeScan.repoName || 'Scanned Repository';
+      document.getElementById('det-scan').textContent = activeScan.scanId ? activeScan.scanId.substring(0, 12) : 'scan_default';
+      document.getElementById('det-time').textContent = activeScan.timestamp || new Date().toLocaleString();
+      document.getElementById('det-count').textContent = activeScan.assetsFound || (activeScan.findings ? activeScan.findings.length : 0);
+
+      if (activeScan.verificationResult) {
+        restoreSavedVerification(activeScan.verificationResult, activeScan.merkleData);
+        renderBlockchainHistory(activeScan.verificationHistory || [activeScan.verificationResult]);
+      } else {
+        startVerification();
+      }
+    }
+
+    // ─── Merkle Tree Generator ───
+    async function sha256(str) {
+      const buffer = new TextEncoder().encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function buildMerkleTreeFromCBOM(items) {
+      if (!items || items.length === 0) {
+        const emptyHash = await sha256("EMPTY_CBOM_INVENTORY");
+        const fullHash = emptyHash.startsWith('0x') ? emptyHash : ('0x' + emptyHash);
+        const node = {
+          id: 'leaf-0',
+          level: 0,
+          index: 0,
+          label: 'Empty Inventory',
+          type: 'root',
+          hash: fullHash,
+          children: []
+        };
+        return {
+          root: fullHash,
+          leaves: [node],
+          treeLevels: [[node]],
+          nodesMap: { [node.id]: node }
+        };
+      }
+
+      // Level 0: Leaf nodes for each finding/component
+      const leafNodes = await Promise.all(items.map(async (item, idx) => {
+        const algo = item.algorithm || item.name || 'Crypto Asset';
+        const file = item.file || item.filePath || '';
+        const line = item.line || item.lineNumber || 0;
+        const rawStr = typeof item === 'string' ? item : JSON.stringify({
+          algo: algo,
+          type: item.type || item.category || 'Asset',
+          file: file || 'unknown',
+          line: line || 0
+        });
+        const hashStr = await sha256(rawStr);
+        const fullHash = hashStr.startsWith('0x') ? hashStr : ('0x' + hashStr);
+        return {
+          id: `leaf-${idx}`,
+          level: 0,
+          index: idx,
+          label: `Finding ${idx + 1}`,
+          meta: algo,
+          fileInfo: file ? `${file.split('/').pop()}:${line}` : `Asset #${idx + 1}`,
+          fullFile: file,
+          type: 'leaf',
+          hash: fullHash,
+          children: []
+        };
+      }));
+
+      const treeLevels = [leafNodes];
+      const nodesMap = {};
+      leafNodes.forEach(n => { nodesMap[n.id] = n; });
+
+      let currentLevel = leafNodes;
+      let levelIdx = 1;
+
+      while (currentLevel.length > 1) {
+        const nextLevel = [];
+        for (let i = 0; i < currentLevel.length; i += 2) {
+          const left = currentLevel[i];
+          const right = (i + 1 < currentLevel.length) ? currentLevel[i + 1] : currentLevel[i];
+          const parentHash = await sha256(left.hash + right.hash);
+          const parentFullHash = parentHash.startsWith('0x') ? parentHash : ('0x' + parentHash);
+          const parentNode = {
+            id: `node-${levelIdx}-${Math.floor(i / 2)}`,
+            level: levelIdx,
+            index: Math.floor(i / 2),
+            label: `Combined Node`,
+            type: 'combined',
+            hash: parentFullHash,
+            children: [left.id, right.id],
+            leftHash: left.hash,
+            rightHash: right.hash
+          };
+          nodesMap[parentNode.id] = parentNode;
+          nextLevel.push(parentNode);
+        }
+        treeLevels.push(nextLevel);
+        currentLevel = nextLevel;
+        levelIdx++;
+      }
+
+      // Mark top node as root
+      const rootNode = currentLevel[0];
+      rootNode.type = 'root';
+      rootNode.label = 'ROOT';
+
+      return {
+        root: rootNode.hash,
+        leaves: leafNodes,
+        treeLevels: treeLevels,
+        nodesMap: nodesMap
+      };
+    }
+
+    function updateStep(stepId, state) {
+      const el = document.getElementById('step-' + stepId);
+      if (!el) return;
+      el.className = 'pl-step ' + state;
+      if (state === 'done') {
+        el.querySelector('.pl-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      } else if (state === 'fail') {
+        el.querySelector('.pl-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setHero(status, title, desc) {
+      const hero = document.getElementById('hero-card');
+      if (!hero) return;
+      hero.className = 'verify-hero status-' + status;
+      document.getElementById('hero-icon').className = 'vh-icon ' + status;
+
+      const iconPaths = {
+        verified: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        failed: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>',
+        incomplete: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+        unverified: '<circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/>'
+      };
+      document.getElementById('hero-icon').innerHTML = iconPaths[status] || iconPaths.unverified;
+      document.getElementById('hero-title').textContent = title;
+      document.getElementById('hero-desc').textContent = desc;
+    }
+
+    async function startVerification() {
+      if (!activeScan) return;
+
+      const startTimestamp = Date.now();
+      startLiveVerifyTimer(startTimestamp);
+
+      const btn = document.getElementById('btn-verify');
+      if (btn) {
+        btn.disabled = true;
+      }
+
+      document.getElementById('pl-progress').style.width = '0%';
+
+      // Reset UI
+      document.getElementById('hash-text').textContent = 'Computing Merkle Tree Root...';
+      document.getElementById('hash-copy').style.display = 'none';
+      document.getElementById('hash-status').className = 'status-badge sb-none';
+      document.getElementById('hash-status').textContent = 'Computing...';
+      document.getElementById('hash-box').className = 'hash-box';
+      document.getElementById('comp-current').textContent = '—';
+      document.getElementById('comp-chain').textContent = '—';
+      document.getElementById('comp-result').textContent = '—';
+      document.getElementById('comp-result').className = 'comp-res';
+
+      setHero('unverified', 'VERIFYING', 'Computing Merkle Tree Root and checking blockchain anchor...');
+
+      // Reset pipeline steps
+      for (let i = 1; i <= 5; i++) updateStep(i, '');
+
+      // ─── Step 1 & 2: Build Merkle Tree Root ───
+      updateStep(1, 'active');
+      document.getElementById('pl-progress').style.width = '20%';
+      await delay(400);
+
+      let merkleData = null;
+      try {
+        const components = activeScan.cbom || activeScan.findings || [];
+        merkleData = await buildMerkleTreeFromCBOM(components);
+        merkleRootHex = merkleData.root.startsWith('0x') ? merkleData.root : ('0x' + merkleData.root);
+        currentHashHex = merkleRootHex;
+
+        document.getElementById('hash-text').textContent = merkleRootHex;
+        document.getElementById('hash-text').style.color = 'var(--text-h)';
+        document.getElementById('hash-copy').style.display = 'block';
+        document.getElementById('hash-status').className = 'status-badge sb-valid';
+        document.getElementById('hash-status').textContent = 'Merkle Root Built';
+        document.getElementById('comp-current').textContent = merkleRootHex;
+
+        renderMerkleTree(merkleData);
+        updateStep(1, 'done');
+        updateStep(2, 'done');
+        document.getElementById('pl-progress').style.width = '45%';
+      } catch (e) {
+        console.error('Merkle Tree calculation failed:', e);
+        const failDuration = Date.now() - startTimestamp;
+        stopLiveVerifyTimer();
+        displayVerifyDuration(failDuration, false);
+        updateStep(1, 'fail');
+        setHero('failed', '❌ VERIFICATION FAILED', 'Could not compute Merkle Tree root for the CBOM.');
+
+        const failRecord = {
+          id: 'vh_' + Date.now(),
+          scanId: activeScan.scanId,
+          repoName: activeScan.repoName || 'Scanned Repository',
+          timestamp: new Date().toISOString(),
+          verified: false,
+          localOnly: false,
+          failed: true,
+          txHash: 'N/A',
+          network: 'N/A',
+          blockNumber: 'N/A',
+          anchoredAt: new Date().toISOString(),
+          merkleRoot: null,
+          statusLabel: '❌ Verification Failed',
+          statusClass: 'sb-invalid',
+          heroStatus: 'failed',
+          heroTitle: '❌ VERIFICATION FAILED',
+          heroDesc: 'Could not compute Merkle Tree root or confirm scan payload.'
+        };
+
+        activeScan.verificationResult = failRecord;
+        activeScan.verificationHistory = activeScan.verificationHistory || [];
+        activeScan.verificationHistory.unshift(failRecord);
+
+        const currentData = CryptoEngine.getData();
+        currentData.activeScan = activeScan;
+        if (currentData.scans && Array.isArray(currentData.scans)) {
+          const idx = currentData.scans.findIndex(s => s.scanId === activeScan.scanId);
+          if (idx >= 0) currentData.scans[idx] = activeScan;
+        }
+        CryptoEngine.saveData(currentData);
+        renderBlockchainHistory(activeScan.verificationHistory);
+
+        if (btn) {
+          btn.textContent = 'Verify Again';
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      await delay(300);
+
+      // ─── Step 3: Digital Signature Check ───
+      updateStep(3, 'active');
+      document.getElementById('pl-progress').style.width = '60%';
+      await delay(300);
+      updateStep(3, 'done');
+
+      // ─── Step 4 & 5: Backend API Blockchain Anchor Call ───
+      updateStep(4, 'active');
+      updateStep(5, 'active');
+      document.getElementById('pl-progress').style.width = '80%';
+
+      let verifyResult = null;
+      let anchorResult = null;
+      let apiSuccess = false;
+
+      try {
+        const token = getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        // Call /scan/:scanId/anchor with payload
+        const anchorRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/anchor`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            repoId: activeScan.repoId,
+            repoName: activeScan.repoName,
+            findings: activeScan.findings || activeScan.cbom || [],
+            cbom: activeScan.cbom || activeScan.findings || []
+          })
+        }).catch(() => null);
+
+        if (anchorRes && anchorRes.ok) {
+          anchorResult = await anchorRes.json().catch(() => null);
+          if (anchorResult && anchorResult.verified) apiSuccess = true;
+        }
+
+        // Call /scan/:scanId/verify
+        const verifyRes = await fetch(`${API_BASE}/scan/${activeScan.scanId}/verify`, {
+          method: 'GET',
+          headers: headers
+        }).catch(() => null);
+
+        if (verifyRes && verifyRes.ok) {
+          verifyResult = await verifyRes.json().catch(() => null);
+        }
+
+        const finalTxHash = (verifyResult && verifyResult.txHash) || (anchorResult && anchorResult.txHash);
+        const isVerified = (verifyResult && verifyResult.verified !== false) || (anchorResult && anchorResult.verified !== false);
+
+        if (finalTxHash && finalTxHash !== '0x' && isVerified) {
+          verifyResult = verifyResult || anchorResult;
+          verifyResult.txHash = finalTxHash;
+          apiSuccess = true;
+        } else if (verifyResult && verifyResult.verified !== false) {
+          apiSuccess = true;
+        }
+      } catch (e) {
+        console.warn('API Verification error, continuing with verified cryptographic anchor proof:', e);
+      }
+
+      updateStep(4, 'done');
+      updateStep(5, 'done');
+      document.getElementById('pl-progress').style.width = '100%';
+
+      let record = null;
+      const hashSeed = await sha256(activeScan.scanId + merkleRootHex);
+      const fallbackTx = '0x' + hashSeed;
+      const fallbackBlock = 6482914 + (Math.abs(parseInt(hashSeed.substring(0, 6), 16)) % 1000);
+
+      const onChainTx = (verifyResult && verifyResult.txHash && verifyResult.txHash !== '0x')
+        ? verifyResult.txHash
+        : ((anchorResult && anchorResult.txHash && anchorResult.txHash !== '0x') ? anchorResult.txHash : fallbackTx);
+
+      const onChainNetwork = (verifyResult && verifyResult.network)
+        ? verifyResult.network
+        : ((anchorResult && anchorResult.network) ? anchorResult.network : 'Ethereum Sepolia (0x1cA9...359a)');
+
+      const onChainBlock = (verifyResult && verifyResult.blockNumber)
+        ? verifyResult.blockNumber
+        : ((anchorResult && anchorResult.blockNumber) ? anchorResult.blockNumber : fallbackBlock);
+
+      const chainRoot = (verifyResult && verifyResult.onChainHash)
+        ? verifyResult.onChainHash
+        : ((anchorResult && anchorResult.merkleRoot) ? anchorResult.merkleRoot : merkleRootHex);
+
+      const chainRootFormatted = chainRoot.startsWith('0x') ? chainRoot : ('0x' + chainRoot);
+      document.getElementById('comp-chain').textContent = chainRootFormatted;
+      document.getElementById('comp-chain').style.color = 'var(--text-m)';
+
+      document.getElementById('anch-status').className = 'status-badge sb-valid';
+      document.getElementById('anch-status').textContent = '✅ Verified & Anchored';
+      document.getElementById('anch-network').textContent = onChainNetwork;
+      document.getElementById('anch-tx').textContent = onChainTx.substring(0, 18) + '…';
+      document.getElementById('anch-block').textContent = onChainBlock.toString();
+      document.getElementById('anch-time').textContent = (verifyResult && verifyResult.anchoredAt)
+        ? new Date(verifyResult.anchoredAt).toLocaleString()
+        : new Date().toLocaleString();
+
+      document.getElementById('hash-box').className = 'hash-box match';
+      document.getElementById('comp-result').innerHTML = '✅ MATCH — VERIFIED ON-CHAIN';
+      document.getElementById('comp-result').className = 'comp-res match';
+      setHero('verified', '✅ VERIFIED & ANCHORED ON-CHAIN',
+        'CBOM Merkle Tree Root confirmed against public blockchain ledger. Cryptographic integrity 100% intact.');
+
+      record = {
+        id: 'vh_' + Date.now(),
+        scanId: activeScan.scanId,
+        repoName: activeScan.repoName || 'Scanned Repository',
+        timestamp: new Date().toISOString(),
+        verified: true,
+        localOnly: false,
+        txHash: onChainTx,
+        network: onChainNetwork,
+        blockNumber: onChainBlock.toString(),
+        anchoredAt: new Date().toISOString(),
+        merkleRoot: merkleRootHex,
+        statusLabel: '✅ Verified & Anchored',
+        statusClass: 'sb-valid',
+        heroStatus: 'verified',
+        heroTitle: '✅ VERIFIED & ANCHORED ON-CHAIN',
+        heroDesc: 'CBOM Merkle Tree Root confirmed against public blockchain ledger. Cryptographic integrity 100% intact.'
+      };
+
+      // Save to activeScan and CryptoEngine storage!
+      if (record) {
+        activeScan.verificationResult = record;
+        activeScan.verificationHistory = activeScan.verificationHistory || [];
+        activeScan.verificationHistory.unshift(record);
+        if (activeScan.verificationHistory.length > 20) {
+          activeScan.verificationHistory = activeScan.verificationHistory.slice(0, 20);
+        }
+        activeScan.merkleData = merkleData;
+
+        const currentData = CryptoEngine.getData();
+        currentData.activeScan = activeScan;
+        if (currentData.scans && Array.isArray(currentData.scans)) {
+          const idx = currentData.scans.findIndex(s => s.scanId === activeScan.scanId);
+          if (idx >= 0) {
+            currentData.scans[idx] = activeScan;
+          }
+        }
+        CryptoEngine.saveData(currentData);
+        renderBlockchainHistory(activeScan.verificationHistory);
+      }
+
+      const endTimestamp = Date.now();
+      stopLiveVerifyTimer();
+      const isVerified = record && record.verified && !record.localOnly;
+      displayVerifyDuration(endTimestamp - startTimestamp, isVerified);
+
+      if (btn) {
+        btn.innerHTML = 'Verify Again';
+        btn.disabled = false;
+      }
+    }
+
+    function copyHash() {
+      if (merkleRootHex || currentHashHex) {
+        navigator.clipboard.writeText(merkleRootHex || currentHashHex);
+        const btn = document.getElementById('hash-copy');
+        if (btn) {
+          btn.textContent = 'Copied!';
+          setTimeout(() => btn.textContent = 'Copy Root', 2000);
+        }
+      }
+    }
+
+    function copyMerkleRoot() {
+      if (merkleRootHex) {
+        navigator.clipboard.writeText(merkleRootHex);
+        alert('Merkle Root copied to clipboard!');
+      }
+    }
+
+    function copySelectedNodeHash() {
+      if (window.selectedNodeHash) {
+        navigator.clipboard.writeText(window.selectedNodeHash);
+        const btn = document.getElementById('node-hash-copy');
+        if (btn) {
+          btn.textContent = 'Copied!';
+          setTimeout(() => btn.textContent = 'Copy Full Hash', 2000);
+        }
+      }
+    }
+
+    // ─── Merkle Tree Renderer & Switcher ───
+    function switchMerkleView(view) {
+      currentMerkleView = view;
+      const diagram = document.getElementById('merkle-tree-diagram');
+      const listContainer = document.getElementById('merkle-list-container');
+      const btnTree = document.getElementById('btn-tree-view');
+      const btnList = document.getElementById('btn-list-view');
+
+      if (view === 'tree') {
+        if (diagram) diagram.style.display = 'block';
+        if (listContainer) listContainer.style.display = 'none';
+        if (btnTree) btnTree.className = 'btn-sec active';
+        if (btnList) btnList.className = 'btn-sec';
+        setTimeout(drawMerkleTreeLines, 60);
+      } else {
+        if (diagram) diagram.style.display = 'none';
+        if (listContainer) listContainer.style.display = 'block';
+        if (btnTree) btnTree.className = 'btn-sec';
+        if (btnList) btnList.className = 'btn-sec active';
+      }
+    }
+
+    function renderMerkleTree(merkleData) {
+      const panel = document.getElementById('merkle-panel');
+      if (!panel) return;
+      panel.style.display = 'block';
+
+      window.currentMerkleData = merkleData;
+
+      const root = merkleData.root || null;
+      if (root) {
+        merkleRootHex = root.startsWith('0x') ? root : ('0x' + root);
+        const mrEl = document.getElementById('merkle-root');
+        if (mrEl) mrEl.textContent = merkleRootHex;
+        const msEl = document.getElementById('merkle-status');
+        if (msEl) {
+          msEl.className = 'status-badge sb-valid';
+          msEl.textContent = '✅ Merkle Root Computed';
+        }
+      }
+
+      renderMerkleTreeDiagram(merkleData);
+      renderMerkleListView(merkleData);
+      switchMerkleView(currentMerkleView);
+    }
+
+    function renderMerkleTreeDiagram(merkleData) {
+      const levelsContainer = document.getElementById('merkle-tree-levels');
+      if (!levelsContainer || !merkleData.treeLevels) return;
+
+      const levels = merkleData.treeLevels;
+      let html = '';
+      for (let l = levels.length - 1; l >= 0; l--) {
+        const levelNodes = levels[l];
+        html += `<div class="merkle-tree-level">`;
+        levelNodes.forEach(node => {
+          const isRoot = node.type === 'root';
+          const isCombined = node.type === 'combined';
+          const shortHash = node.hash.substring(0, 10) + '…' + node.hash.substring(node.hash.length - 4);
+          const badgeClass = isRoot ? 'badge-root' : (isCombined ? 'badge-combined' : 'badge-leaf');
+
+          html += `
         <div class="mt-node ${isRoot ? 'is-root' : ''}" 
              data-node-id="${node.id}" 
              data-children-ids="${(node.children || []).join(',')}"
@@ -1406,339 +1882,339 @@ function renderMerkleTreeDiagram(merkleData) {
           ${node.meta ? `<div class="mt-node-meta" title="${node.meta}">${node.meta}</div>` : ''}
         </div>
       `;
-    });
-    html += `</div>`;
-  }
+        });
+        html += `</div>`;
+      }
 
-  levelsContainer.innerHTML = html;
-  setTimeout(drawMerkleTreeLines, 60);
-}
+      levelsContainer.innerHTML = html;
+      setTimeout(drawMerkleTreeLines, 60);
+    }
 
-function renderMerkleListView(merkleData) {
-  const leavesEl = document.getElementById('merkle-leaves');
-  if (!leavesEl || !merkleData.leaves) return;
+    function renderMerkleListView(merkleData) {
+      const leavesEl = document.getElementById('merkle-leaves');
+      if (!leavesEl || !merkleData.leaves) return;
 
-  leavesEl.innerHTML = merkleData.leaves.map((node, i) => {
-    const short = node.hash.substring(0, 16) + '…';
-    return `<div class="merkle-leaf" title="${node.hash}" onclick="selectMerkleNode('${node.id}')">
-      <div style="font-weight:600; color:var(--text-h); margin-bottom:4px;">Finding #${i+1}: ${node.meta || 'Asset'}</div>
+      leavesEl.innerHTML = merkleData.leaves.map((node, i) => {
+        const short = node.hash.substring(0, 16) + '…';
+        return `<div class="merkle-leaf" title="${node.hash}" onclick="selectMerkleNode('${node.id}')">
+      <div style="font-weight:600; color:var(--text-h); margin-bottom:4px;">Finding #${i + 1}: ${node.meta || 'Asset'}</div>
       <div>Hash: ${short}</div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function drawMerkleTreeLines() {
-  const svg = document.getElementById('merkle-tree-svg');
-  const container = document.getElementById('merkle-tree-diagram');
-  if (!svg || !container) return;
+    function drawMerkleTreeLines() {
+      const svg = document.getElementById('merkle-tree-svg');
+      const container = document.getElementById('merkle-tree-diagram');
+      if (!svg || !container) return;
 
-  svg.innerHTML = '';
-  svg.setAttribute('width', Math.max(container.clientWidth, container.scrollWidth));
-  svg.setAttribute('height', Math.max(container.clientHeight, container.scrollHeight));
-  const containerRect = container.getBoundingClientRect();
-  
-  const nodeEls = container.querySelectorAll('.mt-node');
-  const nodeMap = {};
-  nodeEls.forEach(el => {
-    const id = el.getAttribute('data-node-id');
-    if (id) nodeMap[id] = el;
-  });
+      svg.innerHTML = '';
+      svg.setAttribute('width', Math.max(container.clientWidth, container.scrollWidth));
+      svg.setAttribute('height', Math.max(container.clientHeight, container.scrollHeight));
+      const containerRect = container.getBoundingClientRect();
 
-  nodeEls.forEach(parentEl => {
-    const childrenIdsStr = parentEl.getAttribute('data-children-ids');
-    if (!childrenIdsStr) return;
-    const childrenIds = childrenIdsStr.split(',').filter(Boolean);
+      const nodeEls = container.querySelectorAll('.mt-node');
+      const nodeMap = {};
+      nodeEls.forEach(el => {
+        const id = el.getAttribute('data-node-id');
+        if (id) nodeMap[id] = el;
+      });
 
-    const pRect = parentEl.getBoundingClientRect();
-    const pX = pRect.left + pRect.width / 2 - containerRect.left + container.scrollLeft;
-    const pY = pRect.bottom - containerRect.top + container.scrollTop;
+      nodeEls.forEach(parentEl => {
+        const childrenIdsStr = parentEl.getAttribute('data-children-ids');
+        if (!childrenIdsStr) return;
+        const childrenIds = childrenIdsStr.split(',').filter(Boolean);
 
-    childrenIds.forEach(childId => {
-      const childEl = nodeMap[childId.trim()];
-      if (!childEl) return;
+        const pRect = parentEl.getBoundingClientRect();
+        const pX = pRect.left + pRect.width / 2 - containerRect.left + container.scrollLeft;
+        const pY = pRect.bottom - containerRect.top + container.scrollTop;
 
-      const cRect = childEl.getBoundingClientRect();
-      const cX = cRect.left + cRect.width / 2 - containerRect.left + container.scrollLeft;
-      const cY = cRect.top - containerRect.top + container.scrollTop;
+        childrenIds.forEach(childId => {
+          const childEl = nodeMap[childId.trim()];
+          if (!childEl) return;
 
-      const midY = (pY + cY) / 2;
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      const d = `M ${pX} ${pY} C ${pX} ${midY}, ${cX} ${midY}, ${cX} ${cY}`;
-      path.setAttribute('d', d);
-      path.setAttribute('stroke', 'var(--border-color)');
-      path.setAttribute('stroke-width', '1.5');
-      path.setAttribute('fill', 'none');
-      svg.appendChild(path);
+          const cRect = childEl.getBoundingClientRect();
+          const cX = cRect.left + cRect.width / 2 - containerRect.left + container.scrollLeft;
+          const cY = cRect.top - containerRect.top + container.scrollTop;
+
+          const midY = (pY + cY) / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = `M ${pX} ${pY} C ${pX} ${midY}, ${cX} ${midY}, ${cX} ${cY}`;
+          path.setAttribute('d', d);
+          path.setAttribute('stroke', 'var(--border-color)');
+          path.setAttribute('stroke-width', '1.5');
+          path.setAttribute('fill', 'none');
+          svg.appendChild(path);
+        });
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentMerkleView === 'tree') drawMerkleTreeLines();
     });
-  });
-}
 
-window.addEventListener('resize', () => {
-  if (currentMerkleView === 'tree') drawMerkleTreeLines();
-});
+    function selectMerkleNode(nodeId) {
+      if (!window.currentMerkleData || !window.currentMerkleData.nodesMap) return;
+      const node = window.currentMerkleData.nodesMap[nodeId];
+      if (!node) return;
 
-function selectMerkleNode(nodeId) {
-  if (!window.currentMerkleData || !window.currentMerkleData.nodesMap) return;
-  const node = window.currentMerkleData.nodesMap[nodeId];
-  if (!node) return;
+      document.querySelectorAll('.mt-node, .merkle-leaf').forEach(el => {
+        const isTarget = el.getAttribute('data-node-id') === nodeId || el.getAttribute('onclick')?.includes(nodeId);
+        el.classList.toggle('selected', isTarget);
+      });
 
-  document.querySelectorAll('.mt-node, .merkle-leaf').forEach(el => {
-    const isTarget = el.getAttribute('data-node-id') === nodeId || el.getAttribute('onclick')?.includes(nodeId);
-    el.classList.toggle('selected', isTarget);
-  });
+      const detail = document.getElementById('merkle-leaf-detail');
+      if (detail) detail.style.display = 'block';
 
-  const detail = document.getElementById('merkle-leaf-detail');
-  if (detail) detail.style.display = 'block';
+      window.selectedNodeHash = node.hash;
 
-  window.selectedNodeHash = node.hash;
+      const titleEl = document.getElementById('node-detail-title');
+      const labelEl = document.getElementById('node-detail-label');
+      const hashEl = document.getElementById('node-detail-hash');
+      const fileRow = document.getElementById('node-detail-file-row');
+      const fileEl = document.getElementById('node-detail-file');
+      const childrenRow = document.getElementById('node-detail-children-row');
+      const childrenEl = document.getElementById('node-detail-children');
 
-  const titleEl = document.getElementById('node-detail-title');
-  const labelEl = document.getElementById('node-detail-label');
-  const hashEl = document.getElementById('node-detail-hash');
-  const fileRow = document.getElementById('node-detail-file-row');
-  const fileEl = document.getElementById('node-detail-file');
-  const childrenRow = document.getElementById('node-detail-children-row');
-  const childrenEl = document.getElementById('node-detail-children');
+      if (node.type === 'root') {
+        if (titleEl) titleEl.textContent = '👑 Merkle Root Node (On-Chain Master Hash)';
+        if (labelEl) labelEl.textContent = 'ROOT — Master Cryptographic Fingerprint';
+      } else if (node.type === 'combined') {
+        if (titleEl) titleEl.textContent = '🔀 Combined Intermediate Hash Node';
+        if (labelEl) labelEl.textContent = `${node.label} (Level ${node.level})`;
+      } else {
+        if (titleEl) titleEl.textContent = '📄 Leaf Node (Finding Fingerprint)';
+        if (labelEl) labelEl.textContent = `${node.label} (${node.meta || 'Crypto Asset'})`;
+      }
 
-  if (node.type === 'root') {
-    if (titleEl) titleEl.textContent = '👑 Merkle Root Node (On-Chain Master Hash)';
-    if (labelEl) labelEl.textContent = 'ROOT — Master Cryptographic Fingerprint';
-  } else if (node.type === 'combined') {
-    if (titleEl) titleEl.textContent = '🔀 Combined Intermediate Hash Node';
-    if (labelEl) labelEl.textContent = `${node.label} (Level ${node.level})`;
-  } else {
-    if (titleEl) titleEl.textContent = '📄 Leaf Node (Finding Fingerprint)';
-    if (labelEl) labelEl.textContent = `${node.label} (${node.meta || 'Crypto Asset'})`;
-  }
+      if (hashEl) hashEl.textContent = node.hash;
 
-  if (hashEl) hashEl.textContent = node.hash;
+      if (node.type === 'leaf' && (node.fullFile || node.fileInfo)) {
+        if (fileRow) fileRow.style.display = 'flex';
+        if (fileEl) fileEl.textContent = node.fullFile || node.fileInfo;
+      } else {
+        if (fileRow) fileRow.style.display = 'none';
+      }
 
-  if (node.type === 'leaf' && (node.fullFile || node.fileInfo)) {
-    if (fileRow) fileRow.style.display = 'flex';
-    if (fileEl) fileEl.textContent = node.fullFile || node.fileInfo;
-  } else {
-    if (fileRow) fileRow.style.display = 'none';
-  }
-
-  if (node.children && node.children.length > 0) {
-    if (childrenRow) childrenRow.style.display = 'flex';
-    const leftChild = window.currentMerkleData.nodesMap[node.children[0]];
-    const rightChild = window.currentMerkleData.nodesMap[node.children[1]];
-    if (childrenEl) {
-      childrenEl.innerHTML = `
+      if (node.children && node.children.length > 0) {
+        if (childrenRow) childrenRow.style.display = 'flex';
+        const leftChild = window.currentMerkleData.nodesMap[node.children[0]];
+        const rightChild = window.currentMerkleData.nodesMap[node.children[1]];
+        if (childrenEl) {
+          childrenEl.innerHTML = `
         Left: ${leftChild ? leftChild.hash.substring(0, 20) + '…' : '—'}<br>
         Right: ${rightChild ? rightChild.hash.substring(0, 20) + '…' : '—'}
       `;
+        }
+      } else {
+        if (childrenRow) childrenRow.style.display = 'none';
+      }
+
+      if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  } else {
-    if (childrenRow) childrenRow.style.display = 'none';
-  }
 
-  if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
+    function renderBlockchainHistory(historyInput) {
+      const panel = document.getElementById('bh-panel');
+      const list = document.getElementById('bh-list');
+      if (!panel || !list || !activeScan) return;
+      panel.style.display = 'block';
 
-function renderBlockchainHistory(historyInput) {
-  const panel = document.getElementById('bh-panel');
-  const list = document.getElementById('bh-list');
-  if (!panel || !list || !activeScan) return;
-  panel.style.display = 'block';
+      let items = [];
+      if (Array.isArray(historyInput)) {
+        items = historyInput;
+      } else if (historyInput && typeof historyInput === 'object') {
+        items = [historyInput];
+      }
 
-  let items = [];
-  if (Array.isArray(historyInput)) {
-    items = historyInput;
-  } else if (historyInput && typeof historyInput === 'object') {
-    items = [historyInput];
-  }
-
-  if (items.length === 0) {
-    list.innerHTML = `
+      if (items.length === 0) {
+        list.innerHTML = `
       <div style="padding:16px; text-align:center; color:var(--text-m); font-size:13px;">
         No verification history recorded yet.
       </div>
     `;
-    return;
-  }
+        return;
+      }
 
-  list.innerHTML = items.map(item => {
-    const isLocal = item.localOnly || item.txHash === 'N/A' || !item.verified;
-    const isSuccess = item.verified && !isLocal;
-    
-    const iconSvg = isSuccess 
-      ? '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>';
+      list.innerHTML = items.map(item => {
+        const isLocal = item.localOnly || item.txHash === 'N/A' || !item.verified;
+        const isSuccess = item.verified && !isLocal;
 
-    const iconBg = isSuccess ? 'rgba(16,185,129,0.1)' : 'var(--amber-bg)';
-    const itemBorder = isSuccess ? '1px solid var(--border-color)' : '1px solid var(--border-color); border-left: 3px solid var(--amber)';
-    const statusBadge = isSuccess 
-      ? '<span class="status-badge sb-valid">✅ Verified & Anchored</span>' 
-      : '<span class="status-badge sb-amber">⚠️ Local Only</span>';
+        const iconSvg = isSuccess
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/></svg>';
 
-    const txDisplay = (item.txHash && item.txHash !== 'N/A')
-      ? (item.network && item.network.toLowerCase().includes('sepolia')
-          ? `<a href="https://sepolia.etherscan.io/tx/${item.txHash}" target="_blank" style="color:var(--purple); text-decoration:underline;">${item.txHash.substring(0,18)}…</a>`
-          : `${item.txHash.substring(0,18)}…`)
-      : 'N/A';
+        const iconBg = isSuccess ? 'rgba(16,185,129,0.1)' : 'var(--amber-bg)';
+        const itemBorder = isSuccess ? '1px solid var(--border-color)' : '1px solid var(--border-color); border-left: 3px solid var(--amber)';
+        const statusBadge = isSuccess
+          ? '<span class="status-badge sb-valid">✅ Verified & Anchored</span>'
+          : '<span class="status-badge sb-amber">⚠️ Local Only</span>';
 
-    const timeStr = item.timestamp || item.anchoredAt 
-      ? new Date(item.timestamp || item.anchoredAt).toLocaleString() 
-      : new Date().toLocaleString();
+        const txDisplay = (item.txHash && item.txHash !== 'N/A')
+          ? (item.network && item.network.toLowerCase().includes('sepolia')
+            ? `<a href="https://sepolia.etherscan.io/tx/${item.txHash}" target="_blank" style="color:var(--purple); text-decoration:underline;">${item.txHash.substring(0, 18)}…</a>`
+            : `${item.txHash.substring(0, 18)}…`)
+          : 'N/A';
 
-    return `
+        const timeStr = item.timestamp || item.anchoredAt
+          ? new Date(item.timestamp || item.anchoredAt).toLocaleString()
+          : new Date().toLocaleString();
+
+        return `
       <div class="bh-item" style="${itemBorder}; margin-bottom:10px;">
         <div class="bh-icon-wrap" style="background:${iconBg};">
           ${iconSvg}
         </div>
         <div style="flex:1;">
-          <div class="bh-algo">${item.repoName || activeScan.repoName || 'Scanned Repository'} — Scan ${(item.scanId || activeScan.scanId || 'scan_1').substring(0,8)}</div>
+          <div class="bh-algo">${item.repoName || activeScan.repoName || 'Scanned Repository'} — Scan ${(item.scanId || activeScan.scanId || 'scan_1').substring(0, 8)}</div>
           <div class="bh-meta">
             Network: ${item.network || 'Sepolia / Local'} &nbsp;|&nbsp;
             Tx: ${txDisplay} &nbsp;|&nbsp;
             ${timeStr}
           </div>
-          ${item.merkleRoot ? `<div class="bh-meta" style="margin-top:4px; font-family:'JetBrains Mono',monospace;">Merkle Root: ${item.merkleRoot.substring(0,24)}…</div>` : ''}
+          ${item.merkleRoot ? `<div class="bh-meta" style="margin-top:4px; font-family:'JetBrains Mono',monospace;">Merkle Root: ${item.merkleRoot.substring(0, 24)}…</div>` : ''}
         </div>
         <div class="bh-status">${statusBadge}</div>
       </div>
     `;
-  }).join('');
-}
-
-window.addEventListener('load', () => {
-  init();
-});
-window.addEventListener('cryptoscan_data_updated', () => {
-  init();
-});
-
-async function generateFullReport() {
-  if (!activeScan) {
-    alert('No active scan data available to generate a report.');
-    return;
-  }
-
-  // 1. Ensure Merkle Tree Root is computed if not already done
-  if (!merkleRootHex) {
-    try {
-      const components = activeScan.cbom || activeScan.findings || [];
-      const merkleData = await buildMerkleTreeFromCBOM(components);
-      merkleRootHex = merkleData.root.startsWith('0x') ? merkleData.root : ('0x' + merkleData.root);
-    } catch(e) {
-      console.warn('Could not compute Merkle Root for report:', e);
+      }).join('');
     }
-  }
 
-  // 2. Extract live scan metadata
-  const repoName = activeScan.repoName || 'Scanned Repository';
-  const scanId = activeScan.scanId || 'scan_current';
-  const scanTimestamp = activeScan.timestamp || new Date().toLocaleString();
-  const findings = activeScan.findings || [];
-  const filesScanned = activeScan.filesScanned || activeScan.filesDiscovered || new Set(findings.map(f => f.file || f.filePath)).size || 0;
-  const totalComponents = activeScan.assetsFound || (activeScan.cbom ? activeScan.cbom.length : findings.length) || 0;
+    window.addEventListener('load', () => {
+      init();
+    });
+    window.addEventListener('cryptoscan_data_updated', () => {
+      init();
+    });
 
-  // Live join repository criticality
-  const repoCritMap = {};
-  try {
-    const res = await fetch('http://localhost:3000/repos');
-    if (res.ok) {
-      const repos = await res.json();
-      repos.forEach(r => {
+    async function generateFullReport() {
+      if (!activeScan) {
+        alert('No active scan data available to generate a report.');
+        return;
+      }
+
+      // 1. Ensure Merkle Tree Root is computed if not already done
+      if (!merkleRootHex) {
+        try {
+          const components = activeScan.cbom || activeScan.findings || [];
+          const merkleData = await buildMerkleTreeFromCBOM(components);
+          merkleRootHex = merkleData.root.startsWith('0x') ? merkleData.root : ('0x' + merkleData.root);
+        } catch (e) {
+          console.warn('Could not compute Merkle Root for report:', e);
+        }
+      }
+
+      // 2. Extract live scan metadata
+      const repoName = activeScan.repoName || 'Scanned Repository';
+      const scanId = activeScan.scanId || 'scan_current';
+      const scanTimestamp = activeScan.timestamp || new Date().toLocaleString();
+      const findings = activeScan.findings || [];
+      const filesScanned = activeScan.filesScanned || activeScan.filesDiscovered || new Set(findings.map(f => f.file || f.filePath)).size || 0;
+      const totalComponents = activeScan.assetsFound || (activeScan.cbom ? activeScan.cbom.length : findings.length) || 0;
+
+      // Live join repository criticality
+      const repoCritMap = {};
+      try {
+        const res = await fetch('http://localhost:3000/repos');
+        if (res.ok) {
+          const repos = await res.json();
+          repos.forEach(r => {
+            const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+            if (r.id) repoCritMap[r.id] = crit;
+            if (r.name) repoCritMap[r.name] = crit;
+            if (r.url) repoCritMap[r.url] = crit;
+          });
+        }
+      } catch (e) { }
+      const allData = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
+      (allData.repositories || []).forEach(r => {
         const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
-        if (r.id) repoCritMap[r.id] = crit;
-        if (r.name) repoCritMap[r.name] = crit;
-        if (r.url) repoCritMap[r.url] = crit;
+        if (r.id && !repoCritMap[r.id]) repoCritMap[r.id] = crit;
+        if (r.name && !repoCritMap[r.name]) repoCritMap[r.name] = crit;
+        if (r.url && !repoCritMap[r.url]) repoCritMap[r.url] = crit;
       });
-    }
-  } catch(e) {}
-  const allData = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
-  (allData.repositories || []).forEach(r => {
-    const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
-    if (r.id && !repoCritMap[r.id]) repoCritMap[r.id] = crit;
-    if (r.name && !repoCritMap[r.name]) repoCritMap[r.name] = crit;
-    if (r.url && !repoCritMap[r.url]) repoCritMap[r.url] = crit;
-  });
 
-  const parentRepoCrit = (activeScan.repositoryId && repoCritMap[activeScan.repositoryId]) ||
-                         (activeScan.repo && repoCritMap[activeScan.repo]) ||
-                         (activeScan.repoName && repoCritMap[activeScan.repoName]) ||
-                         (activeScan.targetUrl && repoCritMap[activeScan.targetUrl]) ||
-                         activeScan.businessCriticality || activeScan.criticality_tier ||
-                         null;
+      const parentRepoCrit = (activeScan.repositoryId && repoCritMap[activeScan.repositoryId]) ||
+        (activeScan.repo && repoCritMap[activeScan.repo]) ||
+        (activeScan.repoName && repoCritMap[activeScan.repoName]) ||
+        (activeScan.targetUrl && repoCritMap[activeScan.targetUrl]) ||
+        activeScan.businessCriticality || activeScan.criticality_tier ||
+        null;
 
-  // 3. Summary Risk Counts (same as Dashboard / Findings)
-  const critCount = findings.filter(f => (f.severity || '').toLowerCase() === 'critical').length;
-  const highCount = findings.filter(f => (f.severity || '').toLowerCase() === 'high').length;
-  const medCount = findings.filter(f => (f.severity || '').toLowerCase() === 'medium').length;
-  const lowCount = findings.filter(f => (f.severity || '').toLowerCase() === 'low' || (f.severity || '').toLowerCase() === 'informational').length;
-  const quantVulnCount = findings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln') || Boolean(f.isQuantumVulnerable)).length;
+      // 3. Summary Risk Counts (same as Dashboard / Findings)
+      const critCount = findings.filter(f => (f.severity || '').toLowerCase() === 'critical').length;
+      const highCount = findings.filter(f => (f.severity || '').toLowerCase() === 'high').length;
+      const medCount = findings.filter(f => (f.severity || '').toLowerCase() === 'medium').length;
+      const lowCount = findings.filter(f => (f.severity || '').toLowerCase() === 'low' || (f.severity || '').toLowerCase() === 'informational').length;
+      const quantVulnCount = findings.filter(f => f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln') || Boolean(f.isQuantumVulnerable)).length;
 
-  // 4. Migration Priority Order (same as Risk & Migration page)
-  const candidateMap = {};
-  findings.forEach(f => {
-    const algo = f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown');
-    if (!candidateMap[algo]) {
-      candidateMap[algo] = {
-        algorithm: algo,
-        severity: (f.severity || 'LOW').toUpperCase(),
-        quantumVulnerable: f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'),
-        recommendation: f.recommendation || f.remediation || 'Upgrade to NIST-standard quantum-safe algorithm (ML-KEM / ML-DSA)',
-        affectedFiles: new Set()
-      };
-    }
-    candidateMap[algo].affectedFiles.add(f.file || f.filePath || 'unknown');
-    const curSev = candidateMap[algo].severity;
-    const fSev = (f.severity || 'LOW').toUpperCase();
-    const sevRanks = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'INFORMATIONAL': 0 };
-    if ((sevRanks[fSev] || 0) > (sevRanks[curSev] || 0)) {
-      candidateMap[algo].severity = fSev;
-    }
-    if (f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln')) {
-      candidateMap[algo].quantumVulnerable = true;
-    }
-  });
+      // 4. Migration Priority Order (same as Risk & Migration page)
+      const candidateMap = {};
+      findings.forEach(f => {
+        const algo = f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown');
+        if (!candidateMap[algo]) {
+          candidateMap[algo] = {
+            algorithm: algo,
+            severity: (f.severity || 'LOW').toUpperCase(),
+            quantumVulnerable: f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln'),
+            recommendation: f.recommendation || f.remediation || 'Upgrade to NIST-standard quantum-safe algorithm (ML-KEM / ML-DSA)',
+            affectedFiles: new Set()
+          };
+        }
+        candidateMap[algo].affectedFiles.add(f.file || f.filePath || 'unknown');
+        const curSev = candidateMap[algo].severity;
+        const fSev = (f.severity || 'LOW').toUpperCase();
+        const sevRanks = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'INFORMATIONAL': 0 };
+        if ((sevRanks[fSev] || 0) > (sevRanks[curSev] || 0)) {
+          candidateMap[algo].severity = fSev;
+        }
+        if (f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vuln')) {
+          candidateMap[algo].quantumVulnerable = true;
+        }
+      });
 
-  const migrationCandidates = Object.values(candidateMap).map(c => {
-    let priority = 3;
-    if (c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
-      priority = 1;
-    } else if (c.severity === 'MEDIUM') {
-      priority = 2;
-    }
-    return {
-      ...c,
-      fileCount: c.affectedFiles.size,
-      priority: priority
-    };
-  });
+      const migrationCandidates = Object.values(candidateMap).map(c => {
+        let priority = 3;
+        if (c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
+          priority = 1;
+        } else if (c.severity === 'MEDIUM') {
+          priority = 2;
+        }
+        return {
+          ...c,
+          fileCount: c.affectedFiles.size,
+          priority: priority
+        };
+      });
 
-  const riskWeights = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4, 'SAFE': 5 };
-  migrationCandidates.sort((a, b) => {
-    if (a.priority !== b.priority) return a.priority - b.priority;
-    const wA = riskWeights[a.severity] || 4;
-    const wB = riskWeights[b.severity] || 4;
-    if (wA !== wB) return wA - wB;
-    return b.fileCount - a.fileCount;
-  });
+      const riskWeights = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4, 'SAFE': 5 };
+      migrationCandidates.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        const wA = riskWeights[a.severity] || 4;
+        const wB = riskWeights[b.severity] || 4;
+        if (wA !== wB) return wA - wB;
+        return b.fileCount - a.fileCount;
+      });
 
-  // 5. Blockchain Anchor State & Verification Outcome from this page's own state
-  const merkleRoot = merkleRootHex || document.getElementById('merkle-root')?.textContent || document.getElementById('hash-text')?.textContent || 'Pending Calculation';
-  const txHash = lastVerifyResult?.txHash || (document.getElementById('anch-tx')?.textContent !== '0x7f8a9c2b4d1e3f...' ? document.getElementById('anch-tx')?.textContent : null) || 'Not anchored yet';
-  const network = lastVerifyResult?.network || document.getElementById('anch-network')?.textContent || 'Ethereum Sepolia';
-  const blockNumber = lastVerifyResult?.blockNumber || document.getElementById('anch-block')?.textContent || '1084291';
-  const anchorTime = lastVerifyResult?.anchoredAt ? new Date(lastVerifyResult.anchoredAt).toLocaleString() : (document.getElementById('anch-time')?.textContent || scanTimestamp);
-  
-  const heroTitle = document.getElementById('hero-title')?.textContent || 'NOT VERIFIED';
-  const isVerified = heroTitle.includes('VERIFIED') && !heroTitle.includes('NOT') && !heroTitle.includes('FAILED');
-  const outcomeText = isVerified ? 'VERIFIED — INTEGRITY 100% CONFIRMED ON LEDGER' : heroTitle;
-  const outcomeColor = isVerified ? '#10b981' : '#ef4444';
+      // 5. Blockchain Anchor State & Verification Outcome from this page's own state
+      const merkleRoot = merkleRootHex || document.getElementById('merkle-root')?.textContent || document.getElementById('hash-text')?.textContent || 'Pending Calculation';
+      const txHash = lastVerifyResult?.txHash || (document.getElementById('anch-tx')?.textContent !== '0x7f8a9c2b4d1e3f...' ? document.getElementById('anch-tx')?.textContent : null) || 'Not anchored yet';
+      const network = lastVerifyResult?.network || document.getElementById('anch-network')?.textContent || 'Ethereum Sepolia';
+      const blockNumber = lastVerifyResult?.blockNumber || document.getElementById('anch-block')?.textContent || '1084291';
+      const anchorTime = lastVerifyResult?.anchoredAt ? new Date(lastVerifyResult.anchoredAt).toLocaleString() : (document.getElementById('anch-time')?.textContent || scanTimestamp);
 
-  // Build printable report window
-  const printWin = window.open('', '_blank');
-  if (!printWin) {
-    alert('Popup blocker prevented opening the report. Please allow popups for this site.');
-    return;
-  }
+      const heroTitle = document.getElementById('hero-title')?.textContent || 'NOT VERIFIED';
+      const isVerified = heroTitle.includes('VERIFIED') && !heroTitle.includes('NOT') && !heroTitle.includes('FAILED');
+      const outcomeText = isVerified ? 'VERIFIED — INTEGRITY 100% CONFIRMED ON LEDGER' : heroTitle;
+      const outcomeColor = isVerified ? '#10b981' : '#ef4444';
 
-  const reportHTML = `<!DOCTYPE html>
+      // Build printable report window
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        alert('Popup blocker prevented opening the report. Please allow popups for this site.');
+        return;
+      }
+
+      const reportHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1815,7 +2291,7 @@ async function generateFullReport() {
     <div class="section-title">1. CBOM Metadata & Identity</div>
     <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 12px; font-size: 12px;">
       <div class="proof-row"><span class="proof-key">Repository</span><span style="font-weight:600;">${repoName}</span></div>
-      <div class="proof-row"><span class="proof-key">Business Criticality</span><span style="font-weight:600; color:${(parentRepoCrit==='Critical'?'#b91c1c':'#0f172a')}">${parentRepoCrit || 'Not tagged'}</span></div>
+      <div class="proof-row"><span class="proof-key">Business Criticality</span><span style="font-weight:600; color:${(parentRepoCrit === 'Critical' ? '#b91c1c' : '#0f172a')}">${parentRepoCrit || 'Not tagged'}</span></div>
       <div class="proof-row"><span class="proof-key">Files Scanned</span><span style="font-weight:600;">${filesScanned}</span></div>
       <div class="proof-row"><span class="proof-key">CBOM Components</span><span style="font-weight:600;">${totalComponents}</span></div>
       <div class="proof-row"><span class="proof-key">Timestamp</span><span>${scanTimestamp}</span></div>
@@ -1884,7 +2360,7 @@ async function generateFullReport() {
           <tr>
             <td><span class="badge badge-p${c.priority}">Priority ${c.priority}</span></td>
             <td style="font-weight:600;">${c.algorithm}</td>
-            <td><span class="badge badge-${(c.severity || 'low').toLowerCase().substring(0,4)}">${c.severity}</span></td>
+            <td><span class="badge badge-${(c.severity || 'low').toLowerCase().substring(0, 4)}">${c.severity}</span></td>
             <td>${c.fileCount} file${c.fileCount === 1 ? '' : 's'}</td>
             <td>${c.quantumVulnerable ? '<span style="color:#8b5cf6; font-weight:600;">Yes (Vulnerable)</span>' : '<span style="color:#10b981; font-weight:600;">Safe</span>'}</td>
             <td>${c.recommendation}</td>
@@ -1912,67 +2388,67 @@ async function generateFullReport() {
       </thead>
       <tbody>
         ${findings.map(f => {
-          const sev = (f.severity || 'LOW').toUpperCase();
-          const badgeClass = sev === 'CRITICAL' ? 'badge-crit' : sev === 'HIGH' ? 'badge-high' : sev === 'MEDIUM' ? 'badge-med' : 'badge-low';
-          const fileLoc = (f.file || f.filePath || 'unknown') + (f.line ? ':' + f.line : '');
-          const exp = f.exposure || (f.category === 'exposure' ? 'External' : 'Internal');
-          
-          const algoUpper = (f.algorithm || f.title || '').toUpperCase();
-          const usageUpper = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
-          let fType = 'Asset';
-          if (algoUpper.includes('RSA') || algoUpper.includes('ECDSA') || algoUpper.includes('ECDH') || algoUpper.includes('ECC') || algoUpper.includes('CURVE25519') || algoUpper.includes('ED25519') || algoUpper.includes('DSA') || usageUpper.includes('ASYMMETRIC') || usageUpper.includes('PUBLIC KEY')) {
-            fType = 'Asymmetric Key';
-          } else if (algoUpper.includes('AES') || algoUpper.includes('DES') || algoUpper.includes('BLOWFISH') || algoUpper.includes('RC4') || algoUpper.includes('CHACHA') || usageUpper.includes('SYMMETRIC') || usageUpper.includes('BLOCK CIPHER')) {
-            fType = 'Symmetric Cipher';
-          } else if (algoUpper.includes('SHA') || algoUpper.includes('MD5') || algoUpper.includes('HASH') || algoUpper.includes('DIGEST') || usageUpper.includes('HASH')) {
-            fType = 'Cryptographic Hash';
-          } else if (algoUpper.includes('PBKDF') || algoUpper.includes('BCRYPT') || algoUpper.includes('ARGON') || algoUpper.includes('SCRYPT') || usageUpper.includes('PASSWORD') || usageUpper.includes('DERIVATION')) {
-            fType = 'Key Derivation';
-          } else if (algoUpper.includes('HMAC') || algoUpper.includes('MAC')) {
-            fType = 'MAC / HMAC';
-          } else if (algoUpper.includes('SECRET') || algoUpper.includes('KEY MATERIAL') || algoUpper.includes('PRIVATE KEY') || usageUpper.includes('SECRET')) {
-            fType = 'Secret Material';
-          } else if (algoUpper.includes('TLS') || algoUpper.includes('SSL') || usageUpper.includes('TRANSPORT')) {
-            fType = 'Protocol / TLS';
-          } else if (algoUpper.includes('PRNG') || algoUpper.includes('RANDOM')) {
-            fType = 'PRNG / Entropy';
-          }
+        const sev = (f.severity || 'LOW').toUpperCase();
+        const badgeClass = sev === 'CRITICAL' ? 'badge-crit' : sev === 'HIGH' ? 'badge-high' : sev === 'MEDIUM' ? 'badge-med' : 'badge-low';
+        const fileLoc = (f.file || f.filePath || 'unknown') + (f.line ? ':' + f.line : '');
+        const exp = f.exposure || (f.category === 'exposure' ? 'External' : 'Internal');
 
-          let fLifetime = 'Medium-term';
-          const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '')).toUpperCase();
-          const fileStr = (f.file || f.filePath || '').toLowerCase();
-          if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || fileStr.includes('ca-') || fileStr.includes('master')) {
-            fLifetime = 'Permanent';
-          } else if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || fileStr.includes('auth') || fileStr.includes('user')) {
-            fLifetime = 'Long-term';
-          } else if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || fileStr.includes('session') || fileStr.includes('cache')) {
-            fLifetime = 'Short-term';
-          }
+        const algoUpper = (f.algorithm || f.title || '').toUpperCase();
+        const usageUpper = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
+        let fType = 'Asset';
+        if (algoUpper.includes('RSA') || algoUpper.includes('ECDSA') || algoUpper.includes('ECDH') || algoUpper.includes('ECC') || algoUpper.includes('CURVE25519') || algoUpper.includes('ED25519') || algoUpper.includes('DSA') || usageUpper.includes('ASYMMETRIC') || usageUpper.includes('PUBLIC KEY')) {
+          fType = 'Asymmetric Key';
+        } else if (algoUpper.includes('AES') || algoUpper.includes('DES') || algoUpper.includes('BLOWFISH') || algoUpper.includes('RC4') || algoUpper.includes('CHACHA') || usageUpper.includes('SYMMETRIC') || usageUpper.includes('BLOCK CIPHER')) {
+          fType = 'Symmetric Cipher';
+        } else if (algoUpper.includes('SHA') || algoUpper.includes('MD5') || algoUpper.includes('HASH') || algoUpper.includes('DIGEST') || usageUpper.includes('HASH')) {
+          fType = 'Cryptographic Hash';
+        } else if (algoUpper.includes('PBKDF') || algoUpper.includes('BCRYPT') || algoUpper.includes('ARGON') || algoUpper.includes('SCRYPT') || usageUpper.includes('PASSWORD') || usageUpper.includes('DERIVATION')) {
+          fType = 'Key Derivation';
+        } else if (algoUpper.includes('HMAC') || algoUpper.includes('MAC')) {
+          fType = 'MAC / HMAC';
+        } else if (algoUpper.includes('SECRET') || algoUpper.includes('KEY MATERIAL') || algoUpper.includes('PRIVATE KEY') || usageUpper.includes('SECRET')) {
+          fType = 'Secret Material';
+        } else if (algoUpper.includes('TLS') || algoUpper.includes('SSL') || usageUpper.includes('TRANSPORT')) {
+          fType = 'Protocol / TLS';
+        } else if (algoUpper.includes('PRNG') || algoUpper.includes('RANDOM')) {
+          fType = 'PRNG / Entropy';
+        }
 
-          let fCrit = (f.repositoryId && repoCritMap[f.repositoryId]) ||
-                      parentRepoCrit ||
-                      f.businessCriticality || f.criticality_tier ||
-                      f.repoCriticality ||
-                      'Not tagged';
-          const fCritNorm = String(fCrit).trim();
-          if (['NOT TAGGED', 'UNKNOWN', 'NONE', '', 'UNDEFINED'].includes(fCritNorm.toUpperCase())) {
-            fCrit = 'Not tagged';
-          } else {
-            const lower = fCritNorm.toLowerCase();
-            if (lower === 'critical') fCrit = 'Critical';
-            else if (lower === 'important') fCrit = 'Important';
-            else if (lower === 'standard') fCrit = 'Standard';
-            else if (lower === 'low') fCrit = 'Low';
-          }
+        let fLifetime = 'Medium-term';
+        const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '')).toUpperCase();
+        const fileStr = (f.file || f.filePath || '').toLowerCase();
+        if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || fileStr.includes('ca-') || fileStr.includes('master')) {
+          fLifetime = 'Permanent';
+        } else if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || fileStr.includes('auth') || fileStr.includes('user')) {
+          fLifetime = 'Long-term';
+        } else if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || fileStr.includes('session') || fileStr.includes('cache')) {
+          fLifetime = 'Short-term';
+        }
 
-          let critColor = '#334155';
-          if (fCrit === 'Critical') critColor = '#b91c1c';
-          else if (fCrit === 'Important') critColor = '#ea580c';
-          else if (fCrit === 'Standard') critColor = '#0284c7';
-          else if (fCrit === 'Low') critColor = '#64748b';
+        let fCrit = (f.repositoryId && repoCritMap[f.repositoryId]) ||
+          parentRepoCrit ||
+          f.businessCriticality || f.criticality_tier ||
+          f.repoCriticality ||
+          'Not tagged';
+        const fCritNorm = String(fCrit).trim();
+        if (['NOT TAGGED', 'UNKNOWN', 'NONE', '', 'UNDEFINED'].includes(fCritNorm.toUpperCase())) {
+          fCrit = 'Not tagged';
+        } else {
+          const lower = fCritNorm.toLowerCase();
+          if (lower === 'critical') fCrit = 'Critical';
+          else if (lower === 'important') fCrit = 'Important';
+          else if (lower === 'standard') fCrit = 'Standard';
+          else if (lower === 'low') fCrit = 'Low';
+        }
 
-          const rec = f.recommendation || f.remediation || 'Compliant or routine upgrade.';
-          return `
+        let critColor = '#334155';
+        if (fCrit === 'Critical') critColor = '#b91c1c';
+        else if (fCrit === 'Important') critColor = '#ea580c';
+        else if (fCrit === 'Standard') critColor = '#0284c7';
+        else if (fCrit === 'Low') critColor = '#64748b';
+
+        const rec = f.recommendation || f.remediation || 'Compliant or routine upgrade.';
+        return `
             <tr>
               <td style="font-weight:600;">${f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown')}</td>
               <td><span style="font-size:11px; color:#475569; font-weight:600;">${fType}</span></td>
@@ -1984,23 +2460,24 @@ async function generateFullReport() {
               <td>${rec}</td>
             </tr>
           `;
-        }).join('')}
+      }).join('')}
       </tbody>
     </table>
   </div>
 </body>
 </html>`;
 
-  printWin.document.open();
-  printWin.document.write(reportHTML);
-  printWin.document.close();
-  setTimeout(() => {
-    printWin.focus();
-    printWin.print();
-  }, 400);
-}
-</script>
-<script src="assets/js/auth.js"></script>
-<script src="assets/js/shell.js"></script>
+      printWin.document.open();
+      printWin.document.write(reportHTML);
+      printWin.document.close();
+      setTimeout(() => {
+        printWin.focus();
+        printWin.print();
+      }, 400);
+    }
+  </script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/shell.js"></script>
 </body>
+
 </html>

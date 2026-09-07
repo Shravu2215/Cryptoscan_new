@@ -40,7 +40,7 @@ function parseGitHubUrl(value) {
   if (parts.length !== 2) return null;
 
   const owner = parts[0];
-  const repo = parts[1].replace(/\.git$/, '');
+  let repo = parts[1].trim().replace(/\.git?$/i, '').replace(/\.+$/, '');
   if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) {
     return null;
   }
