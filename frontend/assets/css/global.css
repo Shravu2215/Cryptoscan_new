@@ -403,6 +403,48 @@ body.sidebar-collapsed .sb-nav-item {
   color: #c084fc !important;
 }
 
+/* Light Mode High-Contrast Sidebar Overrides */
+html.light-mode .sb-nav-group-title,
+:root.light-mode .sb-nav-group-title {
+  color: #7c3aed !important;
+}
+
+html.light-mode .sb-nav-item,
+html.light-mode .nav-item,
+:root.light-mode .sb-nav-item,
+:root.light-mode .nav-item {
+  color: #475569 !important;
+}
+
+html.light-mode .sb-nav-item:hover,
+html.light-mode .nav-item:hover,
+:root.light-mode .sb-nav-item:hover,
+:root.light-mode .nav-item:hover {
+  color: #6b21a8 !important;
+  background: rgba(139, 92, 246, 0.14) !important;
+}
+
+html.light-mode .sb-nav-item.active,
+html.light-mode .nav-item.active,
+:root.light-mode .sb-nav-item.active,
+:root.light-mode .nav-item.active {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.1)) !important;
+  color: #6b21a8 !important;
+  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+}
+
+html.light-mode .sb-nav-item.active svg,
+html.light-mode .nav-item.active svg,
+:root.light-mode .sb-nav-item.active svg,
+:root.light-mode .nav-item.active svg {
+  color: #7c3aed !important;
+}
+
+html.light-mode .sb-user-name,
+:root.light-mode .sb-user-name {
+  color: #0f172a !important;
+}
+
 .sb-footer {
   padding: 16px 14px;
   border-top: 1px solid var(--border-subtle);
