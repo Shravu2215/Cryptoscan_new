@@ -5,21 +5,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Core Backgrounds - Bright, Energetic, Premium Navy */
-  --bg-main: #050505;
-  --bg-sidebar: #050505;
-  --bg-surface: #0F0F11;
-  --bg-surface-hover: #16161A;
-  --bg-surface-active: #1F1F24;
+  /* Dark Theme Default — Professional Slate Navy */
+  --bg-main: #0b0f19;
+  --bg-sidebar: #0e1424;
+  --bg-surface: #131b2e;
+  --bg-surface-hover: #1c263e;
+  --bg-surface-active: #253352;
+  --bg-card: #131b2e;
+  --bg-card-hover: #1c263e;
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-active: rgba(239, 68, 68, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(139, 92, 246, 0.5);
 
   /* Text Colors */
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
+  --text-h: #f8fafc;
+  --text-b: #cbd5e1;
+  --text-m: #94a3b8;
+  --text-s: #64748b;
 
   /* Accent Colors */
   --accent-violet: #8B5CF6;
@@ -33,8 +41,8 @@
   --accent-blue: #3B82F6;
 
   /* Gradients */
-  --grad-primary: linear-gradient(135deg, #991b1b, #ef4444);
-  --grad-sidebar: linear-gradient(90deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+  --grad-primary: linear-gradient(135deg, #7c3aed, #3b82f6);
+  --grad-sidebar: linear-gradient(90deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.05));
 
   /* Status Colors */
   --status-success: #22C55E;
@@ -61,14 +69,40 @@
 
   /* Shadows / Glows */
   --shadow-subtle: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --glow-accent: 0 0 20px rgba(139, 92, 246, 0.4);
   --glow-accent: 0 0 20px rgba(139, 92, 246, 0.25);
-  --glow-primary: 0 0 20px rgba(239, 68, 68, 0.25);
+  --glow-primary: 0 0 20px rgba(59, 130, 246, 0.25);
 
   /* Layout Variables */
   --sidebar-width: 260px;
   --topbar-height: 72px;
   --transition-fast: 0.2s ease;
+}
+
+/* Light Theme Mode */
+:root.light-mode,
+html.light-mode {
+  --bg-main: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-surface-active: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+
+  --border-subtle: #e2e8f0;
+  --border-color: #e2e8f0;
+  --border-light: #e2e8f0;
+  --border-active: #8b5cf6;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-h: #0f172a;
+  --text-b: #334155;
+  --text-m: #475569;
+  --text-s: #64748b;
+
+  --shadow-subtle: 0 8px 30px rgba(15, 23, 42, 0.08);
 }
 
 /* ==========================================================================

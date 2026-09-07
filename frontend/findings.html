@@ -7,8 +7,13 @@
   <title>Findings — CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') === 'light') {
+      var saved = localStorage.getItem('cs_theme');
+      if (saved === 'light') {
         document.documentElement.classList.add('light-mode');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
       }
     }
     initTheme();
@@ -27,11 +32,11 @@
     }
 
     :root {
-      /* Dark theme variables */
-      --bg-main: #050505;
-      --bg-sidebar: #050505;
-      --bg-card: #0F0F11;
-      --bg-card-hover: #16161A;
+      /* Dark theme variables — Professional Slate Navy */
+      --bg-main: #0b0f19;
+      --bg-sidebar: #0e1424;
+      --bg-card: #131b2e;
+      --bg-card-hover: #1c263e;
       --border-color: rgba(255, 255, 255, 0.08);
       --border-light: rgba(255, 255, 255, 0.08);
 

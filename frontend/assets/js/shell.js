@@ -84,14 +84,12 @@ class AppShell {
 
     sidebar.innerHTML = `
       <div class="sb-header">
-        <a href="dashboard.html" class="sb-brand">
-          <div class="sb-brand-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" width="24" height="24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>
-            </svg>
+        <a href="dashboard.html" class="sb-brand" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+          <img src="assets/images/nebula-logo.png" alt="NEBULA Logo" class="sb-brand-logo" style="height:36px; width:auto; border-radius:6px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(139,92,246,0.3));">
+          <div style="display:flex; flex-direction:column;">
+            <span class="sb-brand-name" style="font-size:16px; font-weight:800; letter-spacing:1.2px; background:linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">NEBULA</span>
+            <span style="font-size:9px; font-weight:600; color:var(--text-muted); letter-spacing:0.8px; text-transform:uppercase; margin-top:-2px;">CryptoScan Security</span>
           </div>
-          <span class="sb-brand-name">CryptoScan</span>
         </a>
       </div>
       <nav class="sb-content">
@@ -138,17 +136,22 @@ class AppShell {
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <div class="tb-breadcrumbs">
-          <span>CryptoScan</span>
+        <div class="tb-breadcrumbs" style="display:flex; align-items:center; gap:8px;">
+          <img src="assets/images/nebula-logo.png" alt="NEBULA" style="height:22px; width:auto; border-radius:4px;">
+          <span style="font-weight:700; color:var(--text-h);">NEBULA</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
           <span class="current">${title}</span>
         </div>
       </div>
-      <div class="tb-right">
+      <div class="tb-right" style="display:flex; align-items:center; gap:12px;">
         <button class="search-trigger">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <span>Search</span>
           <kbd>⌘ K</kbd>
+        </button>
+        <button class="icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme" style="display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;display:none;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </button>
         <button class="icon-btn" title="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -163,6 +166,25 @@ class AppShell {
   }
 
   bindEvents() {
+    // Theme toggle
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const isLight = document.documentElement.classList.contains('light-mode');
+        if (isLight) {
+          document.documentElement.classList.remove('light-mode');
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('cs_theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light-mode');
+          localStorage.setItem('cs_theme', 'light');
+        }
+        this.updateThemeIcons();
+      });
+    }
+    this.updateThemeIcons();
+
     // Mobile Sidebar Toggle
     const mobileBtn = document.getElementById('mobile-menu-btn');
     if (mobileBtn) {
@@ -186,6 +208,14 @@ class AppShell {
         }
       });
     }
+  }
+
+  updateThemeIcons() {
+    const isLight = document.documentElement.classList.contains('light-mode');
+    const sunIcons = document.querySelectorAll('.theme-icon-sun');
+    const moonIcons = document.querySelectorAll('.theme-icon-moon');
+    sunIcons.forEach(icon => icon.style.display = isLight ? 'block' : 'none');
+    moonIcons.forEach(icon => icon.style.display = isLight ? 'none' : 'block');
   }
 
   loadUserData() {

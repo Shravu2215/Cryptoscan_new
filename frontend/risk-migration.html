@@ -5,14 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risk & Migration — CryptoScan</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+  function initTheme() {
+    var saved = localStorage.getItem('cs_theme');
+    if (saved === 'light') {
+      document.documentElement.classList.add('light-mode');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light-mode');
+    }
+  }
+  initTheme();
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-    /* Dark theme variables */
-  --bg-main: #050505;
-  --bg-sidebar: #050505;
-  --bg-card: #0F0F11;
-  --bg-card-hover: #16161A;
+  /* Dark theme variables — Professional Slate Navy */
+  --bg-main: #0b0f19;
+  --bg-sidebar: #0e1424;
+  --bg-card: #131b2e;
+  --bg-card-hover: #1c263e;
   --border-color: rgba(255, 255, 255, 0.08);
   --border-light: rgba(255, 255, 255, 0.08);
   
