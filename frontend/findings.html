@@ -104,7 +104,8 @@
       color: var(--text-b);
       display: flex;
       -webkit-font-smoothing: antialiased;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     /* Sidebar */
@@ -214,12 +215,13 @@
     }
 
     /* Main Content Area */
+    .app-main,
     .main {
       margin-left: var(--sb-w);
       flex: 1;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      min-height: 100vh;
       overflow-y: auto;
     }
 
