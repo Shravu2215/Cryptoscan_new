@@ -84,11 +84,11 @@ class AppShell {
 
     sidebar.innerHTML = `
       <div class="sb-header">
-        <a href="dashboard.html" class="sb-brand" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
-          <img src="assets/images/nebula-logo.png" alt="NEBULA Logo" class="sb-brand-logo" style="height:36px; width:auto; border-radius:6px; object-fit:contain; filter:drop-shadow(0 0 8px rgba(139,92,246,0.3));">
-          <div style="display:flex; flex-direction:column;">
-            <span class="sb-brand-name" style="font-size:16px; font-weight:800; letter-spacing:1.2px; background:linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">NEBULA</span>
-            <span style="font-size:9px; font-weight:600; color:var(--text-muted); letter-spacing:0.8px; text-transform:uppercase; margin-top:-2px;">CryptoScan Security</span>
+        <a href="dashboard.html" class="sb-brand" style="display:flex; align-items:center; gap:10px; text-decoration:none; width:100%;">
+          <img src="assets/images/nebula-logo.png" alt="NEBULA Logo" class="sb-brand-logo" style="height:32px; width:auto; max-height:32px; border-radius:6px; object-fit:contain; filter:drop-shadow(0 0 6px rgba(139,92,246,0.3)); flex-shrink:0;">
+          <div style="display:flex; flex-direction:column; justify-content:center;">
+            <span class="sb-brand-name" style="font-size:15px; font-weight:800; letter-spacing:1.2px; background:linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">NEBULA</span>
+            <span style="font-size:8.5px; font-weight:600; color:var(--text-muted); letter-spacing:0.8px; text-transform:uppercase; line-height:1.2; margin-top:1px;">CryptoScan Security</span>
           </div>
         </a>
       </div>

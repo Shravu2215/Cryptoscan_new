@@ -145,19 +145,23 @@ a {
   overflow: hidden;
 }
 
-.app-sidebar {
+.app-sidebar,
+.sb,
+.sidebar {
   width: 240px;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
-  background-color: rgba(11, 16, 38, 0.8);
-  backdrop-filter: blur(20px);
+  background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   transition: transform var(--transition-fast), width var(--transition-fast);
   z-index: 100;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .app-main {
@@ -281,22 +285,25 @@ body.sidebar-collapsed .sb-nav-item {
 }
 
 .sb-header {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 18px !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
 .sb-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  font-weight: 700;
-  color: #ffffff;
-  font-size: 17px;
-  letter-spacing: -0.02em;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
 }
 
 .sb-brand-icon {
