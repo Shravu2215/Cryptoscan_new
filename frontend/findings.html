@@ -1337,11 +1337,6 @@
                     <option value="external-facing">External-Facing</option>
                     <option value="internal">Internal</option>
                   </select>
-                    <div class="exposure-def" style="font-size:12px; color:var(--text-s); margin-top:4px;">
-                      Internal exposure = code/system only accessible within the company (e.g., admin tools, batch jobs).<br>
-                      External exposure = code/system directly accessible from the internet (e.g., public API, login page).<br>
-                      Hence, external findings are considered higher risk.
-                    </div>
                   <select id="filter-algo" class="filter-sel" onchange="handleFilterChange()">
                     <option value="ALL">All Algorithms</option>
                   </select>
@@ -1356,10 +1351,7 @@
                         <th>Risk</th>
                         <th>Algorithm</th>
                         <th>Type</th>
-                         <th>
-                           Exposure
-                           <span class="info-icon" title="Internal exposure = code/system केवल कंपनी के भीतर पहुँचा जा‑सकता है (जैसे admin tools, batch jobs). External exposure = code/system इंटरनेट के माध्यम से सीधे पहुँचा जा‑सकता है (जैसे public API, login page). इसलिए, external findings को higher risk माना जाता है.">ℹ️</span>
-                         </th>
+                        <th title="Internal: code/system only accessible inside the company (admin tools, batch jobs). External: code/system directly reachable from the internet (public API, login page) — external findings carry higher risk.">Exposure ℹ️</th>
                         <th>Detection</th>
                         <th>Mode</th>
                         <th>Confidence</th>
