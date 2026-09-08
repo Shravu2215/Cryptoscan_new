@@ -274,7 +274,149 @@ const CryptoEngine = {
     };
   },
 
-  computeCriticality: function(finding) {
+  classifyExposure: function(finding, repoContext) {
+    const file = (finding.file || finding.filePath || '').toLowerCase();
+    const repo = (finding.repoName || finding.repository || '').toLowerCase();
+    const snippet = (finding.snippet || finding.code || finding.description || '').toLowerCase();
+    const title = (finding.title || finding.algorithm || '').toLowerCase();
+    const text = (file + ' ' + repo + ' ' + title + ' ' + snippet).toLowerCase();
+
+    const triggeredSignals = [];
+    let maxSignalScore = 0;
+    let confidence = 'Low';
+
+    // 1. ROUTE / ENDPOINT DEFINITION (Strongest Signal)
+    const routeSignatures = [
+      { pattern: /app\.(get|post|put|delete|patch|use)\s*\(/i, name: 'Express/Node Route Signature (app.get/post)' },
+      { pattern: /router\.(get|post|put|delete|use)\s*\(/i, name: 'Express Router Handler' },
+      { pattern: /express\.router\b/i, name: 'Express Router Definition' },
+      { pattern: /@app\.route\b/i, name: 'Python Flask Route (@app.route)' },
+      { pattern: /@api_view\b/i, name: 'Django REST Framework (@api_view)' },
+      { pattern: /urlpatterns\s*=/i, name: 'Django URL Routing (urlpatterns)' },
+      { pattern: /path\s*\(|re_path\s*\(/i, name: 'Django Path Mapping' },
+      { pattern: /@restcontroller\b/i, name: 'Spring Boot Controller (@RestController)' },
+      { pattern: /@(requestmapping|getmapping|postmapping|putmapping|deletemapping)\b/i, name: 'Spring Mapping Annotation' },
+      { pattern: /\[http(get|post|put|delete|patch)\]/i, name: '.NET Controller Route ([HttpGet/Post])' },
+      { pattern: /\[route\s*\(/i, name: '.NET Route Attribute' },
+      { pattern: /controllerbase\b/i, name: '.NET Controller Base' },
+      { pattern: /http\.handlefunc\b/i, name: 'Go Standard HTTP Handler' },
+      { pattern: /gin\.(default|new|engine)\b|\.(get|post)\("/i, name: 'Go Gin Framework Route' },
+      { pattern: /echo\.(get|post)\b/i, name: 'Go Echo Web Router' }
+    ];
+
+    let matchedRouteSignal = null;
+    for (const sig of routeSignatures) {
+      if (sig.pattern.test(snippet) || sig.pattern.test(text)) {
+        matchedRouteSignal = sig.name;
+        break;
+      }
+    }
+
+    if (matchedRouteSignal) {
+      triggeredSignals.push(`Signal 1: ${matchedRouteSignal}`);
+      maxSignalScore = Math.max(maxSignalScore, 5.0);
+      confidence = 'High';
+    }
+
+    // 2. CONFIG / DEPLOYMENT SIGNALS
+    let matchedConfigSignal = null;
+    if (text.includes('dockerfile') || text.includes('docker-compose') || text.includes('ingress') || text.includes('nginx.conf') || text.includes('k8s') || text.includes('service.yaml')) {
+      if (text.includes('expose 80') || text.includes('expose 443') || text.includes('expose 8080') || text.includes('loadbalancer') || text.includes('nodeport') || text.includes('ingress') || text.includes('listen 80') || text.includes('listen 443')) {
+        matchedConfigSignal = 'Public Deployment Config (EXPOSE 80/443 / LoadBalancer / Ingress)';
+        maxSignalScore = Math.max(maxSignalScore, 5.0);
+        confidence = 'High';
+      } else if (text.includes('clusterip') || text.includes('internal-only') || text.includes('private-net')) {
+        matchedConfigSignal = 'Internal-only Deployment Manifest (ClusterIP / Private Network)';
+        maxSignalScore = Math.max(maxSignalScore, 1.5);
+        confidence = 'High';
+      }
+    }
+    if (matchedConfigSignal) {
+      triggeredSignals.push(`Signal 2: ${matchedConfigSignal}`);
+    }
+
+    // 3. TRANSITIVE IMPORT / DEPENDENCY CONTEXT
+    let matchedImportSignal = null;
+    if (repoContext && Array.isArray(repoContext.allFiles)) {
+      const isImportedByPublic = repoContext.allFiles.some(f => {
+        const path = (f.path || f.name || '').toLowerCase();
+        const content = (f.content || '').toLowerCase();
+        const isPublicController = path.includes('controller') || path.includes('route') || path.includes('api') || content.includes('@restcontroller') || content.includes('app.post');
+        const importsTarget = file && content.includes(file.split('/').pop().replace(/\.[^/.]+$/, ''));
+        return isPublicController && importsTarget;
+      });
+      if (isImportedByPublic) {
+        matchedImportSignal = 'Transitive Call from Confirmed Public Controller';
+        maxSignalScore = Math.max(maxSignalScore, 4.5);
+        if (confidence !== 'High') confidence = 'Medium';
+      }
+    }
+    if (matchedImportSignal) {
+      triggeredSignals.push(`Signal 3: ${matchedImportSignal}`);
+    }
+
+    // 4. NETWORK BINDING PATTERNS
+    if (text.includes('0.0.0.0') || text.includes('*:8080') || text.includes('http.listenandserve(":8080"') || text.includes('server.listen(8080')) {
+      triggeredSignals.push('Signal 4: Public Interface Network Binding (0.0.0.0)');
+      if (maxSignalScore === 0) maxSignalScore = 4.0;
+      else maxSignalScore = Math.min(5.0, maxSignalScore + 0.5);
+      if (confidence !== 'High') confidence = 'Medium';
+    } else if (text.includes('127.0.0.1') || text.includes('localhost') || text.includes('unix:')) {
+      triggeredSignals.push('Signal 4: Loopback Interface Binding (127.0.0.1 / localhost)');
+      if (maxSignalScore === 0) maxSignalScore = 1.5;
+      else maxSignalScore = Math.max(1.0, maxSignalScore - 1.0);
+      if (confidence !== 'High') confidence = 'Medium';
+    }
+
+    // 5. FOLDER / NAMING CONVENTIONS (Fallback / Heuristic adjustment)
+    const extFolderPatterns = ['/api/', '/public/', '/routes/', '/controllers/', '/endpoints/', '/web/', '/handlers/', '/v1/', '/v2/'];
+    const intFolderPatterns = ['/internal/', '/test/', '/tests/', '/spec/', '/dev/', '/scripts/', '/tools/', '/migrations/', '/admin-cli/', '/jobs/', '/cron/', '/batch/'];
+
+    const matchedExtPath = extFolderPatterns.find(p => file.includes(p));
+    const matchedIntPath = intFolderPatterns.find(p => file.includes(p));
+
+    if (matchedExtPath) {
+      triggeredSignals.push(`Signal 5: Public Directory Keyword (${matchedExtPath})`);
+      if (maxSignalScore === 0) {
+        maxSignalScore = 3.5;
+        confidence = 'Low';
+      }
+    } else if (matchedIntPath) {
+      triggeredSignals.push(`Signal 5: Internal Directory Keyword (${matchedIntPath})`);
+      if (maxSignalScore === 0) {
+        maxSignalScore = 1.5;
+        confidence = 'Low';
+      }
+    }
+
+    // FINAL DECISION LOGIC & VERDICT
+    let finalLabel = 'Unknown';
+    let finalScore = 3.0;
+
+    if (triggeredSignals.length === 0) {
+      finalLabel = 'Unknown';
+      finalScore = 3.0;
+      confidence = 'Low';
+    } else if (maxSignalScore >= 4.0) {
+      finalLabel = 'External';
+      finalScore = maxSignalScore;
+    } else if (maxSignalScore >= 2.0 && maxSignalScore < 4.0) {
+      finalLabel = 'Internal';
+      finalScore = maxSignalScore;
+    } else {
+      finalLabel = 'Internal';
+      finalScore = 1.5;
+    }
+
+    return {
+      exposure_label: finalLabel,
+      exposure_score: Math.round(finalScore * 10) / 10,
+      exposure_confidence: confidence,
+      triggered_signals: triggeredSignals.length > 0 ? triggeredSignals : ['No reliable route/config signals matched (Default: Unknown)']
+    };
+  },
+
+  computeCriticality: function(finding, repoContext) {
     const file = (finding.file || finding.filePath || '').toLowerCase();
     const repo = (finding.repoName || finding.repository || '').toLowerCase();
     const text = (file + ' ' + repo + ' ' + (finding.title || '') + ' ' + (finding.snippet || '') + ' ' + (finding.library || '')).toLowerCase();
@@ -293,15 +435,9 @@ const CryptoEngine = {
       sens = 1.0;
     }
 
-    // 2. Exposure (0.25) — route / service location
-    let exp = 3.0;
-    if (text.includes('public') || text.includes('api/') || text.includes('endpoint') || text.includes('gateway') || text.includes('external') || text.includes('web/') || text.includes('routes') || text.includes('controller') || text.includes('ingress') || (finding.exposure || '').toLowerCase() === 'external') {
-      exp = 5.0;
-    } else if (text.includes('internal') || text.includes('service') || text.includes('shared') || text.includes('middleware')) {
-      exp = 3.0;
-    } else if (text.includes('test') || text.includes('dev') || text.includes('mock') || text.includes('spec') || text.includes('fixture')) {
-      exp = 1.0;
-    }
+    // 2. Exposure (0.25) — Generic Multi-Signal Classifier
+    const expResult = this.classifyExposure(finding, repoContext);
+    let exp = expResult.exposure_score;
 
     // 3. System Role (0.25) — production vs staging vs dev
     let sys = 3.0;
@@ -342,6 +478,9 @@ const CryptoEngine = {
     return {
       criticality_score: score,
       criticality_label: label,
+      exposure_label: expResult.exposure_label,
+      exposure_confidence: expResult.exposure_confidence,
+      exposure_signals: expResult.triggered_signals,
       subfactors: {
         data_sensitivity: sens,
         exposure: exp,
@@ -443,6 +582,11 @@ const CryptoEngine = {
     f.user_confirmed_lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
       ? Number(f.user_confirmed_lifetime)
       : lt.user_confirmed_lifetime;
+
+    f.exposure_label = f.exposure_label || crit.exposure_label || 'Unknown';
+    f.exposure_confidence = f.exposure_confidence || crit.exposure_confidence || 'Low';
+    f.exposure_signals = f.exposure_signals || crit.exposure_signals || [];
+    f.exposure = f.exposure_label.toLowerCase() === 'external' ? 'external-facing' : (f.exposure_label.toLowerCase() === 'unknown' ? 'unknown' : 'internal');
 
     f.criticality_score = (f.criticality_score !== undefined && f.criticality_score !== null)
       ? Number(f.criticality_score)
@@ -636,8 +780,8 @@ const CryptoEngine = {
   }
 };
 
-// Attach Profile Dropdown Toggle
-window.addEventListener('DOMContentLoaded', () => {
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
   const pBtn = document.getElementById('profile-btn');
   const pDrop = document.getElementById('profile-dropdown');
   if (pBtn && pDrop) {
@@ -699,3 +843,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+}
+
+if (typeof window !== 'undefined') window.CryptoEngine = CryptoEngine;
+if (typeof module !== 'undefined' && module.exports) module.exports = CryptoEngine;

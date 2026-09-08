@@ -1517,6 +1517,8 @@
               <strong id="lbl-sub-exp">3.0</strong>
             </div>
             <input type="range" id="slider-sub-exp" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+            <div id="drw-exposure-confidence" style="font-size:11px; font-weight:600; color:var(--purple); margin-top:4px;"></div>
+            <div id="drw-exposure-signals" style="margin-top:2px; font-size:10px; color:var(--text-m); line-height:1.4;"></div>
           </div>
 
           <div>
@@ -2097,10 +2099,12 @@
         const confClass = getConfBadgeClass(conf);
         const detMethod = f.detection_method || 'ast';
         const detClass = getDetBadgeClass(detMethod);
-        const detLabel = getDetLabel(detMethod);
-        const exp = f.exposure || 'internal';
-        const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
-        const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
+        const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
+        const expLabelRaw = f.exposure_label || expObj.exposure_label;
+        const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
+        const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
+        const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
+        const expDisplayText = `${expLabelRaw} (${expConfRaw})`;
 
         const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
         const lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
@@ -2117,7 +2121,7 @@
         <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
         <td><span class="badge badge-ast" style="font-size:11px; text-transform:uppercase;">${type}</span></td>
-        <td><span class="badge ${expClass}">${expLabel}</span></td>
+        <td><span class="badge ${expClass}" title="Triggered Exposure Signals: ${expSignals}">${expDisplayText}</span></td>
         <td><span class="badge ${detClass}">${detLabel}</span></td>
         <td><span class="badge ${confClass}">${conf}</span></td>
         <td><span class="badge ${qClass}">${quant}</span></td>
@@ -2256,6 +2260,22 @@
       document.getElementById('slider-sub-sys').value = sub.system_role || 3.0;
       document.getElementById('slider-sub-reg').value = sub.regulatory_impact || 2.0;
       updateDrawerSubfactorsLive();
+
+      const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
+      const expDrwLabel = f.exposure_label || expObj.exposure_label;
+      const expDrwConf = f.exposure_confidence || expObj.exposure_confidence;
+      const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals : expObj.triggered_signals;
+
+      const confEl = document.getElementById('drw-exposure-confidence');
+      if (confEl) {
+        confEl.textContent = `Auto-Detected: ${expDrwLabel} (Confidence: ${expDrwConf})`;
+        confEl.style.color = expDrwConf === 'High' ? 'var(--green)' : (expDrwConf === 'Medium' ? 'var(--amber)' : 'var(--purple)');
+      }
+
+      const sigEl = document.getElementById('drw-exposure-signals');
+      if (sigEl) {
+        sigEl.innerHTML = (expSignals || []).map(s => `<div>• ${s}</div>`).join('');
+      }
 
       const auditSpan = document.getElementById('drw-audit-trail');
       if (auditSpan) {
