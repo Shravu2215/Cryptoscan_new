@@ -404,12 +404,29 @@ const CryptoEngine = {
     }
 
     // FINAL DECISION LOGIC & VERDICT
-    let finalLabel = 'Unknown';
-    let finalScore = 3.0;
+    // When no explicit signals fire, use file-path heuristics to decide
+    // Internal vs External — we never emit 'Unknown' to the user.
+    const extFilePatterns = ['/api/', '/public/', '/routes/', '/controllers/', '/endpoints/', '/web/', '/handlers/', '/v1/', '/v2/', 'controller', 'route', 'endpoint', 'webhook', 'servlet', 'gateway', 'graphql', 'rest'];
+    const intFilePatterns = ['/internal/', '/test/', '/tests/', '/spec/', '/dev/', '/scripts/', '/tools/', '/migrations/', '/admin/', '/jobs/', '/cron/', '/batch/', '/util/', '/helpers/', '/config/', '/lib/', '/core/'];
+
+    let finalLabel;
+    let finalScore;
 
     if (triggeredSignals.length === 0) {
-      finalLabel = 'Unknown';
-      finalScore = 3.0;
+      // No strong signals — use file path to decide
+      const hasExtPath = extFilePatterns.some(p => file.includes(p));
+      const hasIntPath = intFilePatterns.some(p => file.includes(p));
+
+      if (hasExtPath && !hasIntPath) {
+        finalLabel = 'External';
+        finalScore = 3.5;
+        triggeredSignals.push('Heuristic: File path matches public-facing pattern');
+      } else {
+        // Default: hardcoded keys / certs in source are company-internal
+        finalLabel = 'Internal';
+        finalScore = 1.5;
+        triggeredSignals.push('Heuristic: No public route/endpoint signals — defaulting to Internal');
+      }
       confidence = 'Low';
     } else if (maxSignalScore >= 4.0) {
       finalLabel = 'External';
@@ -426,7 +443,7 @@ const CryptoEngine = {
       exposure_label: finalLabel,
       exposure_score: Math.round(finalScore * 10) / 10,
       exposure_confidence: confidence,
-      triggered_signals: triggeredSignals.length > 0 ? triggeredSignals : ['No reliable route/config signals matched (Default: Unknown)']
+      triggered_signals: triggeredSignals
     };
   },
 
@@ -597,10 +614,10 @@ const CryptoEngine = {
       ? Number(f.user_confirmed_lifetime)
       : lt.user_confirmed_lifetime;
 
-    f.exposure_label = f.exposure_label || crit.exposure_label || 'Unknown';
+    f.exposure_label = f.exposure_label || crit.exposure_label || 'Internal';
     f.exposure_confidence = f.exposure_confidence || crit.exposure_confidence || 'Low';
     f.exposure_signals = f.exposure_signals || crit.exposure_signals || [];
-    f.exposure = f.exposure_label.toLowerCase() === 'external' ? 'external-facing' : (f.exposure_label.toLowerCase() === 'unknown' ? 'unknown' : 'internal');
+    f.exposure = f.exposure_label.toLowerCase() === 'external' ? 'external-facing' : 'internal';
 
     f.criticality_score = (f.criticality_score !== undefined && f.criticality_score !== null)
       ? Number(f.criticality_score)
