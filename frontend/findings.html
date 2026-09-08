@@ -2016,7 +2016,7 @@
             (f.algorithm || f.title || '').toLowerCase().includes(searchClean);
           const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
 
-          const fExpLabel = f.exposure_label || (f.exposure === 'external-facing' ? 'External' : (f.exposure === 'internal' ? 'Internal' : 'Unknown'));
+          const fExpLabel = (f.exposure_label && f.exposure_label !== 'Unknown') ? f.exposure_label : (f.exposure === 'external-facing' ? 'External' : 'Internal');
           const fExpRaw = f.exposure || 'internal';
           const matchExposure = exposure === 'ALL' ||
             fExpLabel.toLowerCase() === exposure.toLowerCase() ||
@@ -2142,8 +2142,8 @@
           const detMethod = f.detection_method || 'ast';
           const detClass = getDetBadgeClass(detMethod);
           const detLabel = getDetLabel(detMethod);
-          const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
-          const expLabelRaw = f.exposure_label || expObj.exposure_label;
+          const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Internal', exposure_confidence: 'Low', triggered_signals: [] };
+          const expLabelRaw = (f.exposure_label && f.exposure_label !== 'Unknown') ? f.exposure_label : expObj.exposure_label;
           const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
           const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
           const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
@@ -2304,8 +2304,8 @@
         document.getElementById('slider-sub-reg').value = sub.regulatory_impact || 2.0;
         updateDrawerSubfactorsLive();
 
-        const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
-        const expDrwLabel = f.exposure_label || expObj.exposure_label;
+        const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Internal', exposure_confidence: 'Low', triggered_signals: [] };
+        const expDrwLabel = (f.exposure_label && f.exposure_label !== 'Unknown') ? f.exposure_label : expObj.exposure_label;
         const expDrwConf = f.exposure_confidence || expObj.exposure_confidence;
         const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals : expObj.triggered_signals;
 
