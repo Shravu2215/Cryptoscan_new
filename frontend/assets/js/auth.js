@@ -37,11 +37,17 @@ const Auth = {
   /** Call backend login endpoint and store returned JWT */
   async login(email, password) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+
       const res = await fetch(`${this.API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Invalid email or password.');
@@ -50,7 +56,7 @@ const Auth = {
       return data;
     } catch (err) {
       // Rethrow explicit business validation errors (e.g. invalid credentials)
-      if (err.message && !err.message.includes('fetch') && err.message !== 'Failed to fetch') {
+      if (err.message && !err.message.includes('fetch') && err.message !== 'Failed to fetch' && err.name !== 'AbortError') {
         throw err;
       }
 
@@ -82,18 +88,24 @@ const Auth = {
   /** Call backend signup endpoint, then login to retrieve real JWT */
   async signup(name, email, password) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+
       const res = await fetch(`${this.API_BASE}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Signup failed');
       }
       return await this.login(email, password);
     } catch (err) {
-      if (err.message && !err.message.includes('fetch') && err.message !== 'Failed to fetch') {
+      if (err.message && !err.message.includes('fetch') && err.message !== 'Failed to fetch' && err.name !== 'AbortError') {
         throw err;
       }
       return await this.login(email, password);

@@ -807,9 +807,14 @@
       // Live-fetch repositories from backend
       try {
         const token = localStorage.getItem('cs_token');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+
         const res = await fetch('http://localhost:3000/repos', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const liveRepos = await res.json();
           const repoMap = {};
