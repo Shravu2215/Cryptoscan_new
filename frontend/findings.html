@@ -2090,22 +2090,6 @@
       const totalPages = Math.ceil(filteredFindings.length / itemsPerPage);
       const start = (currentPage - 1) * itemsPerPage;
       const pageData = filteredFindings.slice(start, start + itemsPerPage);
-
-      tbody.innerHTML = pageData.map((f, i) => {
-        const sev = getSeverity(f);
-        const algo = f.algorithm || (f.title || 'Unknown').split(' ')[0] || 'Unknown';
-        const purpose = f.usage || f.category || '-';
-        const quant = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
-        const qClass = isQuantum(f) ? 'badge-quant' : 'badge-safe';
-        const conf = f.confidence || 'Likely';
-        const confClass = getConfBadgeClass(conf);
-        const detMethod = f.detection_method || 'ast';
-        const detClass = getDetBadgeClass(detMethod);
-        const detLabel = getDetLabel(detMethod);
-        const exp = f.exposure || 'internal';
-        const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
-        const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
-
       tbody.innerHTML = pageData.map((f, i) => {
         const sev = getSeverity(f);
         const algo = f.algorithm || (f.title || 'Unknown').split(' ')[0] || 'Unknown';
@@ -2162,7 +2146,6 @@
         </td>
       </tr>
     `;
-      }).join('');
       }).join('');
 
       document.querySelectorAll('.finding-row').forEach(row => {
@@ -2386,10 +2369,6 @@
         });
       }
       CryptoEngine.saveData(data);
-    }
-
-      document.getElementById('drawer-overlay').classList.add('active');
-      document.getElementById('drawer').classList.add('active');
     }
 
     function closeDrawer() {
