@@ -1,1155 +1,2190 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risk & Migration — CryptoScan</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script>
-  function initTheme() {
-    var saved = localStorage.getItem('cs_theme');
-    if (saved === 'light') {
-      document.documentElement.classList.add('light-mode');
-      document.documentElement.classList.remove('dark');
-    } else {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light-mode');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Risk & Migration — CryptoScan</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <script>
+    function initTheme() {
+      var saved = localStorage.getItem('cs_theme');
+      if (saved === 'light') {
+        document.documentElement.classList.add('light-mode');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
+      }
     }
-  }
-  initTheme();
-</script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  /* Dark theme variables — Modern Slate Dark */
-  --bg-main: #111827;
-  --bg-sidebar: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #334155;
-  --border-color: #334155;
-  --border-light: #334155;
-  
-  --text-h: #f8fafc; /* Headers text */
-  --text-b: #cbd5e1; /* Body text */
-  --text-m: #94a3b8; /* Muted text */
-  --text-s: #64748b; /* Subtle text */
-  
-  /* State Colors */
-  --green: #10b981; /* Secure/Verified */
-  --green-bg: rgba(16, 185, 129, 0.1);
-  --red: #ef4444; /* Critical */
-  --red-bg: rgba(239, 68, 68, 0.1);
-  --amber: #f59e0b; /* High */
-  --amber-bg: rgba(245, 158, 11, 0.1);
-  --yellow: #eab308; /* Medium */
-  --yellow-bg: rgba(234, 179, 8, 0.1);
-  --gray: #94a3b8; /* Low */
-  --gray-bg: rgba(148, 163, 184, 0.1);
-  
-  --purple: #8b5cf6; /* Quantum */
-  --purple-bg: rgba(139, 92, 246, 0.1);
+    initTheme();
+  </script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 16px;
-  --sb-w: 240px;
-  --t: .2s ease;
-}
+    :root {
+      /* Dark theme variables — Modern Slate Dark */
+      --bg-main: #111827;
+      --bg-sidebar: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --border-color: #334155;
+      --border-light: #334155;
 
-html { font-size: 14px; }
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  min-height: 100vh;
-  background-color: var(--bg-main);
-  color: var(--text-b);
-  display: flex;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-}
+      --text-h: #f8fafc;
+      /* Headers text */
+      --text-b: #cbd5e1;
+      /* Body text */
+      --text-m: #94a3b8;
+      /* Muted text */
+      --text-s: #64748b;
+      /* Subtle text */
 
-/* Sidebar */
-.sb {
-  width: var(--sb-w);
-  flex-shrink: 0;
-  background-color: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 100;
-  padding: 24px 16px;
-}
-.sb-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 8px 24px;
-  border-bottom: 1px solid var(--border-light);
-  margin-bottom: 24px;
-}
-.sb-logo {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-}
-.sb-logo svg { width: 24px; height: 24px; color: var(--text-h); }
-.sb-name { font-size: 16px; font-weight: 700; color: var(--text-h); letter-spacing: -0.02em; }
-.sb-name span { color: var(--text-m); font-weight: 400; }
+      /* State Colors */
+      --green: #10b981;
+      /* Secure/Verified */
+      --green-bg: rgba(16, 185, 129, 0.1);
+      --red: #ef4444;
+      /* Critical */
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --amber: #f59e0b;
+      /* High */
+      --amber-bg: rgba(245, 158, 11, 0.1);
+      --yellow: #eab308;
+      /* Medium */
+      --yellow-bg: rgba(234, 179, 8, 0.1);
+      --gray: #94a3b8;
+      /* Low */
+      --gray-bg: rgba(148, 163, 184, 0.1);
 
-.sb-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.sb-nav-divider { height: 1px; background: var(--border-light); margin: 16px 0; }
-.nav-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 12px; border-radius: var(--r-sm);
-  color: var(--text-m); font-size: 13px; font-weight: 500;
-  cursor: pointer; text-decoration: none; transition: all var(--t);
-}
-.nav-item:hover { color: var(--red); background: var(--red-bg); }
-.nav-item.active {
-  background: var(--green-bg);
-  color: var(--green);
-  border: 1px solid rgba(21, 128, 61, 0.2);
-}
-.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
-.nav-badge {
-  margin-left: auto; background: var(--border-color);
-  color: var(--text-h); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
-}
+      --purple: #8b5cf6;
+      /* Quantum */
+      --purple-bg: rgba(139, 92, 246, 0.1);
 
-/* Main Content Area */
-.main {
-  margin-left: var(--sb-w); flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto;
-}
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 16px;
+      --sb-w: 240px;
+      --t: .2s ease;
+    }
 
-/* Header */
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 24px 32px; background: var(--bg-main);
-  position: sticky; top: 0; z-index: 50;
-  border-bottom: 1px solid var(--border-color);
-}
-.tb-left { display: flex; flex-direction: column; gap: 4px; }
-.tb-title { font-size: 20px; font-weight: 600; color: var(--text-h); letter-spacing: -0.02em; line-height: 1; }
-.tb-sub { font-size: 13px; color: var(--text-m); }
-.tb-right { display: flex; align-items: center; gap: 16px; }
+    html {
+      font-size: 14px;
+    }
 
-/* Buttons */
-.btn-p {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-  background: var(--red); border: none; border-radius: var(--r-sm);
-  font-size: 13px; font-weight: 600; color: #ffffff; cursor: pointer;
-  transition: opacity var(--t); text-decoration: none;
-}
-.btn-p:hover { opacity: 0.9; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      background-color: var(--bg-main);
+      color: var(--text-b);
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
 
-.btn-sec {
-  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-  background: transparent; border: 1px solid var(--border-color);
-  border-radius: var(--r-sm); font-size: 13px; font-weight: 500; color: var(--text-b);
-  cursor: pointer; text-decoration: none; transition: all var(--t);
-}
-.btn-sec:hover { background: var(--bg-card); border-color: var(--text-s); }
+    /* Sidebar */
+    .sb {
+      width: var(--sb-w);
+      flex-shrink: 0;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      padding: 24px 16px;
+    }
 
-/* Dashboard Grid */
-.content { padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
-.row { display: flex; gap: 24px; }
-.col { display: flex; flex-direction: column; gap: 24px; }
-.col-2 { flex: 2; } .col-1 { flex: 1; }
+    .sb-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px 24px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 24px;
+    }
 
-/* Cards */
-.gcard {
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--r-lg); padding: 24px; position: relative;
-}
-.gc-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.gc-ttl { font-size: 14px; font-weight: 600; color: var(--text-h); }
-.gc-sub { font-size: 12px; color: var(--text-m); margin-top: 4px; }
+    .sb-logo {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* Stats Grid */
-.stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
-.scard {
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--r-md); padding: 16px;
-}
-.scard-primary {
-  background: linear-gradient(135deg, #991b1b, #dc2626);
-  color: #ffffff;
-  border: none;
-}
-.scard-primary .sc-lbl, .scard-primary .empty-sub { color: rgba(255,255,255,0.8); }
-.scard-primary .sc-val, .scard-primary .empty-val { color: #ffffff; }
+    .sb-logo svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-h);
+    }
 
-.sc-lbl { font-size: 12px; color: var(--text-m); font-weight: 500; margin-bottom: 8px; }
-.sc-val { font-size: 24px; font-weight: 600; color: var(--text-h); font-family: 'JetBrains Mono', monospace; line-height: 1; }
-.empty-val { font-size: 24px; font-weight: 600; color: var(--text-s); }
-.empty-sub { font-size: 11px; color: var(--text-s); margin-top: 4px; }
+    .sb-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-h);
+      letter-spacing: -0.02em;
+    }
 
-/* Risk Distribution */
-.risk-dist { display: flex; flex-direction: column; gap: 12px; }
-.risk-bar-container { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; display: flex; overflow: hidden; }
-.risk-bar { height: 100%; }
-.risk-legend { display: flex; justify-content: space-between; font-size: 12px; }
-.legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-b); }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .sb-name span {
+      color: var(--text-m);
+      font-weight: 400;
+    }
 
-/* Tables */
-table { width: 100%; border-collapse: collapse; }
-thead th {
-  padding: 12px 16px; font-size: 11px; font-weight: 500;
-  color: var(--text-m); text-align: left; border-bottom: 1px solid var(--border-color);
-}
-tbody td {
-  padding: 16px; font-size: 13px; color: var(--text-b);
-  border-bottom: 1px solid var(--border-color);
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: var(--bg-card-hover); }
+    .sb-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
 
-/* HNDL Panel */
-.hndl-panel {
-  background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(239,68,68,0.05));
-  border: 1px solid rgba(139,92,246,0.25); border-radius: var(--r-lg); padding: 24px;
-}
-.hndl-panel-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.hndl-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(139,92,246,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.hndl-icon svg { width: 20px; height: 20px; color: var(--purple); }
-.hndl-title { font-size: 15px; font-weight: 700; color: var(--text-h); }
-.hndl-sub { font-size: 12px; color: var(--text-m); margin-top: 2px; }
-.hndl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.hndl-metric { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-md); padding: 16px; }
-.hndl-metric-lbl { font-size: 11px; color: var(--text-s); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-.hndl-metric-val { font-size: 26px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
-.hndl-metric-sub { font-size: 11px; color: var(--text-m); margin-top: 6px; }
+    .sb-nav-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 16px 0;
+    }
 
-/* Crypto-Agility */
-.agility-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-lg); padding: 24px; }
-.agility-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.agility-title { font-size: 15px; font-weight: 700; color: var(--text-h); }
-.agility-score-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-.agility-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.agility-item { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-md); padding: 16px; text-align: center; }
-.agility-item-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-.agility-item-count { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-bottom: 4px; }
-.agility-item-lbl { font-size: 12px; color: var(--text-m); font-weight: 500; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: var(--r-sm);
+      color: var(--text-m);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--t);
+    }
 
-/* Badges */
-.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; border: 1px solid transparent; }
-.badge-crit { background: var(--red-bg); color: var(--red); border-color: rgba(239, 68, 68, 0.2); }
-.badge-high { background: var(--amber-bg); color: var(--amber); border-color: rgba(245, 158, 11, 0.2); }
-.badge-med { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234, 179, 8, 0.2); }
-.badge-low { background: var(--gray-bg); color: var(--gray); border-color: rgba(113, 113, 122, 0.2); }
-.badge-quant { background: var(--purple-bg); color: var(--purple); border-color: rgba(139, 92, 246, 0.2); }
+    .nav-item:hover {
+      color: var(--red);
+      background: var(--red-bg);
+    }
 
-/* Empty States */
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; gap: 12px; }
-.empty-msg { font-size: 13px; color: var(--text-m); }
+    .nav-item.active {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(21, 128, 61, 0.2);
+    }
 
-/* Top Risks List */
-.risk-list { display: flex; flex-direction: column; gap: 12px; }
-.risk-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm); }
-.risk-algo { font-size: 13px; font-weight: 500; color: var(--text-h); font-family: 'JetBrains Mono', monospace; }
-.risk-count { font-size: 12px; color: var(--text-s); }
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke-width: 1.5;
+    }
 
-/* Quick Actions */
-.qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.qa-btn { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm); text-align: left; cursor: pointer; transition: all var(--t); text-decoration: none; }
-.qa-btn:hover { border-color: var(--text-m); }
-.qa-btn svg { width: 20px; height: 20px; color: var(--text-h); }
-.qa-ttl { font-size: 13px; font-weight: 500; color: var(--text-h); }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--border-color);
+      color: var(--text-h);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
 
-/* Profile Avatar */
-.profile-avatar-wrap { position: relative; }
-.profile-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(135deg, #991b1b, #ef4444);
-  border: 2px solid rgba(239,68,68,0.2);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .2s ease;
-  box-shadow: 0 2px 8px rgba(239,68,68,0.15);
-  padding: 0;
-}
-.profile-avatar:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(239,68,68,0.25);
-  border-color: rgba(239,68,68,0.4);
-}
-.profile-initials {
-  font-size: 13px; font-weight: 700; color: white;
-  letter-spacing: 0.02em; line-height: 1;
-  font-family: 'Inter', sans-serif;
-  pointer-events: none;
-}
-.profile-dropdown {
-  position: absolute; top: calc(100% + 8px); right: 0;
-  width: 260px; background: var(--bg-card);
-  border: 1px solid var(--border-color); border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
-  opacity: 0; visibility: hidden;
-  transform: translateY(-6px) scale(0.97);
-  transition: all .2s ease;
-  z-index: 999;
-  overflow: hidden;
-}
-.profile-dropdown.open {
-  opacity: 1; visibility: visible;
-  transform: translateY(0) scale(1);
-}
-.pd-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px;
-}
-.pd-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, #991b1b, #ef4444);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.pd-avatar span {
-  font-size: 15px; font-weight: 700; color: white;
-  font-family: 'Inter', sans-serif;
-}
-.pd-info { overflow: hidden; }
-.pd-name {
-  font-size: 14px; font-weight: 600; color: var(--text-h);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.pd-email {
-  font-size: 12px; color: var(--text-m); margin-top: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.pd-divider { height: 1px; background: var(--border-color); margin: 0; }
-.pd-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  font-size: 13px; font-weight: 500; color: var(--text-b);
-  text-decoration: none; transition: all .15s ease;
-  cursor: pointer;
-}
-.pd-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.5; }
-.pd-item:hover { background: var(--bg-card-hover); color: var(--red); }
-.pd-logout { color: var(--red); }
-.pd-logout:hover { background: var(--red-bg); color: #f87171; }
+    /* Main Content Area */
+    .main {
+      margin-left: var(--sb-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+    }
 
-</style>
-<style>
-  /* Risk & Migration Specific Layout */
-  
-  /* Improved Header Banner */
-  .risk-hero {
-    position: relative;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 36px 24px; text-align: center; border-radius: 20px;
-    background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, #0F0F11 50%, rgba(139,92,246,0.1) 100%);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-  .risk-hero.risk-crit {
-    background: linear-gradient(135deg, rgba(239,68,68,0.18) 0%, #0F0F11 60%, rgba(153,27,27,0.25) 100%);
-    border-color: rgba(239, 68, 68, 0.4);
-    box-shadow: 0 12px 40px rgba(239,68,68,0.15), inset 0 1px 0 rgba(239,68,68,0.25);
-  }
-  .risk-hero.risk-high {
-    background: linear-gradient(135deg, rgba(245,158,11,0.18) 0%, #0F0F11 60%, rgba(180,83,9,0.25) 100%);
-    border-color: rgba(245, 158, 11, 0.4);
-    box-shadow: 0 12px 40px rgba(245,158,11,0.15), inset 0 1px 0 rgba(245,158,11,0.25);
-  }
-  
-  .risk-hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px; background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 20px;
-    font-size: 11px; font-weight: 700; color: var(--red);
-    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
-  }
-  .risk-hero-badge-pulse {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--red); box-shadow: 0 0 8px var(--red);
-    animation: pulseDot 1.5s infinite;
-  }
-  @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-  
-  .risk-hero-title { font-size: 12px; font-weight: 700; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-  .risk-hero-val {
-    font-size: 52px; font-weight: 900; line-height: 1;
-    letter-spacing: -0.03em; margin-bottom: 14px; font-family: 'Inter', sans-serif;
-  }
-  .risk-hero-val.crit {
-    background: linear-gradient(135deg, #f87171, #ef4444, #dc2626);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 10px rgba(239, 68, 68, 0.3));
-  }
-  .risk-hero-val.high {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.3));
-  }
-  .risk-hero-val.safe {
-    background: linear-gradient(135deg, #34d399, #10b981, #059669);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  
-  .risk-hero-sub {
-    font-size: 16px; font-weight: 600; color: var(--text-h);
-    margin-bottom: 8px; display: inline-flex; align-items: center; gap: 8px;
-  }
-  .risk-hero-sub-count {
-    background: rgba(255, 255, 255, 0.1); padding: 2px 10px;
-    border-radius: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text-h);
-  }
-  .risk-hero-desc { font-size: 13px; color: var(--text-m); max-width: 520px; margin: 0 auto; line-height: 1.6; }
-  
-  /* Improved Recommendation Cards */
-  .rec-list { display: flex; flex-direction: column; gap: 20px; }
-  .rec-card {
-    background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
-    padding: 24px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  }
-  .rec-card:hover {
-    border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-  }
-  .rec-card::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border-color);
-  }
-  .rec-card.p1::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
-  .rec-card.p2::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
-  .rec-card.p3::before { background: linear-gradient(180deg, #eab308, #ca8a04); }
-  
-  .rec-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-  .rec-algo { font-size: 19px; font-weight: 700; color: var(--text-h); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.02em; }
-  .rec-purpose { font-size: 13px; color: var(--text-m); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-  
-  .rec-priority-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.03em; text-transform: uppercase;
-  }
-  .rec-priority-badge.p1 { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
-  .rec-priority-badge.p2 { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
-  .rec-priority-badge.p3 { background: rgba(234, 179, 8, 0.12); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.25); }
-  
-  .rec-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
-  }
-  .rg-card {
-    background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);
-    border-radius: 10px; padding: 12px 14px;
-  }
-  .rg-lbl { font-size: 11px; color: var(--text-s); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; }
-  .rg-val { font-size: 13px; font-weight: 600; color: var(--text-h); }
-  
-  .rec-replace {
-    display: flex; align-items: center; gap: 14px;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
-    padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);
-  }
-  .replace-icon-wrap {
-    width: 32px; height: 32px; border-radius: 8px;
-    background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center;
-    color: var(--green); flex-shrink: 0;
-  }
-  .replace-lbl { font-size: 11px; color: var(--text-m); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-  .replace-val { font-size: 14px; font-weight: 700; color: var(--green); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-  
-  .rec-ft { display: flex; justify-content: flex-end; margin-top: 20px; }
-  .view-details-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px; border-radius: 10px; font-weight: 600; font-size: 13px;
-    background: var(--bg-main); border: 1px solid var(--border-color);
-    color: var(--text-h); cursor: pointer; transition: all 0.2s ease;
-  }
-  .view-details-btn:hover {
-    background: var(--bg-card-hover); border-color: var(--green); color: var(--green);
-  }
+    /* Header */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 32px;
+      background: var(--bg-main);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-  /* Migration Order Timeline */
-  .timeline { display: flex; flex-direction: column; padding: 16px 0; }
-  .tl-item { display: flex; gap: 16px; position: relative; padding-bottom: 24px; }
-  .tl-item:last-child { padding-bottom: 0; }
-  .tl-item::before {
-    content: ''; position: absolute; left: 15px; top: 32px; bottom: 0; width: 2px; background: var(--border-color);
-  }
-  .tl-item:last-child::before { display: none; }
-  
-  .tl-num {
-    width: 32px; height: 32px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color);
-    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-m); z-index: 1; flex-shrink: 0;
-  }
-  .tl-item.p1 .tl-num { border-color: var(--red); color: var(--red); background: var(--red-bg); }
-  
-  .tl-content { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-sm); padding: 16px; flex: 1; }
-  .tl-hd { display: flex; justify-content: space-between; margin-bottom: 8px; }
-  .tl-algo { font-size: 14px; font-weight: 600; color: var(--text-h); font-family: 'JetBrains Mono', monospace; }
-  .tl-dep { font-size: 11px; color: var(--text-s); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; background: var(--bg-card); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); }
-  
-  /* Drawers */
-  .drawer-overlay {
-    position: fixed; inset: 0; background: rgba(12, 26, 46, 0.6); backdrop-filter: blur(4px);
-    z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s ease;
-  }
-  .drawer-overlay.active { opacity: 1; visibility: visible; }
-  .drawer {
-    position: fixed; top: 0; right: 0; bottom: 0; width: 500px; background: var(--bg-main);
-    box-shadow: -4px 0 24px rgba(0,0,0,0.2); z-index: 1001; transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;
-    border-left: 1px solid var(--border-color);
-  }
-  .drawer.active { transform: translateX(0); }
-  .drawer-hd { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); }
-  .drawer-title { font-size: 16px; font-weight: 600; color: var(--text-h); }
-  .drawer-close { background: none; border: none; color: var(--text-m); cursor: pointer; padding: 4px; }
-  .drawer-close:hover { color: var(--text-h); }
-  .drawer-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
-  
-  .impact-graph { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-sm); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-  .ig-node { background: var(--bg-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; color: var(--text-h); text-align: center; min-width: 150px; }
-  .ig-node.vuln { border-color: rgba(239, 68, 68, 0.5); background: var(--red-bg); color: var(--red); }
-  .ig-arrow { color: var(--text-s); font-size: 16px; line-height: 1; }
-  
-  .explanation-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--r-sm); padding: 16px; }
-  .explanation-box h4 { margin: 0 0 8px 0; font-size: 13px; color: var(--text-h); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-  .explanation-box p { margin: 0; font-size: 13px; color: var(--text-m); line-height: 1.5; }
+    .tb-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-  /* Mosca Risk Categorization Panel */
-  .mosca-panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--r-lg);
-    padding: 24px;
-    margin-bottom: 0;
-  }
-  .mosca-hd {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .mosca-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .mosca-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(245, 158, 11, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .mosca-icon svg {
-    width: 22px;
-    height: 22px;
-    color: var(--amber);
-  }
-  .mosca-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-h);
-  }
-  .mosca-sub {
-    font-size: 12px;
-    color: var(--text-m);
-    margin-top: 2px;
-  }
-  .mosca-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-  .mosca-card {
-    background: var(--bg-main);
-    border: 1px solid var(--border-color);
-    border-radius: var(--r-md);
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-  }
-  .mosca-card:hover {
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  }
-  .mosca-card.active {
-    border-color: var(--card-accent, #38bdf8) !important;
-    box-shadow: 0 0 0 1px var(--card-accent, #38bdf8), 0 8px 24px rgba(0, 0, 0, 0.35);
-    background: var(--card-active-bg, rgba(56, 189, 248, 0.05)) !important;
-  }
-  .mosca-card-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 3px 8px;
-    border-radius: 12px;
-    align-self: flex-start;
-    margin-bottom: 12px;
-  }
-  .mosca-card-count {
-    font-size: 32px;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', monospace;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-  .mosca-card-ttl {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-h);
-    margin-bottom: 6px;
-  }
-  .mosca-card-desc {
-    font-size: 12px;
-    color: var(--text-m);
-    line-height: 1.5;
-    flex: 1;
-  }
-  .mosca-card-sub {
-    font-size: 11px;
-    color: var(--text-s);
-    margin-top: 12px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-color);
-  }
-  .prop-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .prop-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .prop-lbl {
-    font-size: 11px;
-    color: var(--text-s);
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  .prop-val {
-    font-size: 14px;
-    color: var(--text-h);
-    font-weight: 500;
-  }
-</style>
+    .tb-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-h);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .tb-sub {
+      font-size: 13px;
+      color: var(--text-m);
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Buttons */
+    .btn-p {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--red);
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+      transition: opacity var(--t);
+      text-decoration: none;
+    }
+
+    .btn-p:hover {
+      opacity: 0.9;
+    }
+
+    .btn-sec {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-b);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--t);
+    }
+
+    .btn-sec:hover {
+      background: var(--bg-card);
+      border-color: var(--text-s);
+    }
+
+    /* Dashboard Grid */
+    .content {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .row {
+      display: flex;
+      gap: 24px;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .col-2 {
+      flex: 2;
+    }
+
+    .col-1 {
+      flex: 1;
+    }
+
+    /* Cards */
+    .gcard {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      position: relative;
+    }
+
+    .gc-hd {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .gc-ttl {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .gc-sub {
+      font-size: 12px;
+      color: var(--text-m);
+      margin-top: 4px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+
+    .scard {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 16px;
+    }
+
+    .scard-primary {
+      background: linear-gradient(135deg, #991b1b, #dc2626);
+      color: #ffffff;
+      border: none;
+    }
+
+    .scard-primary .sc-lbl,
+    .scard-primary .empty-sub {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .scard-primary .sc-val,
+    .scard-primary .empty-val {
+      color: #ffffff;
+    }
+
+    .sc-lbl {
+      font-size: 12px;
+      color: var(--text-m);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .sc-val {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-h);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+
+    .empty-val {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-s);
+    }
+
+    .empty-sub {
+      font-size: 11px;
+      color: var(--text-s);
+      margin-top: 4px;
+    }
+
+    /* Risk Distribution */
+    .risk-dist {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .risk-bar-container {
+      width: 100%;
+      height: 8px;
+      background: var(--border-color);
+      border-radius: 4px;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .risk-bar {
+      height: 100%;
+    }
+
+    .risk-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-b);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-m);
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody td {
+      padding: 16px;
+      font-size: 13px;
+      color: var(--text-b);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-card-hover);
+    }
+
+    /* HNDL Panel */
+    .hndl-panel {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(239, 68, 68, 0.05));
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: var(--r-lg);
+      padding: 24px;
+    }
+
+    .hndl-panel-hd {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .hndl-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .hndl-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--purple);
+    }
+
+    .hndl-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-h);
+    }
+
+    .hndl-sub {
+      font-size: 12px;
+      color: var(--text-m);
+      margin-top: 2px;
+    }
+
+    .hndl-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .hndl-metric {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 16px;
+    }
+
+    .hndl-metric-lbl {
+      font-size: 11px;
+      color: var(--text-s);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .hndl-metric-val {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+
+    .hndl-metric-sub {
+      font-size: 11px;
+      color: var(--text-m);
+      margin-top: 6px;
+    }
+
+    /* Crypto-Agility */
+    .agility-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 24px;
+    }
+
+    .agility-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .agility-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-h);
+    }
+
+    .agility-score-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .agility-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agility-item {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .agility-item-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+
+    .agility-item-count {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .agility-item-lbl {
+      font-size: 12px;
+      color: var(--text-m);
+      font-weight: 500;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    .badge-crit {
+      background: var(--red-bg);
+      color: var(--red);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .badge-high {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-med {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+      border-color: rgba(234, 179, 8, 0.2);
+    }
+
+    .badge-low {
+      background: var(--gray-bg);
+      color: var(--gray);
+      border-color: rgba(113, 113, 122, 0.2);
+    }
+
+    .badge-quant {
+      background: var(--purple-bg);
+      color: var(--purple);
+      border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    /* Empty States */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-msg {
+      font-size: 13px;
+      color: var(--text-m);
+    }
+
+    /* Top Risks List */
+    .risk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .risk-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+    }
+
+    .risk-algo {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-h);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .risk-count {
+      font-size: 12px;
+      color: var(--text-s);
+    }
+
+    /* Quick Actions */
+    .qa-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .qa-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      text-align: left;
+      cursor: pointer;
+      transition: all var(--t);
+      text-decoration: none;
+    }
+
+    .qa-btn:hover {
+      border-color: var(--text-m);
+    }
+
+    .qa-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-h);
+    }
+
+    .qa-ttl {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-h);
+    }
+
+    /* Profile Avatar */
+    .profile-avatar-wrap {
+      position: relative;
+    }
+
+    .profile-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      border: 2px solid rgba(239, 68, 68, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s ease;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+      padding: 0;
+    }
+
+    .profile-avatar:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .profile-initials {
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      font-family: 'Inter', sans-serif;
+      pointer-events: none;
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 260px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px) scale(0.97);
+      transition: all .2s ease;
+      z-index: 999;
+      overflow: hidden;
+    }
+
+    .profile-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .pd-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .pd-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pd-avatar span {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .pd-info {
+      overflow: hidden;
+    }
+
+    .pd-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-h);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pd-email {
+      font-size: 12px;
+      color: var(--text-m);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pd-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 0;
+    }
+
+    .pd-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-b);
+      text-decoration: none;
+      transition: all .15s ease;
+      cursor: pointer;
+    }
+
+    .pd-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke-width: 1.5;
+    }
+
+    .pd-item:hover {
+      background: var(--bg-card-hover);
+      color: var(--red);
+    }
+
+    .pd-logout {
+      color: var(--red);
+    }
+
+    .pd-logout:hover {
+      background: var(--red-bg);
+      color: #f87171;
+    }
+  </style>
+  <style>
+    /* Risk & Migration Specific Layout */
+
+    /* Improved Header Banner */
+    .risk-hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 24px;
+      text-align: center;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, #0F0F11 50%, rgba(139, 92, 246, 0.1) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .risk-hero.risk-crit {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, #0F0F11 60%, rgba(153, 27, 27, 0.25) 100%);
+      border-color: rgba(239, 68, 68, 0.4);
+      box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(239, 68, 68, 0.25);
+    }
+
+    .risk-hero.risk-high {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, #0F0F11 60%, rgba(180, 83, 9, 0.25) 100%);
+      border-color: rgba(245, 158, 11, 0.4);
+      box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(245, 158, 11, 0.25);
+    }
+
+    .risk-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .risk-hero-badge-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(1.3);
+      }
+    }
+
+    .risk-hero-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-m);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .risk-hero-val {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .risk-hero-val.crit {
+      background: linear-gradient(135deg, #f87171, #ef4444, #dc2626);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(239, 68, 68, 0.3));
+    }
+
+    .risk-hero-val.high {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.3));
+    }
+
+    .risk-hero-val.safe {
+      background: linear-gradient(135deg, #34d399, #10b981, #059669);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .risk-hero-sub {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-h);
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .risk-hero-sub-count {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-h);
+    }
+
+    .risk-hero-desc {
+      font-size: 13px;
+      color: var(--text-m);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Improved Recommendation Cards */
+    .rec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .rec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .rec-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .rec-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--border-color);
+    }
+
+    .rec-card.p1::before {
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+    }
+
+    .rec-card.p2::before {
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+    }
+
+    .rec-card.p3::before {
+      background: linear-gradient(180deg, #eab308, #ca8a04);
+    }
+
+    .rec-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .rec-algo {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-h);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.02em;
+    }
+
+    .rec-purpose {
+      font-size: 13px;
+      color: var(--text-m);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rec-priority-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .rec-priority-badge.p1 {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .rec-priority-badge.p2 {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .rec-priority-badge.p3 {
+      background: rgba(234, 179, 8, 0.12);
+      color: #fde047;
+      border: 1px solid rgba(234, 179, 8, 0.25);
+    }
+
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .rg-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .rg-lbl {
+      font-size: 11px;
+      color: var(--text-s);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .rg-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .rec-replace {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .replace-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .replace-lbl {
+      font-size: 11px;
+      color: var(--text-m);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .replace-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .rec-ft {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .view-details-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      color: var(--text-h);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .view-details-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* Migration Order Timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 16px;
+      position: relative;
+      padding-bottom: 24px;
+    }
+
+    .tl-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 32px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border-color);
+    }
+
+    .tl-item:last-child::before {
+      display: none;
+    }
+
+    .tl-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-main);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-m);
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    .tl-item.p1 .tl-num {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .tl-content {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      padding: 16px;
+      flex: 1;
+    }
+
+    .tl-hd {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .tl-algo {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-h);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tl-dep {
+      font-size: 11px;
+      color: var(--text-s);
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Drawers */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 26, 46, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 500px;
+      background: var(--bg-main);
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border-color);
+    }
+
+    .drawer.active {
+      transform: translateX(0);
+    }
+
+    .drawer-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-card);
+    }
+
+    .drawer-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-h);
+    }
+
+    .drawer-close {
+      background: none;
+      border: none;
+      color: var(--text-m);
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .drawer-close:hover {
+      color: var(--text-h);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .impact-graph {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ig-node {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-h);
+      text-align: center;
+      min-width: 150px;
+    }
+
+    .ig-node.vuln {
+      border-color: rgba(239, 68, 68, 0.5);
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .ig-arrow {
+      color: var(--text-s);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .explanation-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-sm);
+      padding: 16px;
+    }
+
+    .explanation-box h4 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--text-h);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .explanation-box p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-m);
+      line-height: 1.5;
+    }
+
+    /* Mosca Risk Categorization Panel */
+    .mosca-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      margin-bottom: 0;
+    }
+
+    .mosca-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .mosca-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mosca-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(245, 158, 11, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mosca-icon svg {
+      width: 22px;
+      height: 22px;
+      color: var(--amber);
+    }
+
+    .mosca-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-h);
+    }
+
+    .mosca-sub {
+      font-size: 12px;
+      color: var(--text-m);
+      margin-top: 2px;
+    }
+
+    .mosca-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .mosca-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-md);
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mosca-card:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .mosca-card.active {
+      border-color: var(--card-accent, #38bdf8) !important;
+      box-shadow: 0 0 0 1px var(--card-accent, #38bdf8), 0 8px 24px rgba(0, 0, 0, 0.35);
+      background: var(--card-active-bg, rgba(56, 189, 248, 0.05)) !important;
+    }
+
+    .mosca-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 12px;
+      align-self: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .mosca-card-count {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .mosca-card-ttl {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-h);
+      margin-bottom: 6px;
+    }
+
+    .mosca-card-desc {
+      font-size: 12px;
+      color: var(--text-m);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .mosca-card-sub {
+      font-size: 11px;
+      color: var(--text-s);
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .prop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .prop-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prop-lbl {
+      font-size: 11px;
+      color: var(--text-s);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .prop-val {
+      font-size: 14px;
+      color: var(--text-h);
+      font-weight: 500;
+    }
+  </style>
   <link rel="stylesheet" href="assets/css/global.css">
 </head>
+
 <body>
-<div class="app-layout">
+  <div class="app-layout">
 
-<aside class="app-sidebar" id="app-sidebar"></aside>
+    <aside class="app-sidebar" id="app-sidebar"></aside>
 
-<div class="app-main">
-  <header class="app-topbar" id="app-topbar"></header>
-  <main class="app-page-container">
-  
+    <div class="app-main">
+      <header class="app-topbar" id="app-topbar"></header>
+      <main class="app-page-container">
 
-  <div class="content">
-    
-    <!-- Empty State -->
-    <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        <div style="font-size:18px; font-weight:600; color:var(--text-h);">No Risk Assessment Available</div>
-        <div class="empty-msg">Run a repository scan to calculate cryptographic and quantum risk.</div>
-        <button class="btn-p" style="margin-top:16px;" onclick="window.location.href='scan.html'">Scan Repository</button>
-      </div>
-    </div>
 
-    <!-- No Migration Required State -->
-    <div id="view-safe" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--green);margin-bottom:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <div style="font-size:18px; font-weight:600; color:var(--text-h);">No Migration Required</div>
-        <div class="empty-msg">The latest scan did not identify any cryptographic components requiring migration.</div>
-        <button class="btn-sec" style="margin-top:16px;" onclick="window.location.href='cbom.html'">View CBOM</button>
-      </div>
-    </div>
+        <div class="content">
 
-    <!-- Active Migration View -->
-    <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
-      
-      <div class="risk-hero" id="hero-card">
-        <div class="risk-hero-badge">
-          <span class="risk-hero-badge-pulse"></span>
-          <span>Quantum Security Posture</span>
-        </div>
-        <div class="risk-hero-title">Overall Quantum Risk</div>
-        <div class="risk-hero-val" id="hero-risk">LOW</div>
-        <div class="risk-hero-sub">
-          <span class="risk-hero-sub-count" id="hero-count">0</span> components require attention
-        </div>
-        <div class="risk-hero-desc">Based on cryptographic assets identified in the latest scan. Immediate action recommended for Critical and Quantum-Vulnerable components.</div>
-      </div>
-      
-      <!-- GLOBAL Z & MIGRATION LOOKUP (Y) SETTINGS PANEL -->
-      <div class="gcard" id="settings-card" style="border: 1px solid rgba(139, 92, 246, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center; color: var(--purple);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--text-h);">Quantum Arrival Estimate (Z) & Mosca Engine Controls</div>
-              <div style="font-size: 12px; color: var(--text-m);">Configure global quantum threat horizon (Z) and migration complexity estimates (Y).</div>
+          <!-- Empty State -->
+          <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div style="font-size:18px; font-weight:600; color:var(--text-h);">No Risk Assessment Available</div>
+              <div class="empty-msg">Run a repository scan to calculate cryptographic and quantum risk.</div>
+              <button class="btn-p" style="margin-top:16px;" onclick="window.location.href='scan.html'">Scan
+                Repository</button>
             </div>
           </div>
-          <button class="btn-sec" id="toggle-y-lookup-btn" onclick="toggleYLookupTable()" style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <span>Edit Migration (Y) Table</span>
-          </button>
-        </div>
 
-        <!-- Global Z Slider & Input -->
-        <div style="margin-top: 20px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-md); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 280px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <label for="global-z-slider" style="font-size: 13px; font-weight: 600; color: var(--text-h);">
-                CRQC Quantum Threat Horizon (Z): <span id="global-z-val-display" style="color: var(--purple); font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;">12</span> Years
-              </label>
-              <span style="font-size: 11px; color: var(--text-s);">Range: 1 – 30 Years</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 16px;">
-              <input type="range" id="global-z-slider" min="1" max="30" step="1" value="12" oninput="onGlobalZChange(this.value)" style="flex: 1; accent-color: var(--purple); cursor: pointer;">
-              <input type="number" id="global-z-input" min="1" max="30" step="1" value="12" onchange="onGlobalZChange(this.value)" style="width: 75px; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-h); font-weight: 700; font-family: 'JetBrains Mono', monospace; text-align: center;">
+          <!-- No Migration Required State -->
+          <div id="view-safe" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                style="width:48px;height:48px;color:var(--green);margin-bottom:8px">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div style="font-size:18px; font-weight:600; color:var(--text-h);">No Migration Required</div>
+              <div class="empty-msg">The latest scan did not identify any cryptographic components requiring migration.
+              </div>
+              <button class="btn-sec" style="margin-top:16px;" onclick="window.location.href='cbom.html'">View
+                CBOM</button>
             </div>
           </div>
-        </div>
 
-        <!-- Expandable Y Lookup Table Editor -->
-        <div id="y-lookup-editor-panel" style="display: none; margin-top: 16px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-md);">
-          <div style="font-size: 14px; font-weight: 700; color: var(--text-h); margin-bottom: 4px;">Migration Time (Y) Lookup Table Editor</div>
-          <div style="font-size: 12px; color: var(--text-m); margin-bottom: 16px;">Set expected migration durations in years based on artefact type and implementation complexity.</div>
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; font-size: 13px;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                  <th style="padding: 8px 12px; text-align: left; color: var(--text-m);">Artefact Type</th>
-                  <th style="padding: 8px 12px; text-align: center; color: var(--text-m);">Simple Migration (Years)</th>
-                  <th style="padding: 8px 12px; text-align: center; color: var(--text-m);">Complex Migration (Years)</th>
-                </tr>
-              </thead>
-              <tbody id="y-lookup-tbody">
+          <!-- Active Migration View -->
+          <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
+
+            <div class="risk-hero" id="hero-card">
+              <div class="risk-hero-badge">
+                <span class="risk-hero-badge-pulse"></span>
+                <span>Quantum Security Posture</span>
+              </div>
+              <div class="risk-hero-title">Overall Quantum Risk</div>
+              <div class="risk-hero-val" id="hero-risk">LOW</div>
+              <div class="risk-hero-sub">
+                <span class="risk-hero-sub-count" id="hero-count">0</span> components require attention
+              </div>
+              <div class="risk-hero-desc">Based on cryptographic assets identified in the latest scan. Immediate action
+                recommended for Critical and Quantum-Vulnerable components.</div>
+            </div>
+
+            <!-- GLOBAL Z & MIGRATION LOOKUP (Y) SETTINGS PANEL -->
+            <div class="gcard" id="settings-card"
+              style="border: 1px solid rgba(139, 92, 246, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div
+                    style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center; color: var(--purple);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width:24px;height:24px;">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-h);">Quantum Arrival Estimate (Z) &
+                      Mosca Engine Controls</div>
+                    <div style="font-size: 12px; color: var(--text-m);">Configure global quantum threat horizon (Z) and
+                      migration complexity estimates (Y).</div>
+                  </div>
+                </div>
+                <button class="btn-sec" id="toggle-y-lookup-btn" onclick="toggleYLookupTable()"
+                  style="display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:16px;height:16px;">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                  <span>Edit Migration (Y) Table</span>
+                </button>
+              </div>
+
+              <!-- Global Z Slider & Input -->
+              <div
+                style="margin-top: 20px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-md); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 280px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label for="global-z-slider" style="font-size: 13px; font-weight: 600; color: var(--text-h);">
+                      CRQC Quantum Threat Horizon (Z): <span id="global-z-val-display"
+                        style="color: var(--purple); font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;">12</span>
+                      Years
+                    </label>
+                    <span style="font-size: 11px; color: var(--text-s);">Range: 1 – 30 Years</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                    <input type="range" id="global-z-slider" min="1" max="30" step="1" value="12"
+                      oninput="onGlobalZChange(this.value)"
+                      style="flex: 1; accent-color: var(--purple); cursor: pointer;">
+                    <input type="number" id="global-z-input" min="1" max="30" step="1" value="12"
+                      onchange="onGlobalZChange(this.value)"
+                      style="width: 75px; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-h); font-weight: 700; font-family: 'JetBrains Mono', monospace; text-align: center;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Expandable Y Lookup Table Editor -->
+              <div id="y-lookup-editor-panel"
+                style="display: none; margin-top: 16px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--r-md);">
+                <div style="font-size: 14px; font-weight: 700; color: var(--text-h); margin-bottom: 4px;">Migration Time
+                  (Y) Lookup Table Editor</div>
+                <div style="font-size: 12px; color: var(--text-m); margin-bottom: 16px;">Set expected migration
+                  durations in years based on artefact type and implementation complexity.</div>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; font-size: 13px;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 8px 12px; text-align: left; color: var(--text-m);">Artefact Type</th>
+                        <th style="padding: 8px 12px; text-align: center; color: var(--text-m);">Simple Migration
+                          (Years)</th>
+                        <th style="padding: 8px 12px; text-align: center; color: var(--text-m);">Complex Migration
+                          (Years)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="y-lookup-tbody">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2D RISK MATRIX / HEATMAP SECTION -->
+            <div class="gcard" id="matrix-section">
+              <div class="gc-hd"
+                style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div class="gc-ttl" style="font-size: 18px;">2D Mosca Risk Heatmap Matrix</div>
+                  <div class="gc-sub">Interactive 4x4 matrix plotting Mosca Urgency Tier vs Business Criticality. Click
+                    any cell to filter the priority list below.</div>
+                </div>
+                <div id="matrix-filter-reset" style="display: none;">
+                  <button class="btn-sec" style="padding: 4px 12px; font-size: 12px;"
+                    onclick="resetMatrixFilter()">Reset Matrix Filter</button>
+                </div>
+              </div>
+              <div id="matrix-grid-container">
                 <!-- Rendered dynamically -->
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            <!-- PRIORITY-RANKED LIST ("FIX THIS FIRST") -->
+            <div class="gcard" id="priority-ranked-section">
+              <div class="gc-hd"
+                style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div class="gc-ttl" style="font-size: 18px;">Priority-Ranked Fix List (Mosca Theorem)</div>
+                  <div class="gc-sub" id="priority-table-count">Sorted by calculated Priority Score = Tier Weight ×
+                    Criticality Score</div>
+                </div>
+              </div>
+              <div style="overflow-x: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="padding: 12px 16px; text-align: left;">Finding Name & Location</th>
+                      <th style="padding: 12px 16px; text-align: center;">Type</th>
+                      <th style="padding: 12px 16px; text-align: center;">X (Lifetime)</th>
+                      <th style="padding: 12px 16px; text-align: center;">Y (Migration)</th>
+                      <th style="padding: 12px 16px; text-align: center;">Z (Threat)</th>
+                      <th style="padding: 12px 16px; text-align: center;">Urgency Margin</th>
+                      <th style="padding: 12px 16px; text-align: center;">Urgency Tier</th>
+                      <th style="padding: 12px 16px; text-align: center;">Business Criticality</th>
+                      <th
+                        style="padding: 12px 16px; text-align: center; background: rgba(139, 92, 246, 0.1); color: var(--purple); font-weight: 700;">
+                        Priority Score</th>
+                    </tr>
+                  </thead>
+                  <tbody id="priority-ranked-tbody">
+                    <!-- Rendered dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="stats-grid">
+              <div class="scard">
+                <div class="sc-lbl">Components at Risk</div>
+                <div class="sc-val" id="stat-risk">0</div>
+              </div>
+              <div class="scard">
+                <div class="sc-lbl">Total Findings</div>
+                <div class="sc-val" id="stat-total" style="color:var(--text-h)">0</div>
+              </div>
+              <div class="scard">
+                <div class="sc-lbl">Critical</div>
+                <div class="sc-val" id="stat-crit" style="color:var(--red)">0</div>
+              </div>
+              <div class="scard">
+                <div class="sc-lbl">High</div>
+                <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
+              </div>
+              <div class="scard">
+                <div class="sc-lbl">Quantum Vulnerable</div>
+                <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
+              </div>
+              <div class="scard scard-primary"
+                style="background:linear-gradient(135deg, var(--text-h), var(--bg-sidebar));">
+                <div class="sc-lbl" style="color:rgba(255,255,255,0.7)">Migration Candidates</div>
+                <div class="sc-val" id="stat-candidates" style="color:#fff">0</div>
+              </div>
+            </div>
+
+            <!-- HNDL Aggregate Analysis Panel -->
+            <div class="hndl-panel" id="hndl-panel" style="display:none;">
+              <div class="hndl-panel-hd">
+                <div class="hndl-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="hndl-title">HNDL Aggregate Analysis (Mosca's Inequality)</div>
+                  <div class="hndl-sub">X (migration) + Y (data lifetime) &gt; Z (quantum threat)</div>
+                </div>
+              </div>
+              <div class="hndl-grid">
+                <div class="hndl-metric">
+                  <div class="hndl-metric-lbl">Overall HNDL Risk</div>
+                  <div class="hndl-metric-val" id="hndl-overall" style="color:var(--red);">—</div>
+                  <div class="hndl-metric-sub">Aggregate vulnerability score</div>
+                </div>
+                <div class="hndl-metric">
+                  <div class="hndl-metric-lbl">Vulnerable Assets</div>
+                  <div class="hndl-metric-val" id="hndl-assets" style="color:var(--purple);">0</div>
+                  <div class="hndl-metric-sub">Quantum-broken algorithms in use</div>
+                </div>
+                <div class="hndl-metric">
+                  <div class="hndl-metric-lbl">At-Risk Encrypted Data</div>
+                  <div class="hndl-metric-val" id="hndl-data-pts" style="color:var(--amber);">0</div>
+                  <div class="hndl-metric-sub">Unique code locations exposed</div>
+                </div>
+                <div class="hndl-metric">
+                  <div class="hndl-metric-lbl">HNDL Score Range</div>
+                  <div class="hndl-metric-val" id="hndl-range" style="font-size:16px; color:var(--text-h);">—</div>
+                  <div class="hndl-metric-sub">Low → High across all findings</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Crypto-Agility Readiness Section -->
+            <div class="agility-panel" id="agility-panel" style="display:none;">
+              <div class="agility-hd">
+                <div class="agility-title">Crypto-Agility Readiness</div>
+                <div id="agility-score-wrap"></div>
+              </div>
+              <div class="agility-grid">
+                <div class="agility-item">
+                  <div class="agility-item-icon" style="background:rgba(16,185,129,0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"
+                      style="width:18px;height:18px;">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="agility-item-count" style="color:var(--green);" id="agile-count">0</div>
+                  <div class="agility-item-lbl">Agile (PQC-ready)</div>
+                </div>
+                <div class="agility-item">
+                  <div class="agility-item-icon" style="background:rgba(245,158,11,0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"
+                      style="width:18px;height:18px;">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div class="agility-item-count" style="color:var(--amber);" id="hardcoded-count">0</div>
+                  <div class="agility-item-lbl">Hardcoded (inflexible)</div>
+                </div>
+                <div class="agility-item">
+                  <div class="agility-item-icon" style="background:rgba(239,68,68,0.1);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+                      style="width:18px;height:18px;">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <div class="agility-item-count" style="color:var(--red);" id="needs-update-count">0</div>
+                  <div class="agility-item-lbl">Requires Update</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Overview Charts -->
+            <div class="row">
+              <div class="col col-2">
+                <div class="gcard">
+                  <div class="gc-hd">
+                    <div class="gc-ttl">Risk Distribution</div>
+                  </div>
+                  <div class="risk-dist" style="margin-top:16px;">
+                    <div class="risk-bar-container" style="height:24px; border-radius:12px;">
+                      <div class="risk-bar" id="rb-crit" style="width:0%; background:var(--red);"></div>
+                      <div class="risk-bar" id="rb-high" style="width:0%; background:var(--amber);"></div>
+                      <div class="risk-bar" id="rb-med" style="width:0%; background:var(--yellow);"></div>
+                      <div class="risk-bar" id="rb-low" style="width:0%; background:var(--gray);"></div>
+                    </div>
+                    <div class="risk-legend" style="margin-top:16px;">
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--red)"></div>Critical
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--amber)"></div>High
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--yellow)"></div>Medium
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--gray)"></div>Low
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-1">
+                <div class="gcard" style="height:100%;">
+                  <div class="gc-hd">
+                    <div class="gc-ttl">Quantum Exposure</div>
+                  </div>
+                  <div
+                    style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm); margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div style="width:12px; height:12px; border-radius:50%; background:var(--purple);"></div>
+                      <div style="font-size:13px; font-weight:500;">Quantum Vulnerable</div>
+                    </div>
+                    <div style="font-size:18px; font-weight:700; color:var(--purple);" id="qe-vuln">0</div>
+                  </div>
+                  <div
+                    style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div style="width:12px; height:12px; border-radius:50%; background:var(--green);"></div>
+                      <div style="font-size:13px; font-weight:500;">Not Identified as Vulnerable</div>
+                    </div>
+                    <div style="font-size:18px; font-weight:700; color:var(--text-m);" id="qe-safe">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mosca Risk Categorization Section -->
+            <div class="mosca-panel" id="mosca-panel" style="display:none;">
+              <div class="mosca-hd">
+                <div class="mosca-title-wrap">
+                  <div class="mosca-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="mosca-title">Mosca Risk Categorization</div>
+                    <div class="mosca-sub">Structured quantum risk categorization using Mosca's Inequality (X + Y vs Z
+                      threat horizon). Click a category to filter recommendations below.</div>
+                  </div>
+                </div>
+                <div id="mosca-filter-indicator" style="display:none; align-items:center; gap:8px;">
+                  <span style="font-size:12px; color:var(--text-m);">Filtered by: <strong id="mosca-active-filter-name"
+                      style="color:var(--text-h);">-</strong></span>
+                  <button class="btn-sec" style="padding:4px 10px; font-size:11px;" onclick="clearMoscaFilter()">Clear
+                    Filter</button>
+                </div>
+              </div>
+              <div class="mosca-grid">
+                <!-- Card 1: Vulnerable Now -->
+                <div class="mosca-card" id="mcard-now" onclick="setMoscaCategoryFilter('VULNERABLE_NOW')"
+                  style="--card-accent: var(--red); --card-active-bg: rgba(239, 68, 68, 0.08);">
+                  <div class="mosca-card-badge"
+                    style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3);">
+                    Inequality Met • X + Y &gt; Z
+                  </div>
+                  <div class="mosca-card-count" id="mc-count-now" style="color:var(--red);">0</div>
+                  <div class="mosca-card-ttl">Vulnerable Now</div>
+                  <div class="mosca-card-desc">Migration time + data lifetime exceeds the quantum threat horizon.
+                    Cryptographic data will remain exposed after CRQC arrival.</div>
+                  <div class="mosca-card-sub" id="mc-sub-now">0 components affected</div>
+                </div>
+
+                <!-- Card 2: Vulnerable Within Threat Horizon -->
+                <div class="mosca-card" id="mcard-horizon" onclick="setMoscaCategoryFilter('WITHIN_HORIZON')"
+                  style="--card-accent: var(--amber); --card-active-bg: rgba(245, 158, 11, 0.08);">
+                  <div class="mosca-card-badge"
+                    style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3);">
+                    Buffer ≤ 3.0 yrs • Z - (X + Y) ≤ 3y
+                  </div>
+                  <div class="mosca-card-count" id="mc-count-horizon" style="color:var(--amber);">0</div>
+                  <div class="mosca-card-ttl">Vulnerable Within Threat Horizon</div>
+                  <div class="mosca-card-desc">Inequality not yet breached, but transition margin is under 3.0 years.
+                    Immediate migration planning required before buffer collapses.</div>
+                  <div class="mosca-card-sub" id="mc-sub-horizon">0 components affected</div>
+                </div>
+
+                <!-- Card 3: Safe Under Current Timeline -->
+                <div class="mosca-card" id="mcard-safe" onclick="setMoscaCategoryFilter('SAFE_TIMELINE')"
+                  style="--card-accent: var(--green); --card-active-bg: rgba(16, 185, 129, 0.08);">
+                  <div class="mosca-card-badge"
+                    style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3);">
+                    Runway &gt; 3.0 yrs • Comfortable Margin
+                  </div>
+                  <div class="mosca-card-count" id="mc-count-safe" style="color:var(--green);">0</div>
+                  <div class="mosca-card-ttl">Safe Under Current Timeline</div>
+                  <div class="mosca-card-desc">Sufficient migration buffer exists before CRQC threat. Component can be
+                    upgraded in planned software maintenance cycles.</div>
+                  <div class="mosca-card-sub" id="mc-sub-safe">0 components affected</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Migration Recommendations List -->
+              <div class="col col-2">
+                <div class="gc-hd" style="margin-bottom:8px;">
+                  <div class="gc-ttl" style="font-size:18px;">Migration Recommendations</div>
+                  <div class="gc-sub">Cryptographic components requiring replacement</div>
+                </div>
+                <div class="rec-list" id="recommendations-list">
+                  <!-- Dynamic Content -->
+                </div>
+              </div>
+
+              <!-- Sidebar Order -->
+              <div class="col col-1">
+                <div class="gcard">
+                  <div class="gc-hd" style="margin-bottom:8px;">
+                    <div class="gc-ttl">Recommended Migration Order</div>
+                  </div>
+                  <div class="timeline" id="migration-timeline">
+                    <!-- Dynamic Content -->
+                  </div>
+                </div>
+
+                <div class="gcard">
+                  <div class="gc-hd">
+                    <div class="gc-ttl">Migration Priority</div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div
+                      style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
+                      <span style="font-weight:600; color:var(--red);">Priority 1 — Immediate</span>
+                      <span id="p1-count">0</span>
+                    </div>
+                    <div
+                      style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
+                      <span style="font-weight:600; color:var(--amber);">Priority 2 — High</span>
+                      <span id="p2-count">0</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px;">
+                      <span style="font-weight:600; color:var(--yellow);">Priority 3 — Planned</span>
+                      <span id="p3-count">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+    </div>
 
-      <!-- 2D RISK MATRIX / HEATMAP SECTION -->
-      <div class="gcard" id="matrix-section">
-        <div class="gc-hd" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Detail Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+      <div class="drawer-hd">
+        <div class="drawer-title">Migration Recommendation</div>
+        <button class="drawer-close" onclick="closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="drawer-body">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <div class="gc-ttl" style="font-size: 18px;">2D Mosca Risk Heatmap Matrix</div>
-            <div class="gc-sub">Interactive 4x4 matrix plotting Mosca Urgency Tier vs Business Criticality. Click any cell to filter the priority list below.</div>
+            <div style="font-size:20px; font-weight:700; color:var(--text-h); font-family: 'JetBrains Mono', monospace;"
+              id="drw-algo">Algorithm</div>
+            <div style="font-size:13px; color:var(--text-s); margin-top:4px;" id="drw-purpose">Purpose</div>
           </div>
-          <div id="matrix-filter-reset" style="display: none;">
-            <button class="btn-sec" style="padding: 4px 12px; font-size: 12px;" onclick="resetMatrixFilter()">Reset Matrix Filter</button>
-          </div>
+          <span class="rec-priority p1" id="drw-priority">Priority 1</span>
         </div>
-        <div id="matrix-grid-container">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
 
-      <!-- PRIORITY-RANKED LIST ("FIX THIS FIRST") -->
-      <div class="gcard" id="priority-ranked-section">
-        <div class="gc-hd" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div class="gc-ttl" style="font-size: 18px;">Priority-Ranked Fix List (Mosca Theorem)</div>
-            <div class="gc-sub" id="priority-table-count">Sorted by calculated Priority Score = Tier Weight × Criticality Score</div>
-          </div>
+        <div class="rec-replace" style="margin-top:16px;">
+          <div style="font-size:13px; color:var(--text-m); font-weight:500;">Replacement:</div>
+          <div class="replace-val" id="drw-replacement">ML-DSA</div>
         </div>
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th style="padding: 12px 16px; text-align: left;">Finding Name & Location</th>
-                <th style="padding: 12px 16px; text-align: center;">Type</th>
-                <th style="padding: 12px 16px; text-align: center;">X (Lifetime)</th>
-                <th style="padding: 12px 16px; text-align: center;">Y (Migration)</th>
-                <th style="padding: 12px 16px; text-align: center;">Z (Threat)</th>
-                <th style="padding: 12px 16px; text-align: center;">Urgency Margin</th>
-                <th style="padding: 12px 16px; text-align: center;">Urgency Tier</th>
-                <th style="padding: 12px 16px; text-align: center;">Business Criticality</th>
-                <th style="padding: 12px 16px; text-align: center; background: rgba(139, 92, 246, 0.1); color: var(--purple); font-weight: 700;">Priority Score</th>
-              </tr>
-            </thead>
-            <tbody id="priority-ranked-tbody">
-              <!-- Rendered dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <!-- Summary Cards -->
-      <div class="stats-grid">
-        <div class="scard">
-          <div class="sc-lbl">Components at Risk</div>
-          <div class="sc-val" id="stat-risk">0</div>
-        </div>
-        <div class="scard">
-          <div class="sc-lbl">Total Findings</div>
-          <div class="sc-val" id="stat-total" style="color:var(--text-h)">0</div>
-        </div>
-        <div class="scard">
-          <div class="sc-lbl">Critical</div>
-          <div class="sc-val" id="stat-crit" style="color:var(--red)">0</div>
-        </div>
-        <div class="scard">
-          <div class="sc-lbl">High</div>
-          <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
-        </div>
-        <div class="scard">
-          <div class="sc-lbl">Quantum Vulnerable</div>
-          <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
-        </div>
-        <div class="scard scard-primary" style="background:linear-gradient(135deg, var(--text-h), var(--bg-sidebar));">
-          <div class="sc-lbl" style="color:rgba(255,255,255,0.7)">Migration Candidates</div>
-          <div class="sc-val" id="stat-candidates" style="color:#fff">0</div>
-        </div>
-      </div>
 
-      <!-- HNDL Aggregate Analysis Panel -->
-      <div class="hndl-panel" id="hndl-panel" style="display:none;">
-        <div class="hndl-panel-hd">
-          <div class="hndl-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+        <div class="prop-grid" style="margin-top:16px;">
+          <div class="prop-item">
+            <div class="prop-lbl">Current Risk</div>
+            <div class="prop-val"><span class="badge" id="drw-risk-badge">Risk</span></div>
           </div>
-          <div>
-            <div class="hndl-title">HNDL Aggregate Analysis (Mosca's Inequality)</div>
-            <div class="hndl-sub">X (migration) + Y (data lifetime) &gt; Z (quantum threat)</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Quantum Status</div>
+            <div class="prop-val" id="drw-quantum">-</div>
           </div>
-        </div>
-        <div class="hndl-grid">
-          <div class="hndl-metric">
-            <div class="hndl-metric-lbl">Overall HNDL Risk</div>
-            <div class="hndl-metric-val" id="hndl-overall" style="color:var(--red);">—</div>
-            <div class="hndl-metric-sub">Aggregate vulnerability score</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Affected Files</div>
+            <div class="prop-val" id="drw-files-count">0</div>
           </div>
-          <div class="hndl-metric">
-            <div class="hndl-metric-lbl">Vulnerable Assets</div>
-            <div class="hndl-metric-val" id="hndl-assets" style="color:var(--purple);">0</div>
-            <div class="hndl-metric-sub">Quantum-broken algorithms in use</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Recommended Mode</div>
+            <div class="prop-val" id="drw-recommended-mode">-</div>
           </div>
-          <div class="hndl-metric">
-            <div class="hndl-metric-lbl">At-Risk Encrypted Data</div>
-            <div class="hndl-metric-val" id="hndl-data-pts" style="color:var(--amber);">0</div>
-            <div class="hndl-metric-sub">Unique code locations exposed</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Migration Effort</div>
+            <div class="prop-val" id="drw-migration-effort">-</div>
           </div>
-          <div class="hndl-metric">
-            <div class="hndl-metric-lbl">HNDL Score Range</div>
-            <div class="hndl-metric-val" id="hndl-range" style="font-size:16px; color:var(--text-h);">—</div>
-            <div class="hndl-metric-sub">Low → High across all findings</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Cost Impact</div>
+            <div class="prop-val" id="drw-cost-impact">-</div>
+          </div>
+          <div class="prop-item">
+            <div class="prop-lbl">Latency/Size Impact</div>
+            <div class="prop-val" id="drw-latency-impact">-</div>
           </div>
         </div>
-      </div>
 
-      <!-- Crypto-Agility Readiness Section -->
-      <div class="agility-panel" id="agility-panel" style="display:none;">
-        <div class="agility-hd">
-          <div class="agility-title">Crypto-Agility Readiness</div>
-          <div id="agility-score-wrap"></div>
+        <div class="explanation-box" style="margin-top:16px;">
+          <h4>Mosca's Inequality (X + Y &gt; Z)</h4>
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
+            <div><strong>X (Migration Time):</strong> <span id="drw-mosca-x">-</span> years</div>
+            <div><strong>Y (Data Lifetime):</strong> <span id="drw-mosca-y">-</span> years</div>
+            <div><strong>Z (Threat Horizon):</strong> <span id="drw-mosca-z">-</span> years</div>
+          </div>
+          <div style="margin-top:8px; font-size:13px; font-weight:600;" id="drw-mosca-result"></div>
+          <div style="margin-top:6px; font-size:12px;" id="drw-mosca-category"></div>
         </div>
-        <div class="agility-grid">
-          <div class="agility-item">
-            <div class="agility-item-icon" style="background:rgba(16,185,129,0.1);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div class="agility-item-count" style="color:var(--green);" id="agile-count">0</div>
-            <div class="agility-item-lbl">Agile (PQC-ready)</div>
-          </div>
-          <div class="agility-item">
-            <div class="agility-item-icon" style="background:rgba(245,158,11,0.1);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
-            <div class="agility-item-count" style="color:var(--amber);" id="hardcoded-count">0</div>
-            <div class="agility-item-lbl">Hardcoded (inflexible)</div>
-          </div>
-          <div class="agility-item">
-            <div class="agility-item-icon" style="background:rgba(239,68,68,0.1);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            </div>
-            <div class="agility-item-count" style="color:var(--red);" id="needs-update-count">0</div>
-            <div class="agility-item-lbl">Requires Update</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Overview Charts -->
-      <div class="row">
-        <div class="col col-2">
-          <div class="gcard">
-            <div class="gc-hd">
-              <div class="gc-ttl">Risk Distribution</div>
-            </div>
-            <div class="risk-dist" style="margin-top:16px;">
-              <div class="risk-bar-container" style="height:24px; border-radius:12px;">
-                <div class="risk-bar" id="rb-crit" style="width:0%; background:var(--red);"></div>
-                <div class="risk-bar" id="rb-high" style="width:0%; background:var(--amber);"></div>
-                <div class="risk-bar" id="rb-med" style="width:0%; background:var(--yellow);"></div>
-                <div class="risk-bar" id="rb-low" style="width:0%; background:var(--gray);"></div>
-              </div>
-              <div class="risk-legend" style="margin-top:16px;">
-                <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Critical</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>High</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Medium</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div>Low</div>
-              </div>
-            </div>
+        <div class="explanation-box" style="margin-top:16px;">
+          <h4>Why Replace It?</h4>
+          <p id="drw-rationale">Explanation goes here.</p>
+          <div id="drw-risk-profile-rationale"
+            style="margin-top:12px; padding:10px 14px; background:rgba(255,255,255,0.03); border-left:3px solid var(--amber); border-radius:6px; font-size:12px; line-height:1.5; color:var(--text-h); font-weight:500;">
           </div>
         </div>
-        <div class="col col-1">
-          <div class="gcard" style="height:100%;">
-            <div class="gc-hd">
-              <div class="gc-ttl">Quantum Exposure</div>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm); margin-bottom:12px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <div style="width:12px; height:12px; border-radius:50%; background:var(--purple);"></div>
-                <div style="font-size:13px; font-weight:500;">Quantum Vulnerable</div>
-              </div>
-              <div style="font-size:18px; font-weight:700; color:var(--purple);" id="qe-vuln">0</div>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--r-sm);">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <div style="width:12px; height:12px; border-radius:50%; background:var(--green);"></div>
-                <div style="font-size:13px; font-weight:500;">Not Identified as Vulnerable</div>
-              </div>
-              <div style="font-size:18px; font-weight:700; color:var(--text-m);" id="qe-safe">0</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Mosca Risk Categorization Section -->
-      <div class="mosca-panel" id="mosca-panel" style="display:none;">
-        <div class="mosca-hd">
-          <div class="mosca-title-wrap">
-            <div class="mosca-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div>
-              <div class="mosca-title">Mosca Risk Categorization</div>
-              <div class="mosca-sub">Structured quantum risk categorization using Mosca's Inequality (X + Y vs Z threat horizon). Click a category to filter recommendations below.</div>
-            </div>
+        <div style="margin-top:16px;">
+          <div class="rg-lbl" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Migration Impact Simulation</span>
+            <button class="btn-sec" style="padding:4px 8px; font-size:11px;" onclick="simulateMigration()">Run
+              Simulation</button>
           </div>
-          <div id="mosca-filter-indicator" style="display:none; align-items:center; gap:8px;">
-            <span style="font-size:12px; color:var(--text-m);">Filtered by: <strong id="mosca-active-filter-name" style="color:var(--text-h);">-</strong></span>
-            <button class="btn-sec" style="padding:4px 10px; font-size:11px;" onclick="clearMoscaFilter()">Clear Filter</button>
+          <div class="impact-graph" id="simulation-container">
+            <div class="ig-node vuln" id="ig-algo">Current Algorithm</div>
+            <div class="ig-arrow">↓</div>
+            <div class="ig-node" id="ig-files">X Affected Files</div>
+            <div class="ig-arrow">↓</div>
+            <div class="ig-node" id="ig-filelist" style="text-align:left; font-size:12px; line-height:1.6;">Direct
+              Dependencies</div>
+            <div class="ig-arrow">↓</div>
+            <div class="ig-node" style="border-color:var(--green); color:var(--green);" id="ig-target">Target
+              Application Module</div>
           </div>
         </div>
-        <div class="mosca-grid">
-          <!-- Card 1: Vulnerable Now -->
-          <div class="mosca-card" id="mcard-now" onclick="setMoscaCategoryFilter('VULNERABLE_NOW')" style="--card-accent: var(--red); --card-active-bg: rgba(239, 68, 68, 0.08);">
-            <div class="mosca-card-badge" style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3);">
-              Inequality Met • X + Y &gt; Z
-            </div>
-            <div class="mosca-card-count" id="mc-count-now" style="color:var(--red);">0</div>
-            <div class="mosca-card-ttl">Vulnerable Now</div>
-            <div class="mosca-card-desc">Migration time + data lifetime exceeds the quantum threat horizon. Cryptographic data will remain exposed after CRQC arrival.</div>
-            <div class="mosca-card-sub" id="mc-sub-now">0 components affected</div>
-          </div>
 
-          <!-- Card 2: Vulnerable Within Threat Horizon -->
-          <div class="mosca-card" id="mcard-horizon" onclick="setMoscaCategoryFilter('WITHIN_HORIZON')" style="--card-accent: var(--amber); --card-active-bg: rgba(245, 158, 11, 0.08);">
-            <div class="mosca-card-badge" style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3);">
-              Buffer ≤ 3.0 yrs • Z - (X + Y) ≤ 3y
-            </div>
-            <div class="mosca-card-count" id="mc-count-horizon" style="color:var(--amber);">0</div>
-            <div class="mosca-card-ttl">Vulnerable Within Threat Horizon</div>
-            <div class="mosca-card-desc">Inequality not yet breached, but transition margin is under 3.0 years. Immediate migration planning required before buffer collapses.</div>
-            <div class="mosca-card-sub" id="mc-sub-horizon">0 components affected</div>
-          </div>
-
-          <!-- Card 3: Safe Under Current Timeline -->
-          <div class="mosca-card" id="mcard-safe" onclick="setMoscaCategoryFilter('SAFE_TIMELINE')" style="--card-accent: var(--green); --card-active-bg: rgba(16, 185, 129, 0.08);">
-            <div class="mosca-card-badge" style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3);">
-              Runway &gt; 3.0 yrs • Comfortable Margin
-            </div>
-            <div class="mosca-card-count" id="mc-count-safe" style="color:var(--green);">0</div>
-            <div class="mosca-card-ttl">Safe Under Current Timeline</div>
-            <div class="mosca-card-desc">Sufficient migration buffer exists before CRQC threat. Component can be upgraded in planned software maintenance cycles.</div>
-            <div class="mosca-card-sub" id="mc-sub-safe">0 components affected</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <!-- Migration Recommendations List -->
-        <div class="col col-2">
-          <div class="gc-hd" style="margin-bottom:8px;">
-            <div class="gc-ttl" style="font-size:18px;">Migration Recommendations</div>
-            <div class="gc-sub">Cryptographic components requiring replacement</div>
-          </div>
-          <div class="rec-list" id="recommendations-list">
-            <!-- Dynamic Content -->
-          </div>
-        </div>
-        
-        <!-- Sidebar Order -->
-        <div class="col col-1">
-          <div class="gcard">
-            <div class="gc-hd" style="margin-bottom:8px;">
-              <div class="gc-ttl">Recommended Migration Order</div>
-            </div>
-            <div class="timeline" id="migration-timeline">
-              <!-- Dynamic Content -->
-            </div>
-          </div>
-          
-          <div class="gcard">
-            <div class="gc-hd">
-              <div class="gc-ttl">Migration Priority</div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
-                <span style="font-weight:600; color:var(--red);">Priority 1 — Immediate</span>
-                <span id="p1-count">0</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
-                <span style="font-weight:600; color:var(--amber);">Priority 2 — High</span>
-                <span id="p2-count">0</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px;">
-                <span style="font-weight:600; color:var(--yellow);">Priority 3 — Planned</span>
-                <span id="p3-count">0</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
-  </div>
-</main>
-</div>
 
-<!-- Detail Drawer -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-hd">
-    <div class="drawer-title">Migration Recommendation</div>
-    <button class="drawer-close" onclick="closeDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-  </div>
-  <div class="drawer-body">
-    
-    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-      <div>
-        <div style="font-size:20px; font-weight:700; color:var(--text-h); font-family: 'JetBrains Mono', monospace;" id="drw-algo">Algorithm</div>
-        <div style="font-size:13px; color:var(--text-s); margin-top:4px;" id="drw-purpose">Purpose</div>
-      </div>
-      <span class="rec-priority p1" id="drw-priority">Priority 1</span>
-    </div>
-    
-    <div class="rec-replace" style="margin-top:16px;">
-      <div style="font-size:13px; color:var(--text-m); font-weight:500;">Replacement:</div>
-      <div class="replace-val" id="drw-replacement">ML-DSA</div>
-    </div>
-    
-    <div class="prop-grid" style="margin-top:16px;">
-      <div class="prop-item">
-        <div class="prop-lbl">Current Risk</div>
-        <div class="prop-val"><span class="badge" id="drw-risk-badge">Risk</span></div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Quantum Status</div>
-        <div class="prop-val" id="drw-quantum">-</div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Affected Files</div>
-        <div class="prop-val" id="drw-files-count">0</div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Recommended Mode</div>
-        <div class="prop-val" id="drw-recommended-mode">-</div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Migration Effort</div>
-        <div class="prop-val" id="drw-migration-effort">-</div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Cost Impact</div>
-        <div class="prop-val" id="drw-cost-impact">-</div>
-      </div>
-      <div class="prop-item">
-        <div class="prop-lbl">Latency/Size Impact</div>
-        <div class="prop-val" id="drw-latency-impact">-</div>
-      </div>
-    </div>
-    
-    <div class="explanation-box" style="margin-top:16px;">
-      <h4>Mosca's Inequality (X + Y &gt; Z)</h4>
-      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
-        <div><strong>X (Migration Time):</strong> <span id="drw-mosca-x">-</span> years</div>
-        <div><strong>Y (Data Lifetime):</strong> <span id="drw-mosca-y">-</span> years</div>
-        <div><strong>Z (Threat Horizon):</strong> <span id="drw-mosca-z">-</span> years</div>
-      </div>
-      <div style="margin-top:8px; font-size:13px; font-weight:600;" id="drw-mosca-result"></div>
-      <div style="margin-top:6px; font-size:12px;" id="drw-mosca-category"></div>
-    </div>
-    
-    <div class="explanation-box" style="margin-top:16px;">
-      <h4>Why Replace It?</h4>
-      <p id="drw-rationale">Explanation goes here.</p>
-      <div id="drw-risk-profile-rationale" style="margin-top:12px; padding:10px 14px; background:rgba(255,255,255,0.03); border-left:3px solid var(--amber); border-radius:6px; font-size:12px; line-height:1.5; color:var(--text-h); font-weight:500;">
-      </div>
-    </div>
-    
-    <div style="margin-top:16px;">
-      <div class="rg-lbl" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>Migration Impact Simulation</span>
-        <button class="btn-sec" style="padding:4px 8px; font-size:11px;" onclick="simulateMigration()">Run Simulation</button>
-      </div>
-      <div class="impact-graph" id="simulation-container">
-        <div class="ig-node vuln" id="ig-algo">Current Algorithm</div>
-        <div class="ig-arrow">↓</div>
-        <div class="ig-node" id="ig-files">X Affected Files</div>
-        <div class="ig-arrow">↓</div>
-        <div class="ig-node" id="ig-filelist" style="text-align:left; font-size:12px; line-height:1.6;">Direct Dependencies</div>
-        <div class="ig-arrow">↓</div>
-        <div class="ig-node" style="border-color:var(--green); color:var(--green);" id="ig-target">Target Application Module</div>
-      </div>
-    </div>
-    
-  </div>
-</div>
+    <script>
+      function simulateMigration() {
+        const container = document.getElementById('simulation-container');
+        const target = document.getElementById('drw-replacement').textContent;
+        const files = document.getElementById('drw-files-count').textContent;
 
-<script>
-  function simulateMigration() {
-    const container = document.getElementById('simulation-container');
-    const target = document.getElementById('drw-replacement').textContent;
-    const files = document.getElementById('drw-files-count').textContent;
-    
-    container.innerHTML = `
+        container.innerHTML = `
       <div style="text-align:center; padding: 24px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="width:32px;height:32px;margin-bottom:12px;animation: spin 1s linear infinite;"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
         <div style="font-size:13px; color:var(--text-h); font-weight:600;">Running PQC Simulation...</div>
         <div style="font-size:12px; color:var(--text-m); margin-top:4px;">Analyzing dependencies & test coverage</div>
       </div>
     `;
-    
-    setTimeout(() => {
-      container.innerHTML = `
+
+        setTimeout(() => {
+          container.innerHTML = `
         <div style="width:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border-color);">
             <div style="font-size:13px; font-weight:600; color:var(--green);">Simulation Complete</div>
@@ -1171,69 +2206,73 @@ tbody tr:hover { background: var(--bg-card-hover); }
           </div>
         </div>
       `;
-    }, 1500);
-  }
-</script>
-<style>
-@keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
+        }, 1500);
+      }
+    </script>
+    <style>
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
 
-<script src="assets/js/engine.js"></script>
-<script>
-let allFindings = [];
-let migrationCandidates = [];
-let activeMoscaFilter = null;
-let activeMatrixFilter = null;
+    <script src="assets/js/engine.js"></script>
+    <script>
+      let allFindings = [];
+      let migrationCandidates = [];
+      let activeMoscaFilter = null;
+      let activeMatrixFilter = null;
 
-function getUrgencyBadgeClass(tier) {
-  if (tier === 'Critical') return 'badge-crit';
-  if (tier === 'High') return 'badge-high';
-  if (tier === 'Medium') return 'badge-med';
-  return 'badge-low';
-}
+      function getUrgencyBadgeClass(tier) {
+        if (tier === 'Critical') return 'badge-crit';
+        if (tier === 'High') return 'badge-high';
+        if (tier === 'Medium') return 'badge-med';
+        return 'badge-low';
+      }
 
-function getCriticalityBadgeClass(label) {
-  if (label === 'Critical') return 'badge-crit';
-  if (label === 'High') return 'badge-high';
-  if (label === 'Medium') return 'badge-med';
-  return 'badge-low';
-}
+      function getCriticalityBadgeClass(label) {
+        if (label === 'Critical') return 'badge-crit';
+        if (label === 'High') return 'badge-high';
+        if (label === 'Medium') return 'badge-med';
+        return 'badge-low';
+      }
 
-function syncGlobalZUI() {
-  const z = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getGlobalZ() : 12;
-  const slider = document.getElementById('global-z-slider');
-  const input = document.getElementById('global-z-input');
-  const display = document.getElementById('global-z-val-display');
-  if (slider) slider.value = z;
-  if (input) input.value = z;
-  if (display) display.textContent = z;
-}
+      function syncGlobalZUI() {
+        const z = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getGlobalZ() : 12;
+        const slider = document.getElementById('global-z-slider');
+        const input = document.getElementById('global-z-input');
+        const display = document.getElementById('global-z-val-display');
+        if (slider) slider.value = z;
+        if (input) input.value = z;
+        if (display) display.textContent = z;
+      }
 
-function onGlobalZChange(val) {
-  const z = parseFloat(val);
-  if (isNaN(z) || z < 1 || z > 30) return;
-  if (typeof CryptoEngine !== 'undefined') {
-    CryptoEngine.setGlobalZ(z);
-  }
-  syncGlobalZUI();
-  init();
-}
+      function onGlobalZChange(val) {
+        const z = parseFloat(val);
+        if (isNaN(z) || z < 1 || z > 30) return;
+        if (typeof CryptoEngine !== 'undefined') {
+          CryptoEngine.setGlobalZ(z);
+        }
+        syncGlobalZUI();
+        init();
+      }
 
-function toggleYLookupTable() {
-  const panel = document.getElementById('y-lookup-editor-panel');
-  if (!panel) return;
-  const isHidden = panel.style.display === 'none';
-  panel.style.display = isHidden ? 'block' : 'none';
-  if (isHidden) renderYLookupEditor();
-}
+      function toggleYLookupTable() {
+        const panel = document.getElementById('y-lookup-editor-panel');
+        if (!panel) return;
+        const isHidden = panel.style.display === 'none';
+        panel.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) renderYLookupEditor();
+      }
 
-function renderYLookupEditor() {
-  const table = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getMigrationLookup() : {};
-  const tbody = document.getElementById('y-lookup-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = Object.keys(table).map(type => {
-    const item = table[type];
-    return `
+      function renderYLookupEditor() {
+        const table = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getMigrationLookup() : {};
+        const tbody = document.getElementById('y-lookup-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = Object.keys(table).map(type => {
+          const item = table[type];
+          return `
       <tr style="border-bottom: 1px solid var(--border-color);">
         <td style="padding: 8px 12px; font-weight: 600; color: var(--text-h); text-transform: capitalize;">${type.replace('_', ' ')}</td>
         <td style="padding: 8px 12px; text-align: center;">
@@ -1244,163 +2283,163 @@ function renderYLookupEditor() {
         </td>
       </tr>
     `;
-  }).join('');
-}
+        }).join('');
+      }
 
-function updateYLookupVal(type, mode, val) {
-  const num = parseFloat(val);
-  if (isNaN(num) || num <= 0) return;
-  const currentTable = CryptoEngine.getMigrationLookup();
-  if (!currentTable[type]) currentTable[type] = {};
-  currentTable[type][mode] = num;
-  CryptoEngine.saveMigrationLookup(currentTable);
-  init();
-}
+      function updateYLookupVal(type, mode, val) {
+        const num = parseFloat(val);
+        if (isNaN(num) || num <= 0) return;
+        const currentTable = CryptoEngine.getMigrationLookup();
+        if (!currentTable[type]) currentTable[type] = {};
+        currentTable[type][mode] = num;
+        CryptoEngine.saveMigrationLookup(currentTable);
+        init();
+      }
 
-function render2DMatrix() {
-  const container = document.getElementById('matrix-grid-container');
-  if (!container) return;
+      function render2DMatrix() {
+        const container = document.getElementById('matrix-grid-container');
+        if (!container) return;
 
-  const criticalities = ['Critical', 'High', 'Medium', 'Low'];
-  const urgencies = ['Critical', 'High', 'Medium', 'Low'];
+        const criticalities = ['Critical', 'High', 'Medium', 'Low'];
+        const urgencies = ['Critical', 'High', 'Medium', 'Low'];
 
-  const cellCounts = {};
-  criticalities.forEach(c => {
-    cellCounts[c] = {};
-    urgencies.forEach(u => {
-      cellCounts[c][u] = 0;
-    });
-  });
+        const cellCounts = {};
+        criticalities.forEach(c => {
+          cellCounts[c] = {};
+          urgencies.forEach(u => {
+            cellCounts[c][u] = 0;
+          });
+        });
 
-  allFindings.forEach(f => {
-    const c = f.criticality_label || 'Medium';
-    const u = (f.risk && f.risk.urgency_tier) || 'Low';
-    if (cellCounts[c] && cellCounts[c][u] !== undefined) {
-      cellCounts[c][u]++;
-    }
-  });
+        allFindings.forEach(f => {
+          const c = f.criticality_label || 'Medium';
+          const u = (f.risk && f.risk.urgency_tier) || 'Low';
+          if (cellCounts[c] && cellCounts[c][u] !== undefined) {
+            cellCounts[c][u]++;
+          }
+        });
 
-  let html = `
+        let html = `
     <div style="display: grid; grid-template-columns: 140px repeat(4, 1fr); gap: 10px; align-items: stretch;">
       <div style="display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-m); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 8px;">
         Criticality ↓ \\ Urgency →
       </div>
   `;
 
-  urgencies.forEach(u => {
-    const uColor = u === 'Critical' ? 'var(--red)' : u === 'High' ? 'var(--amber)' : u === 'Medium' ? 'var(--yellow)' : 'var(--green)';
-    html += `
+        urgencies.forEach(u => {
+          const uColor = u === 'Critical' ? 'var(--red)' : u === 'High' ? 'var(--amber)' : u === 'Medium' ? 'var(--yellow)' : 'var(--green)';
+          html += `
       <div style="text-align: center; font-size: 12px; font-weight: 700; color: ${uColor}; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
         ${u} Urgency
       </div>
     `;
-  });
+        });
 
-  criticalities.forEach(c => {
-    const cColor = c === 'Critical' ? 'var(--red)' : c === 'High' ? 'var(--amber)' : c === 'Medium' ? 'var(--yellow)' : 'var(--green)';
-    html += `
+        criticalities.forEach(c => {
+          const cColor = c === 'Critical' ? 'var(--red)' : c === 'High' ? 'var(--amber)' : c === 'Medium' ? 'var(--yellow)' : 'var(--green)';
+          html += `
       <div style="display: flex; align-items: center; justify-content: flex-end; font-size: 12px; font-weight: 700; color: ${cColor}; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; text-align: right;">
         ${c} Criticality
       </div>
     `;
 
-    urgencies.forEach(u => {
-      const count = cellCounts[c][u];
-      const isTopRight = (c === 'Critical' && u === 'Critical');
-      const isSelected = (activeMatrixFilter && activeMatrixFilter.criticality === c && activeMatrixFilter.urgency === u);
-      
-      let cellBg = 'rgba(30, 41, 59, 0.5)';
-      let borderStyle = '1px solid var(--border-color)';
-      
-      if (c === 'Critical' && u === 'Critical') {
-        cellBg = count > 0 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.12)';
-        borderStyle = '2px solid #ef4444';
-      } else if ((c === 'Critical' && u === 'High') || (c === 'High' && u === 'Critical')) {
-        cellBg = count > 0 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.08)';
-        borderStyle = '1px solid rgba(245, 158, 11, 0.4)';
-      } else if (c === 'Low' && u === 'Low') {
-        cellBg = count > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.05)';
-        borderStyle = '1px solid rgba(16, 185, 129, 0.3)';
-      }
+          urgencies.forEach(u => {
+            const count = cellCounts[c][u];
+            const isTopRight = (c === 'Critical' && u === 'Critical');
+            const isSelected = (activeMatrixFilter && activeMatrixFilter.criticality === c && activeMatrixFilter.urgency === u);
 
-      if (isSelected) {
-        borderStyle = '2px solid var(--purple)';
-        cellBg = 'rgba(139, 92, 246, 0.3)';
-      }
+            let cellBg = 'rgba(30, 41, 59, 0.5)';
+            let borderStyle = '1px solid var(--border-color)';
 
-      html += `
+            if (c === 'Critical' && u === 'Critical') {
+              cellBg = count > 0 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.12)';
+              borderStyle = '2px solid #ef4444';
+            } else if ((c === 'Critical' && u === 'High') || (c === 'High' && u === 'Critical')) {
+              cellBg = count > 0 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.08)';
+              borderStyle = '1px solid rgba(245, 158, 11, 0.4)';
+            } else if (c === 'Low' && u === 'Low') {
+              cellBg = count > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.05)';
+              borderStyle = '1px solid rgba(16, 185, 129, 0.3)';
+            }
+
+            if (isSelected) {
+              borderStyle = '2px solid var(--purple)';
+              cellBg = 'rgba(139, 92, 246, 0.3)';
+            }
+
+            html += `
         <div onclick="onMatrixCellClick('${c}', '${u}')" style="background: ${cellBg}; border: ${borderStyle}; border-radius: 10px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; ${isTopRight ? 'box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);' : ''}">
           ${isTopRight ? `<div style="position: absolute; top: 4px; right: 6px; font-size: 9px; font-weight: 800; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px;">🔥 Max Risk</div>` : ''}
           <div style="font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${count > 0 ? 'var(--text-h)' : 'var(--text-s)'};">${count}</div>
           <div style="font-size: 10px; color: var(--text-m); margin-top: 2px;">finding${count === 1 ? '' : 's'}</div>
         </div>
       `;
-    });
-  });
+          });
+        });
 
-  html += `</div>`;
-  container.innerHTML = html;
+        html += `</div>`;
+        container.innerHTML = html;
 
-  const resetBtn = document.getElementById('matrix-filter-reset');
-  if (resetBtn) {
-    resetBtn.style.display = activeMatrixFilter ? 'block' : 'none';
-  }
-}
+        const resetBtn = document.getElementById('matrix-filter-reset');
+        if (resetBtn) {
+          resetBtn.style.display = activeMatrixFilter ? 'block' : 'none';
+        }
+      }
 
-function onMatrixCellClick(crit, urg) {
-  if (activeMatrixFilter && activeMatrixFilter.criticality === crit && activeMatrixFilter.urgency === urg) {
-    activeMatrixFilter = null;
-  } else {
-    activeMatrixFilter = { criticality: crit, urgency: urg };
-  }
-  render2DMatrix();
-  renderPriorityRankedTable();
-}
+      function onMatrixCellClick(crit, urg) {
+        if (activeMatrixFilter && activeMatrixFilter.criticality === crit && activeMatrixFilter.urgency === urg) {
+          activeMatrixFilter = null;
+        } else {
+          activeMatrixFilter = { criticality: crit, urgency: urg };
+        }
+        render2DMatrix();
+        renderPriorityRankedTable();
+      }
 
-function resetMatrixFilter() {
-  activeMatrixFilter = null;
-  render2DMatrix();
-  renderPriorityRankedTable();
-}
+      function resetMatrixFilter() {
+        activeMatrixFilter = null;
+        render2DMatrix();
+        renderPriorityRankedTable();
+      }
 
-function renderPriorityRankedTable() {
-  const tbody = document.getElementById('priority-ranked-tbody');
-  const countEl = document.getElementById('priority-table-count');
-  if (!tbody) return;
+      function renderPriorityRankedTable() {
+        const tbody = document.getElementById('priority-ranked-tbody');
+        const countEl = document.getElementById('priority-table-count');
+        if (!tbody) return;
 
-  let filtered = [...allFindings];
-  if (activeMatrixFilter) {
-    filtered = filtered.filter(f => 
-      (f.criticality_label || 'Medium') === activeMatrixFilter.criticality &&
-      (f.risk && f.risk.urgency_tier) === activeMatrixFilter.urgency
-    );
-  }
+        let filtered = [...allFindings];
+        if (activeMatrixFilter) {
+          filtered = filtered.filter(f =>
+            (f.criticality_label || 'Medium') === activeMatrixFilter.criticality &&
+            (f.risk && f.risk.urgency_tier) === activeMatrixFilter.urgency
+          );
+        }
 
-  filtered.sort((a, b) => ((b.risk && b.risk.priority_score) || 0) - ((a.risk && a.risk.priority_score) || 0));
+        filtered.sort((a, b) => ((b.risk && b.risk.priority_score) || 0) - ((a.risk && a.risk.priority_score) || 0));
 
-  if (countEl) {
-    countEl.textContent = `${filtered.length} finding${filtered.length === 1 ? '' : 's'}${activeMatrixFilter ? ` (Filtered by ${activeMatrixFilter.criticality} Criticality × ${activeMatrixFilter.urgency} Urgency)` : ''}`;
-  }
+        if (countEl) {
+          countEl.textContent = `${filtered.length} finding${filtered.length === 1 ? '' : 's'}${activeMatrixFilter ? ` (Filtered by ${activeMatrixFilter.criticality} Criticality × ${activeMatrixFilter.urgency} Urgency)` : ''}`;
+        }
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = `
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
       <tr>
         <td colspan="9" style="text-align: center; padding: 32px; color: var(--text-m);">
           No findings match the selected matrix cell.
         </td>
       </tr>
     `;
-    return;
-  }
+          return;
+        }
 
-  tbody.innerHTML = filtered.map((f, i) => {
-    const risk = f.risk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 };
-    const marginColor = risk.urgency_margin < 0 ? 'var(--red)' : (risk.urgency_margin <= 2 ? 'var(--amber)' : 'var(--green)');
-    const marginPrefix = risk.urgency_margin >= 0 ? '+' : '';
-    const name = f.title || f.algorithm || 'Cryptographic Finding';
-    const loc = f.file ? `${f.file}${f.line ? ':' + f.line : ''}` : (f.repoName || '');
+        tbody.innerHTML = filtered.map((f, i) => {
+          const risk = f.risk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 };
+          const marginColor = risk.urgency_margin < 0 ? 'var(--red)' : (risk.urgency_margin <= 2 ? 'var(--amber)' : 'var(--green)');
+          const marginPrefix = risk.urgency_margin >= 0 ? '+' : '';
+          const name = f.title || f.algorithm || 'Cryptographic Finding';
+          const loc = f.file ? `${f.file}${f.line ? ':' + f.line : ''}` : (f.repoName || '');
 
-    return `
+          return `
       <tr style="transition: background 0.15s ease;">
         <td style="padding: 12px 16px;">
           <div style="font-weight: 600; color: var(--text-h); font-size: 13px;">${name}</div>
@@ -1432,304 +2471,304 @@ function renderPriorityRankedTable() {
         </td>
       </tr>
     `;
-  }).join('');
-}
+        }).join('');
+      }
 
-function init() {
-  const data = CryptoEngine.getData();
-  const noDataEl = document.getElementById('view-no-data');
-  const activeEl = document.getElementById('view-active');
-  const safeEl = document.getElementById('view-safe');
-  const headerActionsEl = document.getElementById('header-actions');
-  
-  syncGlobalZUI();
-  
-  if (!data.scans || data.scans.length === 0) {
-    if (noDataEl) noDataEl.style.display = 'block';
-    if (activeEl) activeEl.style.display = 'none';
-    if (safeEl) safeEl.style.display = 'none';
-    if (headerActionsEl) headerActionsEl.style.display = 'none';
-    return;
-  }
-  
-  const repoCritMap = {};
-  (data.repositories || []).forEach(r => {
-    if (r.id) repoCritMap[r.id] = (r.businessCriticality || 'MEDIUM').toUpperCase();
-    if (r.name) repoCritMap[r.name] = (r.businessCriticality || 'MEDIUM').toUpperCase();
-  });
-  (data.scans || []).forEach(s => {
-    if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality.toUpperCase();
-    if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality.toUpperCase();
-  });
+      function init() {
+        const data = CryptoEngine.getData();
+        const noDataEl = document.getElementById('view-no-data');
+        const activeEl = document.getElementById('view-active');
+        const safeEl = document.getElementById('view-safe');
+        const headerActionsEl = document.getElementById('header-actions');
 
-  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-  const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
+        syncGlobalZUI();
 
-  allFindings = targetScans.flatMap(s => (s.findings || []).map(f => {
-    const enriched = CryptoEngine.enrichFinding(f);
-    return {
-      ...enriched,
-      repoId: s.repoId,
-      repoName: s.repoName,
-      businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || 'MEDIUM'
-    };
-  }));
-  
-  // Identify at-risk components
-  const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
-  
-  if (atRisk.length === 0) {
-    if (safeEl) safeEl.style.display = 'block';
-    if (noDataEl) noDataEl.style.display = 'none';
-    if (activeEl) activeEl.style.display = 'none';
-    if (headerActionsEl) headerActionsEl.style.display = 'none';
-    return;
-  }
-  
-  if (noDataEl) noDataEl.style.display = 'none';
-  if (safeEl) safeEl.style.display = 'none';
-  if (activeEl) activeEl.style.display = 'flex';
-  if (headerActionsEl) headerActionsEl.style.display = 'flex';
-  
-  // Group by algorithm to form discrete migration candidates
-  const candidateMap = {};
-  const critWeights = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+        if (!data.scans || data.scans.length === 0) {
+          if (noDataEl) noDataEl.style.display = 'block';
+          if (activeEl) activeEl.style.display = 'none';
+          if (safeEl) safeEl.style.display = 'none';
+          if (headerActionsEl) headerActionsEl.style.display = 'none';
+          return;
+        }
 
-  atRisk.forEach(f => {
-    const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
-    if (!candidateMap[algo]) {
-      candidateMap[algo] = {
-        algorithm: algo,
-        purpose: f.usage || f.category || 'Data Protection',
-        severity: getSeverity(f),
-        quantumVulnerable: isQuantum(f),
-        affectedFiles: new Set(),
-        maxCriticality: 'MEDIUM',
-        maxCritWeight: 2,
-        rationale: f.remediation || f.snippet || 'Component is considered insecure or vulnerable to quantum attacks.',
-        replacement: determineReplacement(algo)
-      };
-    }
-    candidateMap[algo].affectedFiles.add(f.file || 'unknown');
+        const repoCritMap = {};
+        (data.repositories || []).forEach(r => {
+          if (r.id) repoCritMap[r.id] = (r.businessCriticality || 'MEDIUM').toUpperCase();
+          if (r.name) repoCritMap[r.name] = (r.businessCriticality || 'MEDIUM').toUpperCase();
+        });
+        (data.scans || []).forEach(s => {
+          if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality.toUpperCase();
+          if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality.toUpperCase();
+        });
 
-    const fCrit = (f.businessCriticality || 'MEDIUM').toUpperCase();
-    const cWeight = critWeights[fCrit] || 2;
-    if (cWeight > (candidateMap[algo].maxCritWeight || 0)) {
-      candidateMap[algo].maxCritWeight = cWeight;
-      candidateMap[algo].maxCriticality = fCrit;
-    }
-    
-    // Store first finding to extract HNDL / score details
-    if (!candidateMap[algo].rawFinding) {
-      candidateMap[algo].rawFinding = f;
-    }
-    
-    // Escalate severity if multiple findings have different severities
-    const s1 = candidateMap[algo].severity;
-    const s2 = getSeverity(f);
-    if (s2 === 'CRITICAL' || (s2 === 'HIGH' && s1 !== 'CRITICAL')) {
-      candidateMap[algo].severity = s2;
-    }
-    if (isQuantum(f)) candidateMap[algo].quantumVulnerable = true;
-  });
-  
-  migrationCandidates = Object.values(candidateMap).map(c => {
-    let priority = 3;
-    if (c.maxCriticality === 'CRITICAL' || c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
-      priority = 1;
-    } else if (c.maxCriticality === 'HIGH' || c.severity === 'MEDIUM') {
-      priority = 2;
-    } else {
-      priority = 3;
-    }
-    
-    return {
-      ...c,
-      fileCount: c.affectedFiles ? (c.affectedFiles.size || c.affectedFiles.length || 0) : 0,
-      priority: priority
-    };
-  });
-  
-  const riskWeights = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4, 'SAFE': 5 };
-  migrationCandidates.sort((a, b) => {
-    if ((b.maxCritWeight || 2) !== (a.maxCritWeight || 2)) {
-      return (b.maxCritWeight || 2) - (a.maxCritWeight || 2);
-    }
-    if (a.priority !== b.priority) return a.priority - b.priority;
-    const wA = riskWeights[a.severity] || 4;
-    const wB = riskWeights[b.severity] || 4;
-    if (wA !== wB) return wA - wB;
-    return b.fileCount - a.fileCount;
-  });
-  
-  updateDashboard(atRisk);
-  render2DMatrix();
-  renderPriorityRankedTable();
-  renderRecommendations();
-  renderTimeline();
-  computeHndlAndAgility();
-  updateMoscaCategorizationPanel();
-  
-  // Auto-open drawer if ?algo= param is passed
-  const urlAlgo = new URLSearchParams(window.location.search).get('algo');
-  if (urlAlgo) {
-    const candidate = migrationCandidates.find(c => 
-      c.algorithm.toLowerCase() === urlAlgo.toLowerCase() || 
-      c.algorithm.toLowerCase().includes(urlAlgo.toLowerCase())
-    );
-    if (candidate) {
-      const cStr = encodeURIComponent(JSON.stringify({...candidate, affectedFiles:Array.from(candidate.affectedFiles)}));
-      openDrawer(cStr);
-    }
-  }
-}
+        const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+        const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
 
-function updateDashboard(atRisk) {
-  // Overall Risk Hero
-  const hasCrit = allFindings.some(f => getSeverity(f) === 'CRITICAL');
-  const hasHigh = allFindings.some(f => getSeverity(f) === 'HIGH');
-  const hasQuant = allFindings.some(f => isQuantum(f));
-  
-  const hero = document.getElementById('hero-card');
-  const heroRisk = document.getElementById('hero-risk');
-  let overall = 'LOW';
-  
-  if (hasCrit || hasQuant) { overall = 'CRITICAL'; hero.className = 'risk-hero risk-crit'; heroRisk.className = 'risk-hero-val crit'; }
-  else if (hasHigh) { overall = 'HIGH'; hero.className = 'risk-hero risk-high'; heroRisk.className = 'risk-hero-val high'; }
-  else { overall = 'MEDIUM'; heroRisk.className = 'risk-hero-val high'; } // fallback styling
-  
-  heroRisk.textContent = overall;
-  document.getElementById('hero-count').textContent = migrationCandidates.length;
-  
-  const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
-  const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-  const componentsAtRisk = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || migrationCandidates.length;
+        allFindings = targetScans.flatMap(s => (s.findings || []).map(f => {
+          const enriched = CryptoEngine.enrichFinding(f);
+          return {
+            ...enriched,
+            repoId: s.repoId,
+            repoName: s.repoName,
+            businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || 'MEDIUM'
+          };
+        }));
 
-  const critCount = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
-  const highCount = allFindings.filter(f => getSeverity(f) === 'HIGH').length;
-  const medCount = allFindings.filter(f => getSeverity(f) === 'MEDIUM').length;
-  const lowCount = allFindings.filter(f => getSeverity(f) === 'LOW' || getSeverity(f) === 'INFORMATIONAL').length;
-  const quantCount = allFindings.filter(f => isQuantum(f)).length;
+        // Identify at-risk components
+        const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
 
-  // Summary Stats matching Dashboard, CBOM & Findings exactly
-  document.getElementById('stat-risk').textContent = componentsAtRisk;
-  if (document.getElementById('stat-total')) document.getElementById('stat-total').textContent = allFindings.length;
-  document.getElementById('stat-crit').textContent = critCount;
-  document.getElementById('stat-high').textContent = highCount;
-  document.getElementById('stat-quant').textContent = quantCount;
-  document.getElementById('stat-candidates').textContent = migrationCandidates.length;
-  
-  // Distribution Chart — proportional over all findings (identical to Dashboard & Findings)
-  const tot = allFindings.length || 1;
-  document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
-  document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
-  document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
-  document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
-  
-  // Quantum Exposure
-  const qVuln = quantCount;
-  const qSafe = allFindings.length - qVuln;
-  document.getElementById('qe-vuln').textContent = qVuln;
-  document.getElementById('qe-safe').textContent = qSafe;
-  
-  // Priority Counts
-  document.getElementById('p1-count').textContent = migrationCandidates.filter(c => c.priority === 1).length;
-  document.getElementById('p2-count').textContent = migrationCandidates.filter(c => c.priority === 2).length;
-  document.getElementById('p3-count').textContent = migrationCandidates.filter(c => c.priority === 3).length;
-}
+        if (atRisk.length === 0) {
+          if (safeEl) safeEl.style.display = 'block';
+          if (noDataEl) noDataEl.style.display = 'none';
+          if (activeEl) activeEl.style.display = 'none';
+          if (headerActionsEl) headerActionsEl.style.display = 'none';
+          return;
+        }
 
-function computeHndlAndAgility() {
-  const hndlPanel = document.getElementById('hndl-panel');
-  const agilityPanel = document.getElementById('agility-panel');
-  if (!hndlPanel || !agilityPanel) return;
-  if (allFindings.length === 0) {
-    hndlPanel.style.display = 'none';
-    agilityPanel.style.display = 'none';
-    return;
-  }
+        if (noDataEl) noDataEl.style.display = 'none';
+        if (safeEl) safeEl.style.display = 'none';
+        if (activeEl) activeEl.style.display = 'flex';
+        if (headerActionsEl) headerActionsEl.style.display = 'flex';
 
-  // HNDL: Quantum-broken algorithms are the HNDL threat
-  const QUANTUM_BROKEN_FAMILIES = new Set(['RSA','EC','ECDSA','ECDH','DH','DSA','ElGamal']);
-  const quantumBrokenFindings = allFindings.filter(f => {
-    const qs = (f.quantumStatus || '').toLowerCase();
-    const algo = (f.algorithm || '').toUpperCase();
-    return qs.includes('vulnerable') || qs.includes('broken') ||
-           QUANTUM_BROKEN_FAMILIES.has(algo.split('-')[0]) || QUANTUM_BROKEN_FAMILIES.has(algo);
-  });
+        // Group by algorithm to form discrete migration candidates
+        const candidateMap = {};
+        const critWeights = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
 
-  const vulnerableAssets = new Set(quantumBrokenFindings.map(f => f.algorithm)).size;
-  const dataPoints = quantumBrokenFindings.length;
+        atRisk.forEach(f => {
+          const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
+          if (!candidateMap[algo]) {
+            candidateMap[algo] = {
+              algorithm: algo,
+              purpose: f.usage || f.category || 'Data Protection',
+              severity: getSeverity(f),
+              quantumVulnerable: isQuantum(f),
+              affectedFiles: new Set(),
+              maxCriticality: 'MEDIUM',
+              maxCritWeight: 2,
+              rationale: f.remediation || f.snippet || 'Component is considered insecure or vulnerable to quantum attacks.',
+              replacement: determineReplacement(algo)
+            };
+          }
+          candidateMap[algo].affectedFiles.add(f.file || 'unknown');
 
-  // Score: 0-100; based on % of findings that are quantum-broken
-  const hndlPct = allFindings.length > 0 ? Math.round((quantumBrokenFindings.length / allFindings.length) * 100) : 0;
-  const hndlLabel = hndlPct >= 60 ? 'CRITICAL' : hndlPct >= 35 ? 'HIGH' : hndlPct >= 15 ? 'MEDIUM' : 'LOW';
-  const hndlColor = hndlPct >= 60 ? 'var(--red)' : hndlPct >= 35 ? 'var(--amber)' : hndlPct >= 15 ? 'var(--yellow)' : 'var(--green)';
+          const fCrit = (f.businessCriticality || 'MEDIUM').toUpperCase();
+          const cWeight = critWeights[fCrit] || 2;
+          if (cWeight > (candidateMap[algo].maxCritWeight || 0)) {
+            candidateMap[algo].maxCritWeight = cWeight;
+            candidateMap[algo].maxCriticality = fCrit;
+          }
 
-  // Score range across all findings
-  const scoreMin = Math.max(0, hndlPct - 20);
-  const scoreMax = Math.min(100, hndlPct + 15);
+          // Store first finding to extract HNDL / score details
+          if (!candidateMap[algo].rawFinding) {
+            candidateMap[algo].rawFinding = f;
+          }
 
-  document.getElementById('hndl-overall').textContent = hndlLabel;
-  document.getElementById('hndl-overall').style.color = hndlColor;
-  document.getElementById('hndl-assets').textContent = vulnerableAssets;
-  document.getElementById('hndl-data-pts').textContent = dataPoints;
-  document.getElementById('hndl-range').textContent = `${scoreMin} – ${scoreMax}`;
-  hndlPanel.style.display = 'block';
+          // Escalate severity if multiple findings have different severities
+          const s1 = candidateMap[algo].severity;
+          const s2 = getSeverity(f);
+          if (s2 === 'CRITICAL' || (s2 === 'HIGH' && s1 !== 'CRITICAL')) {
+            candidateMap[algo].severity = s2;
+          }
+          if (isQuantum(f)) candidateMap[algo].quantumVulnerable = true;
+        });
 
-  // Crypto-Agility: based on category/rule patterns
-  const SAFE_ALGOS = new Set(['AES-256','AES-256-GCM','AES-192','SHA-256','SHA-384','SHA-512','SHA3-256','SHA3-512','CHACHA20','HMAC']);
-  const PQC_ALGOS = new Set(['ML-KEM','ML-DSA','SLH-DSA','LMS','XMSS','FALCON','KYBER','DILITHIUM']);
-  let agileCount = 0, hardcodedCount = 0, needsUpdateCount = 0;
+        migrationCandidates = Object.values(candidateMap).map(c => {
+          let priority = 3;
+          if (c.maxCriticality === 'CRITICAL' || c.severity === 'CRITICAL' || c.severity === 'HIGH' || c.quantumVulnerable) {
+            priority = 1;
+          } else if (c.maxCriticality === 'HIGH' || c.severity === 'MEDIUM') {
+            priority = 2;
+          } else {
+            priority = 3;
+          }
 
-  allFindings.forEach(f => {
-    const algo = (f.algorithm || '').toUpperCase().split('-').slice(0,2).join('-');
-    const cat = (f.usage || f.category || '').toLowerCase();
-    const isHardcoded = (f.snippet || f.title || '').toLowerCase().includes('hardcoded') ||
-                        (f.remediation || '').toLowerCase().includes('hardcoded') ||
-                        cat.includes('hardcoded-secret');
-    const isPqcAlgo = PQC_ALGOS.has(algo) || PQC_ALGOS.has(algo.split('-')[0]);
-    const isSafeAlgo = SAFE_ALGOS.has(algo);
+          return {
+            ...c,
+            fileCount: c.affectedFiles ? (c.affectedFiles.size || c.affectedFiles.length || 0) : 0,
+            priority: priority
+          };
+        });
 
-    if (isPqcAlgo || isSafeAlgo) agileCount++;
-    else if (isHardcoded) hardcodedCount++;
-    else needsUpdateCount++;
-  });
+        const riskWeights = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4, 'SAFE': 5 };
+        migrationCandidates.sort((a, b) => {
+          if ((b.maxCritWeight || 2) !== (a.maxCritWeight || 2)) {
+            return (b.maxCritWeight || 2) - (a.maxCritWeight || 2);
+          }
+          if (a.priority !== b.priority) return a.priority - b.priority;
+          const wA = riskWeights[a.severity] || 4;
+          const wB = riskWeights[b.severity] || 4;
+          if (wA !== wB) return wA - wB;
+          return b.fileCount - a.fileCount;
+        });
 
-  document.getElementById('agile-count').textContent = agileCount;
-  document.getElementById('hardcoded-count').textContent = hardcodedCount;
-  document.getElementById('needs-update-count').textContent = needsUpdateCount;
+        updateDashboard(atRisk);
+        render2DMatrix();
+        renderPriorityRankedTable();
+        renderRecommendations();
+        renderTimeline();
+        computeHndlAndAgility();
+        updateMoscaCategorizationPanel();
 
-  // Overall agility score 0–100
-  const agilityScore = allFindings.length > 0 ? Math.round((agileCount / allFindings.length) * 100) : 0;
-  const agilityLabel = agilityScore >= 80 ? 'High' : agilityScore >= 50 ? 'Medium' : 'Low';
-  const agilityColor = agilityScore >= 80 ? '#10b981' : agilityScore >= 50 ? '#f59e0b' : '#ef4444';
-  const agilityBg = agilityScore >= 80 ? 'rgba(16,185,129,0.12)' : agilityScore >= 50 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)';
-  document.getElementById('agility-score-wrap').innerHTML = `
+        // Auto-open drawer if ?algo= param is passed
+        const urlAlgo = new URLSearchParams(window.location.search).get('algo');
+        if (urlAlgo) {
+          const candidate = migrationCandidates.find(c =>
+            c.algorithm.toLowerCase() === urlAlgo.toLowerCase() ||
+            c.algorithm.toLowerCase().includes(urlAlgo.toLowerCase())
+          );
+          if (candidate) {
+            const cStr = encodeURIComponent(JSON.stringify({ ...candidate, affectedFiles: Array.from(candidate.affectedFiles) }));
+            openDrawer(cStr);
+          }
+        }
+      }
+
+      function updateDashboard(atRisk) {
+        // Overall Risk Hero
+        const hasCrit = allFindings.some(f => getSeverity(f) === 'CRITICAL');
+        const hasHigh = allFindings.some(f => getSeverity(f) === 'HIGH');
+        const hasQuant = allFindings.some(f => isQuantum(f));
+
+        const hero = document.getElementById('hero-card');
+        const heroRisk = document.getElementById('hero-risk');
+        let overall = 'LOW';
+
+        if (hasCrit || hasQuant) { overall = 'CRITICAL'; hero.className = 'risk-hero risk-crit'; heroRisk.className = 'risk-hero-val crit'; }
+        else if (hasHigh) { overall = 'HIGH'; hero.className = 'risk-hero risk-high'; heroRisk.className = 'risk-hero-val high'; }
+        else { overall = 'MEDIUM'; heroRisk.className = 'risk-hero-val high'; } // fallback styling
+
+        heroRisk.textContent = overall;
+        document.getElementById('hero-count').textContent = migrationCandidates.length;
+
+        const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
+        const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+        const componentsAtRisk = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || migrationCandidates.length;
+
+        const critCount = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
+        const highCount = allFindings.filter(f => getSeverity(f) === 'HIGH').length;
+        const medCount = allFindings.filter(f => getSeverity(f) === 'MEDIUM').length;
+        const lowCount = allFindings.filter(f => getSeverity(f) === 'LOW' || getSeverity(f) === 'INFORMATIONAL').length;
+        const quantCount = allFindings.filter(f => isQuantum(f)).length;
+
+        // Summary Stats matching Dashboard, CBOM & Findings exactly
+        document.getElementById('stat-risk').textContent = componentsAtRisk;
+        if (document.getElementById('stat-total')) document.getElementById('stat-total').textContent = allFindings.length;
+        document.getElementById('stat-crit').textContent = critCount;
+        document.getElementById('stat-high').textContent = highCount;
+        document.getElementById('stat-quant').textContent = quantCount;
+        document.getElementById('stat-candidates').textContent = migrationCandidates.length;
+
+        // Distribution Chart — proportional over all findings (identical to Dashboard & Findings)
+        const tot = allFindings.length || 1;
+        document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
+        document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
+        document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
+        document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
+
+        // Quantum Exposure
+        const qVuln = quantCount;
+        const qSafe = allFindings.length - qVuln;
+        document.getElementById('qe-vuln').textContent = qVuln;
+        document.getElementById('qe-safe').textContent = qSafe;
+
+        // Priority Counts
+        document.getElementById('p1-count').textContent = migrationCandidates.filter(c => c.priority === 1).length;
+        document.getElementById('p2-count').textContent = migrationCandidates.filter(c => c.priority === 2).length;
+        document.getElementById('p3-count').textContent = migrationCandidates.filter(c => c.priority === 3).length;
+      }
+
+      function computeHndlAndAgility() {
+        const hndlPanel = document.getElementById('hndl-panel');
+        const agilityPanel = document.getElementById('agility-panel');
+        if (!hndlPanel || !agilityPanel) return;
+        if (allFindings.length === 0) {
+          hndlPanel.style.display = 'none';
+          agilityPanel.style.display = 'none';
+          return;
+        }
+
+        // HNDL: Quantum-broken algorithms are the HNDL threat
+        const QUANTUM_BROKEN_FAMILIES = new Set(['RSA', 'EC', 'ECDSA', 'ECDH', 'DH', 'DSA', 'ElGamal']);
+        const quantumBrokenFindings = allFindings.filter(f => {
+          const qs = (f.quantumStatus || '').toLowerCase();
+          const algo = (f.algorithm || '').toUpperCase();
+          return qs.includes('vulnerable') || qs.includes('broken') ||
+            QUANTUM_BROKEN_FAMILIES.has(algo.split('-')[0]) || QUANTUM_BROKEN_FAMILIES.has(algo);
+        });
+
+        const vulnerableAssets = new Set(quantumBrokenFindings.map(f => f.algorithm)).size;
+        const dataPoints = quantumBrokenFindings.length;
+
+        // Score: 0-100; based on % of findings that are quantum-broken
+        const hndlPct = allFindings.length > 0 ? Math.round((quantumBrokenFindings.length / allFindings.length) * 100) : 0;
+        const hndlLabel = hndlPct >= 60 ? 'CRITICAL' : hndlPct >= 35 ? 'HIGH' : hndlPct >= 15 ? 'MEDIUM' : 'LOW';
+        const hndlColor = hndlPct >= 60 ? 'var(--red)' : hndlPct >= 35 ? 'var(--amber)' : hndlPct >= 15 ? 'var(--yellow)' : 'var(--green)';
+
+        // Score range across all findings
+        const scoreMin = Math.max(0, hndlPct - 20);
+        const scoreMax = Math.min(100, hndlPct + 15);
+
+        document.getElementById('hndl-overall').textContent = hndlLabel;
+        document.getElementById('hndl-overall').style.color = hndlColor;
+        document.getElementById('hndl-assets').textContent = vulnerableAssets;
+        document.getElementById('hndl-data-pts').textContent = dataPoints;
+        document.getElementById('hndl-range').textContent = `${scoreMin} – ${scoreMax}`;
+        hndlPanel.style.display = 'block';
+
+        // Crypto-Agility: based on category/rule patterns
+        const SAFE_ALGOS = new Set(['AES-256', 'AES-256-GCM', 'AES-192', 'SHA-256', 'SHA-384', 'SHA-512', 'SHA3-256', 'SHA3-512', 'CHACHA20', 'HMAC']);
+        const PQC_ALGOS = new Set(['ML-KEM', 'ML-DSA', 'SLH-DSA', 'LMS', 'XMSS', 'FALCON', 'KYBER', 'DILITHIUM']);
+        let agileCount = 0, hardcodedCount = 0, needsUpdateCount = 0;
+
+        allFindings.forEach(f => {
+          const algo = (f.algorithm || '').toUpperCase().split('-').slice(0, 2).join('-');
+          const cat = (f.usage || f.category || '').toLowerCase();
+          const isHardcoded = (f.snippet || f.title || '').toLowerCase().includes('hardcoded') ||
+            (f.remediation || '').toLowerCase().includes('hardcoded') ||
+            cat.includes('hardcoded-secret');
+          const isPqcAlgo = PQC_ALGOS.has(algo) || PQC_ALGOS.has(algo.split('-')[0]);
+          const isSafeAlgo = SAFE_ALGOS.has(algo);
+
+          if (isPqcAlgo || isSafeAlgo) agileCount++;
+          else if (isHardcoded) hardcodedCount++;
+          else needsUpdateCount++;
+        });
+
+        document.getElementById('agile-count').textContent = agileCount;
+        document.getElementById('hardcoded-count').textContent = hardcodedCount;
+        document.getElementById('needs-update-count').textContent = needsUpdateCount;
+
+        // Overall agility score 0–100
+        const agilityScore = allFindings.length > 0 ? Math.round((agileCount / allFindings.length) * 100) : 0;
+        const agilityLabel = agilityScore >= 80 ? 'High' : agilityScore >= 50 ? 'Medium' : 'Low';
+        const agilityColor = agilityScore >= 80 ? '#10b981' : agilityScore >= 50 ? '#f59e0b' : '#ef4444';
+        const agilityBg = agilityScore >= 80 ? 'rgba(16,185,129,0.12)' : agilityScore >= 50 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)';
+        document.getElementById('agility-score-wrap').innerHTML = `
     <span class="agility-score-badge" style="background:${agilityBg}; color:${agilityColor};">
       Agility Score: ${agilityScore}/100 — ${agilityLabel}
     </span>
   `;
-  agilityPanel.style.display = 'block';
-}
+        agilityPanel.style.display = 'block';
+      }
 
-function renderRecommendations() {
-  const container = document.getElementById('recommendations-list');
-  let candidatesToRender = migrationCandidates;
-  if (activeMoscaFilter) {
-    candidatesToRender = migrationCandidates.filter(c => {
-      const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
-      return m.category === activeMoscaFilter;
-    });
-  }
+      function renderRecommendations() {
+        const container = document.getElementById('recommendations-list');
+        let candidatesToRender = migrationCandidates;
+        if (activeMoscaFilter) {
+          candidatesToRender = migrationCandidates.filter(c => {
+            const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+            return m.category === activeMoscaFilter;
+          });
+        }
 
-  if (candidatesToRender.length === 0) {
-    const filterLabels = {
-      'VULNERABLE_NOW': 'Vulnerable Now',
-      'WITHIN_HORIZON': 'Vulnerable Within Threat Horizon',
-      'SAFE_TIMELINE': 'Safe Under Current Timeline'
-    };
-    const curLabel = filterLabels[activeMoscaFilter] || 'selected';
-    container.innerHTML = `
+        if (candidatesToRender.length === 0) {
+          const filterLabels = {
+            'VULNERABLE_NOW': 'Vulnerable Now',
+            'WITHIN_HORIZON': 'Vulnerable Within Threat Horizon',
+            'SAFE_TIMELINE': 'Safe Under Current Timeline'
+          };
+          const curLabel = filterLabels[activeMoscaFilter] || 'selected';
+          container.innerHTML = `
       <div class="empty-state" style="padding:48px 24px; background:var(--bg-card); border-radius:16px; border:1px solid var(--border-color); text-align:center;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;color:var(--text-s);margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <div style="font-size:15px; font-weight:600; color:var(--text-h);">No recommendations in "${curLabel}"</div>
@@ -1737,15 +2776,15 @@ function renderRecommendations() {
         <button class="btn-sec" style="margin-top:16px;" onclick="clearMoscaFilter()">View All Recommendations</button>
       </div>
     `;
-    return;
-  }
+          return;
+        }
 
-  container.innerHTML = candidatesToRender.map((c, idx) => {
-    const priorityLabel = c.priority === 1 ? 'Priority 1 • Action Needed' : c.priority === 2 ? 'Priority 2 • High Priority' : 'Priority 3 • Standard Upgrade';
-    const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
-    const mBadgeClass = m.category === 'VULNERABLE_NOW' ? 'badge-crit' : (m.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
-    
-    return `
+        container.innerHTML = candidatesToRender.map((c, idx) => {
+          const priorityLabel = c.priority === 1 ? 'Priority 1 • Action Needed' : c.priority === 2 ? 'Priority 2 • High Priority' : 'Priority 3 • Standard Upgrade';
+          const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+          const mBadgeClass = m.category === 'VULNERABLE_NOW' ? 'badge-crit' : (m.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
+
+          return `
       <div class="rec-card p${c.priority}">
         <div class="rec-hd">
           <div>
@@ -1766,7 +2805,7 @@ function renderRecommendations() {
           </div>
           <div class="rg-card">
             <div class="rg-lbl">Quantum Exposure</div>
-            <div class="rg-val" style="color:${c.quantumVulnerable?'var(--red)':'var(--green)'}; font-weight:700;">
+            <div class="rg-val" style="color:${c.quantumVulnerable ? 'var(--red)' : 'var(--green)'}; font-weight:700;">
               ${c.quantumVulnerable ? '⚠️ Vulnerable' : '🛡️ Safe'}
             </div>
           </div>
@@ -1804,43 +2843,43 @@ function renderRecommendations() {
         </div>
       </div>
     `;
-  }).join('');
-  
-  container.querySelectorAll('.view-details-btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      const rawIdx = this.getAttribute('data-idx');
-      if (rawIdx === null || rawIdx === undefined) return;
-      const idx = parseInt(rawIdx, 10);
-      if (isNaN(idx) || idx < 0 || idx >= candidatesToRender.length) return;
-      const c = candidatesToRender[idx];
-      openDrawerObj(c);
-    });
-  });
-}
+        }).join('');
 
-function renderTimeline() {
-  const container = document.getElementById('migration-timeline');
-  let candidatesToRender = migrationCandidates;
-  if (activeMoscaFilter) {
-    candidatesToRender = migrationCandidates.filter(c => {
-      const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
-      return m.category === activeMoscaFilter;
-    });
-  }
-  if (candidatesToRender.length === 0) {
-    container.innerHTML = `<div style="padding:16px; font-size:12px; color:var(--text-m); text-align:center;">No items matching filter.</div>`;
-    return;
-  }
-  container.innerHTML = candidatesToRender.map((c, i) => {
-    let depStr = '';
-    if (i > 0 && c.priority > candidatesToRender[i-1].priority) {
-      depStr = `<div class="tl-dep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:12px;height:12px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Depends on prior step</div>`;
-    }
-    
-    return `
+        container.querySelectorAll('.view-details-btn').forEach(btn => {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const rawIdx = this.getAttribute('data-idx');
+            if (rawIdx === null || rawIdx === undefined) return;
+            const idx = parseInt(rawIdx, 10);
+            if (isNaN(idx) || idx < 0 || idx >= candidatesToRender.length) return;
+            const c = candidatesToRender[idx];
+            openDrawerObj(c);
+          });
+        });
+      }
+
+      function renderTimeline() {
+        const container = document.getElementById('migration-timeline');
+        let candidatesToRender = migrationCandidates;
+        if (activeMoscaFilter) {
+          candidatesToRender = migrationCandidates.filter(c => {
+            const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+            return m.category === activeMoscaFilter;
+          });
+        }
+        if (candidatesToRender.length === 0) {
+          container.innerHTML = `<div style="padding:16px; font-size:12px; color:var(--text-m); text-align:center;">No items matching filter.</div>`;
+          return;
+        }
+        container.innerHTML = candidatesToRender.map((c, i) => {
+          let depStr = '';
+          if (i > 0 && c.priority > candidatesToRender[i - 1].priority) {
+            depStr = `<div class="tl-dep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:12px;height:12px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Depends on prior step</div>`;
+          }
+
+          return `
       <div class="tl-item p${c.priority}">
-        <div class="tl-num">0${i+1}</div>
+        <div class="tl-num">0${i + 1}</div>
         <div class="tl-content">
           <div class="tl-hd">
             <span class="tl-algo">${c.algorithm}</span>
@@ -1852,127 +2891,128 @@ function renderTimeline() {
         </div>
       </div>
     `;
-  }).join('');
-}
+        }).join('');
+      }
 
-function openDrawerObj(c) {
-  if (!c || typeof c !== 'object') return;
-  
-  document.getElementById('drw-algo').textContent = c.algorithm || 'Unknown Algorithm';
-  document.getElementById('drw-purpose').textContent = c.purpose || 'Data Protection';
-  
-  const pBadge = document.getElementById('drw-priority');
-  const pVal = (c.priority !== undefined && c.priority !== null) ? c.priority : 1;
-  pBadge.className = `rec-priority p${pVal}`;
-  pBadge.textContent = `Priority ${pVal}`;
-  
-  document.getElementById('drw-replacement').textContent = c.replacement || 'None specified';
-  
-  const rBadge = document.getElementById('drw-risk-badge');
-  const sev = c.severity || 'INFO';
-  rBadge.className = `badge ${getBadgeClass(sev)}`;
-  rBadge.textContent = sev;
-  
-  const qVuln = !!c.quantumVulnerable;
-  const qStr = qVuln ? 'Vulnerable' : 'Not Identified as Vulnerable';
-  document.getElementById('drw-quantum').innerHTML = `<span style="color:${qVuln ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${qStr}</span>`;
-  
-  const fileCount = (c.fileCount !== undefined && c.fileCount !== null) ? c.fileCount : (c.affectedFiles ? (c.affectedFiles.size || c.affectedFiles.length || 0) : 0);
-  document.getElementById('drw-files-count').textContent = fileCount;
-  document.getElementById('drw-rationale').textContent = c.rationale || 'Component is considered insecure or vulnerable to quantum attacks.';
-  
-  // Part 2: Mosca's Inequality live calculation (exact same as page panel)
-  const mosca = computeFindingMosca(c.rawFinding, fileCount);
-  document.getElementById('drw-mosca-x').textContent = mosca.moscaX;
-  document.getElementById('drw-mosca-y').textContent = mosca.moscaY;
-  document.getElementById('drw-mosca-z').textContent = mosca.moscaZ;
-  const resEl = document.getElementById('drw-mosca-result');
-  resEl.textContent = mosca.isMet ? "🚨 Inequality Met: Data will be vulnerable before migration completes!" : "✅ Safe: Migration can complete before threat horizon.";
-  resEl.style.color = mosca.isMet ? "var(--red)" : "var(--green)";
-  
-  const catEl = document.getElementById('drw-mosca-category');
-  if (catEl) {
-    const catBadgeClass = mosca.category === 'VULNERABLE_NOW' ? 'badge-crit' : (mosca.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
-    catEl.innerHTML = `<span style="color:var(--text-s); font-weight:600;">MOSCA STATUS:</span> <span class="badge ${catBadgeClass}" style="margin-left:6px;">${mosca.categoryLabel}</span> <span style="margin-left:6px; color:var(--text-s);">(${mosca.diff < 0 ? 'Exceeded by ' + Math.abs(mosca.diff).toFixed(1) + 'y' : mosca.diff.toFixed(1) + 'y runway'})</span>`;
-  }
+      function openDrawerObj(c) {
+        if (!c || typeof c !== 'object') return;
 
-  // Part 3: Recommended Mode
-  const recMode = getRecommendedMode(c.algorithm, c.replacement, c.purpose);
-  const recModeEl = document.getElementById('drw-recommended-mode');
-  if (recModeEl) {
-    const isHybrid = recMode.startsWith('Hybrid');
-    recModeEl.innerHTML = `<span class="badge ${isHybrid ? 'badge-quant' : 'badge-safe'}" style="font-weight:600;">${recMode}</span>`;
-  }
+        document.getElementById('drw-algo').textContent = c.algorithm || 'Unknown Algorithm';
+        document.getElementById('drw-purpose').textContent = c.purpose || 'Data Protection';
 
-  // Part 3: Cost Impact
-  const costImpact = computeCostImpact(c.algorithm, c.replacement, c.purpose);
-  const costEl = document.getElementById('drw-cost-impact');
-  if (costEl) {
-    costEl.innerHTML = `<span class="badge ${costImpact.badgeClass}" style="font-weight:600;">${costImpact.level}</span><span style="font-size:11px; color:var(--text-s); display:block; margin-top:2px;">${costImpact.summary}</span>`;
-  }
+        const pBadge = document.getElementById('drw-priority');
+        const pVal = (c.priority !== undefined && c.priority !== null) ? c.priority : 1;
+        pBadge.className = `rec-priority p${pVal}`;
+        pBadge.textContent = `Priority ${pVal}`;
 
-  // Part 3: One-line Why this alternative for this risk profile
-  const riskProfileRationale = getRiskProfileRationale(c, mosca);
-  const rprEl = document.getElementById('drw-risk-profile-rationale');
-  if (rprEl) {
-    const borderColor = mosca.category === 'VULNERABLE_NOW' ? 'var(--red)' : (mosca.category === 'WITHIN_HORIZON' ? 'var(--amber)' : 'var(--green)');
-    rprEl.style.borderLeftColor = borderColor;
-    rprEl.innerHTML = `<span style="color:${borderColor}; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px; display:block; margin-bottom:4px;">Risk Profile Rationale</span>${riskProfileRationale}`;
-  }
+        document.getElementById('drw-replacement').textContent = c.replacement || 'None specified';
 
-  const migrationEffort = (c.rawFinding && c.rawFinding.cryptoAgilityScore < 40) ? 'High' : (c.rawFinding && c.rawFinding.cryptoAgilityScore < 80 ? 'Medium' : 'Low');
-  const latencyImpact = (c.purpose === 'digital_signature' && (c.algorithm.includes('RSA') || c.algorithm.includes('EC'))) ? 'High' : (c.purpose === 'key_exchange' ? 'Medium' : 'Low');
-  document.getElementById('drw-migration-effort').textContent = migrationEffort;
-  document.getElementById('drw-latency-impact').textContent = latencyImpact;
-  
-  document.getElementById('ig-algo').textContent = c.algorithm || 'Current Algorithm';
-  document.getElementById('ig-files').textContent = `${fileCount} Affected Files`;
-  
-  // Populate ig-filelist with real file names handling Set, Array, or empty
-  const filelist = document.getElementById('ig-filelist');
-  let files = [];
-  if (c.affectedFiles) {
-    if (c.affectedFiles instanceof Set) {
-      files = Array.from(c.affectedFiles);
-    } else if (Array.isArray(c.affectedFiles)) {
-      files = c.affectedFiles;
-    }
-  }
-  const maxShow = 4;
-  if (files.length === 0) {
-    filelist.textContent = 'No files identified';
-  } else {
-    const shown = files.slice(0, maxShow);
-    let html = shown.map(f => `<div style="font-family:'JetBrains Mono',monospace; padding:2px 0; color:var(--text-h);">${f}</div>`).join('');
-    if (files.length > maxShow) {
-      html += `<div style="color:var(--text-s); font-style:italic; padding-top:4px;">+${files.length - maxShow} more files</div>`;
-    }
-    filelist.innerHTML = html;
-  }
-  
-  document.getElementById('drawer-overlay').classList.add('active');
-  document.getElementById('drawer').classList.add('active');
-}
+        const rBadge = document.getElementById('drw-risk-badge');
+        const sev = c.severity || 'INFO';
+        rBadge.className = `badge ${getBadgeClass(sev)}`;
+        rBadge.textContent = sev;
 
-// Legacy wrapper used by the ?algo= URL param auto-open
-function openDrawer(cEncoded) {
-  try {
-    const c = JSON.parse(decodeURIComponent(cEncoded));
-    openDrawerObj(c);
-  } catch(e) {
-    console.error('openDrawer parse error:', e);
-  }
-}
+        const qVuln = !!c.quantumVulnerable;
+        const qStr = qVuln ? 'Vulnerable' : 'Not Identified as Vulnerable';
+        document.getElementById('drw-quantum').innerHTML = `<span style="color:${qVuln ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${qStr}</span>`;
 
-function closeDrawer() {
-  document.getElementById('drawer-overlay').classList.remove('active');
-  document.getElementById('drawer').classList.remove('active');
-}
+        const fileCount = (c.fileCount !== undefined && c.fileCount !== null) ? c.fileCount : (c.affectedFiles ? (c.affectedFiles.size || c.affectedFiles.length || 0) : 0);
+        document.getElementById('drw-files-count').textContent = fileCount;
+        document.getElementById('drw-rationale').textContent = c.rationale || 'Component is considered insecure or vulnerable to quantum attacks.';
 
-window.addEventListener('load', init);
-window.addEventListener('cryptoscan_data_updated', init);
-</script>
-</div>
-<script src="assets/js/shell.js"></script>
+        // Part 2: Mosca's Inequality live calculation (exact same as page panel)
+        const mosca = computeFindingMosca(c.rawFinding, fileCount);
+        document.getElementById('drw-mosca-x').textContent = mosca.moscaX;
+        document.getElementById('drw-mosca-y').textContent = mosca.moscaY;
+        document.getElementById('drw-mosca-z').textContent = mosca.moscaZ;
+        const resEl = document.getElementById('drw-mosca-result');
+        resEl.textContent = mosca.isMet ? "🚨 Inequality Met: Data will be vulnerable before migration completes!" : "✅ Safe: Migration can complete before threat horizon.";
+        resEl.style.color = mosca.isMet ? "var(--red)" : "var(--green)";
+
+        const catEl = document.getElementById('drw-mosca-category');
+        if (catEl) {
+          const catBadgeClass = mosca.category === 'VULNERABLE_NOW' ? 'badge-crit' : (mosca.category === 'WITHIN_HORIZON' ? 'badge-high' : 'badge-safe');
+          catEl.innerHTML = `<span style="color:var(--text-s); font-weight:600;">MOSCA STATUS:</span> <span class="badge ${catBadgeClass}" style="margin-left:6px;">${mosca.categoryLabel}</span> <span style="margin-left:6px; color:var(--text-s);">(${mosca.diff < 0 ? 'Exceeded by ' + Math.abs(mosca.diff).toFixed(1) + 'y' : mosca.diff.toFixed(1) + 'y runway'})</span>`;
+        }
+
+        // Part 3: Recommended Mode
+        const recMode = getRecommendedMode(c.algorithm, c.replacement, c.purpose);
+        const recModeEl = document.getElementById('drw-recommended-mode');
+        if (recModeEl) {
+          const isHybrid = recMode.startsWith('Hybrid');
+          recModeEl.innerHTML = `<span class="badge ${isHybrid ? 'badge-quant' : 'badge-safe'}" style="font-weight:600;">${recMode}</span>`;
+        }
+
+        // Part 3: Cost Impact
+        const costImpact = computeCostImpact(c.algorithm, c.replacement, c.purpose);
+        const costEl = document.getElementById('drw-cost-impact');
+        if (costEl) {
+          costEl.innerHTML = `<span class="badge ${costImpact.badgeClass}" style="font-weight:600;">${costImpact.level}</span><span style="font-size:11px; color:var(--text-s); display:block; margin-top:2px;">${costImpact.summary}</span>`;
+        }
+
+        // Part 3: One-line Why this alternative for this risk profile
+        const riskProfileRationale = getRiskProfileRationale(c, mosca);
+        const rprEl = document.getElementById('drw-risk-profile-rationale');
+        if (rprEl) {
+          const borderColor = mosca.category === 'VULNERABLE_NOW' ? 'var(--red)' : (mosca.category === 'WITHIN_HORIZON' ? 'var(--amber)' : 'var(--green)');
+          rprEl.style.borderLeftColor = borderColor;
+          rprEl.innerHTML = `<span style="color:${borderColor}; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.5px; display:block; margin-bottom:4px;">Risk Profile Rationale</span>${riskProfileRationale}`;
+        }
+
+        const migrationEffort = (c.rawFinding && c.rawFinding.cryptoAgilityScore < 40) ? 'High' : (c.rawFinding && c.rawFinding.cryptoAgilityScore < 80 ? 'Medium' : 'Low');
+        const latencyImpact = (c.purpose === 'digital_signature' && (c.algorithm.includes('RSA') || c.algorithm.includes('EC'))) ? 'High' : (c.purpose === 'key_exchange' ? 'Medium' : 'Low');
+        document.getElementById('drw-migration-effort').textContent = migrationEffort;
+        document.getElementById('drw-latency-impact').textContent = latencyImpact;
+
+        document.getElementById('ig-algo').textContent = c.algorithm || 'Current Algorithm';
+        document.getElementById('ig-files').textContent = `${fileCount} Affected Files`;
+
+        // Populate ig-filelist with real file names handling Set, Array, or empty
+        const filelist = document.getElementById('ig-filelist');
+        let files = [];
+        if (c.affectedFiles) {
+          if (c.affectedFiles instanceof Set) {
+            files = Array.from(c.affectedFiles);
+          } else if (Array.isArray(c.affectedFiles)) {
+            files = c.affectedFiles;
+          }
+        }
+        const maxShow = 4;
+        if (files.length === 0) {
+          filelist.textContent = 'No files identified';
+        } else {
+          const shown = files.slice(0, maxShow);
+          let html = shown.map(f => `<div style="font-family:'JetBrains Mono',monospace; padding:2px 0; color:var(--text-h);">${f}</div>`).join('');
+          if (files.length > maxShow) {
+            html += `<div style="color:var(--text-s); font-style:italic; padding-top:4px;">+${files.length - maxShow} more files</div>`;
+          }
+          filelist.innerHTML = html;
+        }
+
+        document.getElementById('drawer-overlay').classList.add('active');
+        document.getElementById('drawer').classList.add('active');
+      }
+
+      // Legacy wrapper used by the ?algo= URL param auto-open
+      function openDrawer(cEncoded) {
+        try {
+          const c = JSON.parse(decodeURIComponent(cEncoded));
+          openDrawerObj(c);
+        } catch (e) {
+          console.error('openDrawer parse error:', e);
+        }
+      }
+
+      function closeDrawer() {
+        document.getElementById('drawer-overlay').classList.remove('active');
+        document.getElementById('drawer').classList.remove('active');
+      }
+
+      window.addEventListener('load', init);
+      window.addEventListener('cryptoscan_data_updated', init);
+    </script>
+  </div>
+  <script src="assets/js/shell.js"></script>
 </body>
+
 </html>

@@ -1215,742 +1215,765 @@
 
       <div class="content">
 
-      <!-- Page Header & Actions -->
-      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 8px;">
-        <div>
-          <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Findings</h1>
-          <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Review cryptographic usage and security risks detected in your repository</div>
+        <!-- Page Header & Actions -->
+        <div
+          style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 8px;">
+          <div>
+            <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Findings</h1>
+            <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Review cryptographic usage and security
+              risks detected in your repository</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="btn-sec" id="btn-export" style="display:none" onclick="alert('Exporting to CSV...')">Export
+              Findings</button>
+            <button class="btn-p" onclick="window.location.href='scan.html'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              + Scan Repository
+            </button>
+          </div>
         </div>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button class="btn-sec" id="btn-export" style="display:none" onclick="alert('Exporting to CSV...')">Export Findings</button>
-          <button class="btn-p" onclick="window.location.href='scan.html'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+
+        <!-- Empty State -->
+        <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            + Scan Repository
-          </button>
+            <div style="font-size:18px; font-weight:600; color:var(--text-h);">No scan results yet</div>
+            <div class="empty-msg">Run a repository scan to discover cryptographic findings.</div>
+            <button class="btn-p" style="margin-top:16px;" onclick="window.location.href='scan.html'">Start
+              Scan</button>
+          </div>
+        </div>
+
+        <!-- Active Findings View -->
+        <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
+
+          <!-- Detection Coverage Panel -->
+          <div class="detection-panel" id="detection-panel" style="display:none;">
+            <span class="det-panel-lbl">Detection Coverage</span>
+            <div class="det-items" id="det-items"></div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="stats-grid">
+            <div class="scard scard-primary">
+              <div class="sc-lbl">Total Findings</div>
+              <div class="sc-val" id="stat-total">0</div>
+            </div>
+            <div class="scard">
+              <div class="sc-lbl">Critical</div>
+              <div class="sc-val" id="stat-crit" style="color:var(--red)">0</div>
+            </div>
+            <div class="scard">
+              <div class="sc-lbl">High</div>
+              <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
+            </div>
+            <div class="scard">
+              <div class="sc-lbl">Medium</div>
+              <div class="sc-val" id="stat-med" style="color:var(--yellow)">0</div>
+            </div>
+            <div class="scard">
+              <div class="sc-lbl">Low</div>
+              <div class="sc-val" id="stat-low" style="color:var(--gray)">0</div>
+            </div>
+            <div class="scard">
+              <div class="sc-lbl">Quantum Vulnerable</div>
+              <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Main Table Area -->
+            <div class="col col-2">
+              <div class="gcard" style="padding:0; overflow:hidden;">
+                <div class="gc-hd" style="padding: 24px 24px 0 24px; margin-bottom: 16px;">
+                  <div>
+                    <div class="gc-ttl">All Findings</div>
+                    <div class="gc-sub" id="lbl-showing-count">Showing 0 findings</div>
+                  </div>
+                </div>
+
+                <div class="filter-bar">
+                  <input type="text" id="filter-search" class="inp-search" placeholder="Search findings..."
+                    oninput="handleFilterChange()">
+                  <select id="filter-risk" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Risks</option>
+                    <option value="CRITICAL">Critical</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                  <select id="filter-type" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Types</option>
+                    <option value="algorithm">Algorithm</option>
+                    <option value="key">Key</option>
+                    <option value="certificate">Certificate</option>
+                    <option value="protocol">Protocol</option>
+                    <option value="library">Library</option>
+                    <option value="hardware_module">Hardware Module</option>
+                    <option value="cloud_service">Cloud Service</option>
+                  </select>
+                  <select id="filter-lifetime" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Lifetimes</option>
+                    <option value="1">&le; 1 Year (Ephemeral)</option>
+                    <option value="2">2 Years (Certificates)</option>
+                    <option value="5">5 Years (Standard)</option>
+                    <option value="10">10 Years (Signing / Key Pair)</option>
+                    <option value="20">20+ Years (Archival / At-Rest)</option>
+                  </select>
+                  <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Business Criticality</option>
+                    <option value="Critical">Critical (Score &ge; 4.0)</option>
+                    <option value="High">High (Score &ge; 3.0)</option>
+                    <option value="Medium">Medium (Score &ge; 2.0)</option>
+                    <option value="Low">Low (Score &lt; 2.0)</option>
+                  </select>
+                  <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Exposure</option>
+                    <option value="external-facing">External-Facing</option>
+                    <option value="internal">Internal</option>
+                  </select>
+                  <select id="filter-algo" class="filter-sel" onchange="handleFilterChange()">
+                    <option value="ALL">All Algorithms</option>
+                  </select>
+                </div>
+
+                <div id="chips-container" class="chips-area" style="display:none;"></div>
+
+                <div class="tbl-wrapper">
+                  <table id="findings-table">
+                    <thead>
+                      <tr>
+                        <th>Risk</th>
+                        <th>Algorithm</th>
+                        <th>Type</th>
+                        <th>Exposure</th>
+                        <th>Detection</th>
+                        <th>Confidence</th>
+                        <th>Quantum Status</th>
+                        <th>Purpose</th>
+                        <th>Lifetime</th>
+                        <th>Business Criticality</th>
+                        <th>File</th>
+                        <th>Line</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="findings-tbody"></tbody>
+                  </table>
+
+                  <div id="empty-search" class="empty-state" style="display:none;">
+                    <div style="font-size:16px; font-weight:600; color:var(--text-h);">No findings match your search
+                    </div>
+                    <div class="empty-msg">Try changing your search or filters.</div>
+                    <button class="btn-sec" style="margin-top:12px;" onclick="clearFilters()">Clear Filters</button>
+                  </div>
+
+                  <div id="empty-safe" class="empty-state" style="display:none;">
+                    <div style="font-size:16px; font-weight:600; color:var(--text-h);">No cryptographic findings
+                      detected
+                    </div>
+                    <div class="empty-msg">Your latest scan did not identify any cryptographic risks.</div>
+                  </div>
+                </div>
+
+                <div class="pagination" id="pagination-ctrl" style="display:none;">
+                  <div class="page-info" id="page-info">Showing 1-20 of 0</div>
+                  <div class="page-controls">
+                    <button class="btn-page" id="btn-prev" onclick="changePage(-1)">Previous</button>
+                    <button class="btn-page" id="btn-next" onclick="changePage(1)">Next</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sidebar Analytics -->
+            <div class="col col-1">
+              <div class="gcard">
+                <div class="gc-hd">
+                  <div class="gc-ttl">Risk Distribution</div>
+                </div>
+                <div id="chart-risk" style="display:none;">
+                  <div class="risk-dist">
+                    <div class="risk-bar-container">
+                      <div class="risk-bar" id="rb-crit" style="width:0%; background:var(--red);"></div>
+                      <div class="risk-bar" id="rb-high" style="width:0%; background:var(--amber);"></div>
+                      <div class="risk-bar" id="rb-med" style="width:0%; background:var(--yellow);"></div>
+                      <div class="risk-bar" id="rb-low" style="width:0%; background:var(--gray);"></div>
+                    </div>
+                    <div class="risk-legend">
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--red)"></div>Critical
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--amber)"></div>High
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--yellow)"></div>Medium
+                      </div>
+                      <div class="legend-item">
+                        <div class="legend-dot" style="background:var(--gray)"></div>Low
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="chart-risk-empty" class="empty-state" style="padding:20px 0; display:none;">
+                  <div class="empty-msg">No risk data available</div>
+                </div>
+              </div>
+
+              <div class="gcard">
+                <div class="gc-hd">
+                  <div class="gc-ttl">Top Cryptographic Risks</div>
+                </div>
+                <div class="risk-list" id="top-risks-list"></div>
+                <div id="top-risks-empty" class="empty-state" style="padding:20px 0; display:none;">
+                  <div class="empty-msg">No risks detected</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </main>
 
-      <!-- Empty State -->
-      <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-            style="width:48px;height:48px;color:var(--text-s);margin-bottom:8px">
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <!-- Detail Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+      <div class="drawer-hd">
+        <div class="drawer-title">Finding Details</div>
+        <button class="drawer-close" onclick="closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
+            <path d="M18 6L6 18M6 6l12 12" />
           </svg>
-          <div style="font-size:18px; font-weight:600; color:var(--text-h);">No scan results yet</div>
-          <div class="empty-msg">Run a repository scan to discover cryptographic findings.</div>
-          <button class="btn-p" style="margin-top:16px;" onclick="window.location.href='scan.html'">Start Scan</button>
-        </div>
+        </button>
       </div>
+      <div class="drawer-body">
 
-      <!-- Active Findings View -->
-      <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
-
-        <!-- Detection Coverage Panel -->
-        <div class="detection-panel" id="detection-panel" style="display:none;">
-          <span class="det-panel-lbl">Detection Coverage</span>
-          <div class="det-items" id="det-items"></div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-size:20px; font-weight:700; color:var(--text-h);" id="drw-algo">Algorithm</div>
+            <div style="font-size:13px; color:var(--text-s); margin-top:4px;" class="code-font" id="drw-fileline">
+              file:line</div>
+          </div>
+          <span class="badge" id="drw-risk-badge">Risk</span>
         </div>
 
-        <!-- Summary Cards -->
-        <div class="stats-grid">
-          <div class="scard scard-primary">
-            <div class="sc-lbl">Total Findings</div>
-            <div class="sc-val" id="stat-total">0</div>
+        <div class="prop-grid">
+          <div class="prop-item">
+            <div class="prop-lbl">Artefact Type</div>
+            <div class="prop-val" id="drw-type">-</div>
           </div>
-          <div class="scard">
-            <div class="sc-lbl">Critical</div>
-            <div class="sc-val" id="stat-crit" style="color:var(--red)">0</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Exposure</div>
+            <div class="prop-val" id="drw-exposure">-</div>
           </div>
-          <div class="scard">
-            <div class="sc-lbl">High</div>
-            <div class="sc-val" id="stat-high" style="color:var(--amber)">0</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Data Sensitivity</div>
+            <div class="prop-val" id="drw-sensitivity">-</div>
           </div>
-          <div class="scard">
-            <div class="sc-lbl">Medium</div>
-            <div class="sc-val" id="stat-med" style="color:var(--yellow)">0</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Lifetime</div>
+            <div class="prop-val" id="drw-lifetime">-</div>
           </div>
-          <div class="scard">
-            <div class="sc-lbl">Low</div>
-            <div class="sc-val" id="stat-low" style="color:var(--gray)">0</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Business Criticality</div>
+            <div class="prop-val" id="drw-criticality">-</div>
           </div>
-          <div class="scard">
-            <div class="sc-lbl">Quantum Vulnerable</div>
-            <div class="sc-val" id="stat-quant" style="color:var(--purple)">0</div>
+          <div class="prop-item">
+            <div class="prop-lbl">Purpose</div>
+            <div class="prop-val" id="drw-purpose">-</div>
+          </div>
+          <div class="prop-item">
+            <div class="prop-lbl">Library</div>
+            <div class="prop-val" id="drw-lib">-</div>
+          </div>
+          <div class="prop-item">
+            <div class="prop-lbl">Key Size</div>
+            <div class="prop-val code-font" id="drw-keysize" style="font-size:13px;">-</div>
+          </div>
+          <div class="prop-item">
+            <div class="prop-lbl">Quantum Status</div>
+            <div class="prop-val" id="drw-quantum">-</div>
           </div>
         </div>
 
-        <div class="row">
-          <!-- Main Table Area -->
-          <div class="col col-2">
-            <div class="gcard" style="padding:0; overflow:hidden;">
-              <div class="gc-hd" style="padding: 24px 24px 0 24px; margin-bottom: 16px;">
-                <div>
-                  <div class="gc-ttl">All Findings</div>
-                  <div class="gc-sub" id="lbl-showing-count">Showing 0 findings</div>
-                </div>
+        <div class="explanation-box"
+          style="margin-top:12px; background:var(--bg-card); border-color:var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="margin:0; font-size:14px; color:var(--text-h);">Business Criticality (4 Sub-factors)</h4>
+            <span id="drw-crit-score-badge" class="badge badge-high" style="font-size:12px; font-weight:700;">High
+              (3.5)</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Data Sensitivity (30% weight):</span>
+                <strong id="lbl-sub-sens">3.5</strong>
               </div>
+              <input type="range" id="slider-sub-sens" min="1.0" max="5.0" step="0.5"
+                style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+            </div>
 
-              <div class="filter-bar">
-                <input type="text" id="filter-search" class="inp-search" placeholder="Search findings..."
-                  oninput="handleFilterChange()">
-                <select id="filter-risk" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Risks</option>
-                  <option value="CRITICAL">Critical</option>
-                  <option value="HIGH">High</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="LOW">Low</option>
-                </select>
-                <select id="filter-type" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Types</option>
-                  <option value="algorithm">Algorithm</option>
-                  <option value="key">Key</option>
-                  <option value="certificate">Certificate</option>
-                  <option value="protocol">Protocol</option>
-                  <option value="library">Library</option>
-                  <option value="hardware_module">Hardware Module</option>
-                  <option value="cloud_service">Cloud Service</option>
-                </select>
-                <select id="filter-lifetime" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Lifetimes</option>
-                  <option value="1">&le; 1 Year (Ephemeral)</option>
-                  <option value="2">2 Years (Certificates)</option>
-                  <option value="5">5 Years (Standard)</option>
-                  <option value="10">10 Years (Signing / Key Pair)</option>
-                  <option value="20">20+ Years (Archival / At-Rest)</option>
-                </select>
-                <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Business Criticality</option>
-                  <option value="Critical">Critical (Score &ge; 4.0)</option>
-                  <option value="High">High (Score &ge; 3.0)</option>
-                  <option value="Medium">Medium (Score &ge; 2.0)</option>
-                  <option value="Low">Low (Score &lt; 2.0)</option>
-                </select>
-                <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Exposure</option>
-                  <option value="external-facing">External-Facing</option>
-                  <option value="internal">Internal</option>
-                </select>
-                <select id="filter-algo" class="filter-sel" onchange="handleFilterChange()">
-                  <option value="ALL">All Algorithms</option>
-                </select>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Exposure Level (25% weight):</span>
+                <strong id="lbl-sub-exp">3.0</strong>
               </div>
+              <input type="range" id="slider-sub-exp" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;"
+                oninput="updateDrawerSubfactorsLive()">
+              <div id="drw-exposure-confidence"
+                style="font-size:11px; font-weight:600; color:var(--purple); margin-top:4px;"></div>
+              <div id="drw-exposure-signals"
+                style="margin-top:2px; font-size:10px; color:var(--text-m); line-height:1.4;"></div>
+            </div>
 
-              <div id="chips-container" class="chips-area" style="display:none;"></div>
-
-              <div class="tbl-wrapper">
-                <table id="findings-table">
-                  <thead>
-                    <tr>
-                      <th>Risk</th>
-                      <th>Algorithm</th>
-                      <th>Type</th>
-                      <th>Exposure</th>
-                      <th>Detection</th>
-                      <th>Confidence</th>
-                      <th>Quantum Status</th>
-                      <th>Purpose</th>
-                      <th>Lifetime</th>
-                      <th>Business Criticality</th>
-                      <th>File</th>
-                      <th>Line</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="findings-tbody"></tbody>
-                </table>
-
-                <div id="empty-search" class="empty-state" style="display:none;">
-                  <div style="font-size:16px; font-weight:600; color:var(--text-h);">No findings match your search</div>
-                  <div class="empty-msg">Try changing your search or filters.</div>
-                  <button class="btn-sec" style="margin-top:12px;" onclick="clearFilters()">Clear Filters</button>
-                </div>
-
-                <div id="empty-safe" class="empty-state" style="display:none;">
-                  <div style="font-size:16px; font-weight:600; color:var(--text-h);">No cryptographic findings detected
-                  </div>
-                  <div class="empty-msg">Your latest scan did not identify any cryptographic risks.</div>
-                </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>System Role (25% weight):</span>
+                <strong id="lbl-sub-sys">3.0</strong>
               </div>
+              <input type="range" id="slider-sub-sys" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;"
+                oninput="updateDrawerSubfactorsLive()">
+            </div>
 
-              <div class="pagination" id="pagination-ctrl" style="display:none;">
-                <div class="page-info" id="page-info">Showing 1-20 of 0</div>
-                <div class="page-controls">
-                  <button class="btn-page" id="btn-prev" onclick="changePage(-1)">Previous</button>
-                  <button class="btn-page" id="btn-next" onclick="changePage(1)">Next</button>
-                </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Regulatory Impact (20% weight):</span>
+                <strong id="lbl-sub-reg">2.0</strong>
               </div>
+              <input type="range" id="slider-sub-reg" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;"
+                oninput="updateDrawerSubfactorsLive()">
             </div>
           </div>
 
-          <!-- Sidebar Analytics -->
-          <div class="col col-1">
-            <div class="gcard">
-              <div class="gc-hd">
-                <div class="gc-ttl">Risk Distribution</div>
-              </div>
-              <div id="chart-risk" style="display:none;">
-                <div class="risk-dist">
-                  <div class="risk-bar-container">
-                    <div class="risk-bar" id="rb-crit" style="width:0%; background:var(--red);"></div>
-                    <div class="risk-bar" id="rb-high" style="width:0%; background:var(--amber);"></div>
-                    <div class="risk-bar" id="rb-med" style="width:0%; background:var(--yellow);"></div>
-                    <div class="risk-bar" id="rb-low" style="width:0%; background:var(--gray);"></div>
-                  </div>
-                  <div class="risk-legend">
-                    <div class="legend-item">
-                      <div class="legend-dot" style="background:var(--red)"></div>Critical
-                    </div>
-                    <div class="legend-item">
-                      <div class="legend-dot" style="background:var(--amber)"></div>High
-                    </div>
-                    <div class="legend-item">
-                      <div class="legend-dot" style="background:var(--yellow)"></div>Medium
-                    </div>
-                    <div class="legend-item">
-                      <div class="legend-dot" style="background:var(--gray)"></div>Low
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div id="chart-risk-empty" class="empty-state" style="padding:20px 0; display:none;">
-                <div class="empty-msg">No risk data available</div>
-              </div>
-            </div>
-
-            <div class="gcard">
-              <div class="gc-hd">
-                <div class="gc-ttl">Top Cryptographic Risks</div>
-              </div>
-              <div class="risk-list" id="top-risks-list"></div>
-              <div id="top-risks-empty" class="empty-state" style="padding:20px 0; display:none;">
-                <div class="empty-msg">No risks detected</div>
-              </div>
+          <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-color);">
+            <label
+              style="font-size:11px; font-weight:600; color:var(--text-s); display:block; margin-bottom:4px;">REASON FOR
+              OVERRIDE (AUDIT TRAIL):</label>
+            <input type="text" id="drw-mod-reason" placeholder="e.g., Upgraded sensitivity per compliance audit"
+              class="inp-search" style="width:100%; font-size:12px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <button class="btn-sec"
+                style="font-size:12px; padding:6px 12px; background:var(--purple); color:white; border:none;"
+                onclick="saveCriticalityOverride()">Save Criticality Override</button>
+              <span id="drw-audit-trail" style="font-size:10px; color:var(--text-m); font-style:italic;"></span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </main>
 
-  <!-- Detail Drawer -->
-  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-hd">
-      <div class="drawer-title">Finding Details</div>
-      <button class="drawer-close" onclick="closeDrawer()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;">
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="drawer-body">
+        <div class="explanation-box"
+          style="margin-top:12px; background:rgba(139,92,246,0.06); border-color:rgba(139,92,246,0.2);">
+          <h4 style="color:var(--purple);">Mosca's Inequality (X + Y &gt; Z)</h4>
+          <p id="drw-mosca-readout"
+            style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--text-h); margin-bottom:4px;">
+            Formula: X (10y lifetime) + Y (1.5y migration) &gt; Z (12y threat)</p>
+          <p id="drw-mosca-verdict" style="font-size:12px; color:var(--amber);">Verdict: Risk is HIGH (Data will still
+            need protection after CRQC arrival)</p>
+        </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <div style="font-size:20px; font-weight:700; color:var(--text-h);" id="drw-algo">Algorithm</div>
-          <div style="font-size:13px; color:var(--text-s); margin-top:4px;" class="code-font" id="drw-fileline">
-            file:line</div>
-        </div>
-        <span class="badge" id="drw-risk-badge">Risk</span>
-      </div>
-
-      <div class="prop-grid">
-        <div class="prop-item">
-          <div class="prop-lbl">Artefact Type</div>
-          <div class="prop-val" id="drw-type">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Exposure</div>
-          <div class="prop-val" id="drw-exposure">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Data Sensitivity</div>
-          <div class="prop-val" id="drw-sensitivity">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Lifetime</div>
-          <div class="prop-val" id="drw-lifetime">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Business Criticality</div>
-          <div class="prop-val" id="drw-criticality">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Purpose</div>
-          <div class="prop-val" id="drw-purpose">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Library</div>
-          <div class="prop-val" id="drw-lib">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Key Size</div>
-          <div class="prop-val code-font" id="drw-keysize" style="font-size:13px;">-</div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-lbl">Quantum Status</div>
-          <div class="prop-val" id="drw-quantum">-</div>
-        </div>
-      </div>
-
-      <div class="explanation-box" style="margin-top:12px; background:var(--bg-card); border-color:var(--border-color);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h4 style="margin:0; font-size:14px; color:var(--text-h);">Business Criticality (4 Sub-factors)</h4>
-          <span id="drw-crit-score-badge" class="badge badge-high" style="font-size:12px; font-weight:700;">High (3.5)</span>
-        </div>
-        
-        <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
-          <div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>Data Sensitivity (30% weight):</span>
-              <strong id="lbl-sub-sens">3.5</strong>
+          <div class="prop-lbl" style="margin-bottom:8px;">Impact</div>
+          <div class="impact-flow">
+            <div class="flow-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;">
+                <path
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span id="drw-impact-file" class="code-font" style="font-size:13px;">file.py</span>
             </div>
-            <input type="range" id="slider-sub-sens" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
-          </div>
-
-          <div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>Exposure Level (25% weight):</span>
-              <strong id="lbl-sub-exp">3.0</strong>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Direct Dependencies
             </div>
-            <input type="range" id="slider-sub-exp" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
-            <div id="drw-exposure-confidence" style="font-size:11px; font-weight:600; color:var(--purple); margin-top:4px;"></div>
-            <div id="drw-exposure-signals" style="margin-top:2px; font-size:10px; color:var(--text-m); line-height:1.4;"></div>
-          </div>
-
-          <div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>System Role (25% weight):</span>
-              <strong id="lbl-sub-sys">3.0</strong>
-            </div>
-            <input type="range" id="slider-sub-sys" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
-          </div>
-
-          <div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>Regulatory Impact (20% weight):</span>
-              <strong id="lbl-sub-reg">2.0</strong>
-            </div>
-            <input type="range" id="slider-sub-reg" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
           </div>
         </div>
 
-        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-color);">
-          <label style="font-size:11px; font-weight:600; color:var(--text-s); display:block; margin-bottom:4px;">REASON FOR OVERRIDE (AUDIT TRAIL):</label>
-          <input type="text" id="drw-mod-reason" placeholder="e.g., Upgraded sensitivity per compliance audit" class="inp-search" style="width:100%; font-size:12px; margin-bottom:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <button class="btn-sec" style="font-size:12px; padding:6px 12px; background:var(--purple); color:white; border:none;" onclick="saveCriticalityOverride()">Save Criticality Override</button>
-            <span id="drw-audit-trail" style="font-size:10px; color:var(--text-m); font-style:italic;"></span>
-          </div>
-        </div>
       </div>
-
-      <div class="explanation-box" style="margin-top:12px; background:rgba(139,92,246,0.06); border-color:rgba(139,92,246,0.2);">
-        <h4 style="color:var(--purple);">Mosca's Inequality (X + Y &gt; Z)</h4>
-        <p id="drw-mosca-readout" style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--text-h); margin-bottom:4px;">Formula: X (10y lifetime) + Y (1.5y migration) &gt; Z (12y threat)</p>
-        <p id="drw-mosca-verdict" style="font-size:12px; color:var(--amber);">Verdict: Risk is HIGH (Data will still need protection after CRQC arrival)</p>
+      <div class="drawer-ft">
+        <button class="btn-p" style="flex:1; justify-content:center;" onclick="goToMigration()">View Migration
+          Recommendation</button>
       </div>
-
-      <div>
-        <div class="prop-lbl" style="margin-bottom:8px;">Impact</div>
-        <div class="impact-flow">
-          <div class="flow-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;">
-              <path
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span id="drw-impact-file" class="code-font" style="font-size:13px;">file.py</span>
-          </div>
-          <div class="flow-arrow">↓</div>
-          <div class="flow-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Direct Dependencies
-          </div>
-        </div>
-      </div>
-
     </div>
-    <div class="drawer-ft">
-      <button class="btn-p" style="flex:1; justify-content:center;" onclick="goToMigration()">View Migration
-        Recommendation</button>
-    </div>
-  </div>
 
-  <script src="assets/js/engine.js"></script>
-  <script>
-    let currentDrawerFinding = null;
-    let allFindings = [];
-    let filteredFindings = [];
-    let currentPage = 1;
-    const itemsPerPage = 15;
+    <script src="assets/js/engine.js"></script>
+    <script>
+      let currentDrawerFinding = null;
+      let allFindings = [];
+      let filteredFindings = [];
+      let currentPage = 1;
+      const itemsPerPage = 15;
 
-    function goToMigration() {
-      if (currentDrawerFinding && currentDrawerFinding.algorithm) {
-        window.location.href = `risk-migration.html?algo=${encodeURIComponent(currentDrawerFinding.algorithm)}`;
-      } else if (currentDrawerFinding && currentDrawerFinding.title) {
-        window.location.href = `risk-migration.html?algo=${encodeURIComponent(currentDrawerFinding.title.split(' ')[0])}`;
-      } else {
-        window.location.href = 'risk-migration.html';
-      }
-    }
-
-    function getUrlParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
-
-    async function init() {
-      const data = CryptoEngine.getData();
-      const noDataEl = document.getElementById('view-no-data');
-      const activeEl = document.getElementById('view-active');
-      const exportBtn = document.getElementById('btn-export');
-
-      if (!data.scans || data.scans.length === 0) {
-        if (noDataEl) noDataEl.style.display = 'block';
-        if (activeEl) activeEl.style.display = 'none';
-        if (exportBtn) exportBtn.style.display = 'none';
-        return;
-      }
-
-      // Live-fetch repositories from backend for live join (single source of truth)
-      const repoCritMap = {};
-      const addCrit = (k, v) => {
-        if (!k || !v) return;
-        repoCritMap[k] = v;
-        const clean = String(k).replace(/\.zip$/i, '');
-        repoCritMap[clean] = v;
-        repoCritMap[clean.toLowerCase()] = v;
-      };
-
-      try {
-        const token = localStorage.getItem('cs_token');
-        const res = await fetch('http://localhost:3000/repos', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (res.ok) {
-          const liveRepos = await res.json();
-          liveRepos.forEach(r => {
-            const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
-            if (r.id) addCrit(r.id, crit);
-            if (r.name) addCrit(r.name, crit);
-          });
-        }
-      } catch (err) {
-        console.warn('Live repos fetch failed, using cached store:', err);
-      }
-
-      (data.repositories || []).forEach(r => {
-        const crit = r.businessCriticality || r.criticality_tier;
-        if (r.id && crit) addCrit(r.id, crit);
-        if (r.name && crit) addCrit(r.name, crit);
-      });
-      (data.scans || []).forEach(s => {
-        const crit = s.businessCriticality || s.criticality_tier;
-        if (s.repoId && crit) addCrit(s.repoId, crit);
-        if (s.repoName && crit) addCrit(s.repoName, crit);
-      });
-
-      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
-
-      allFindings = targetScans.flatMap(s => {
-        // Inherit live tier from parent repo record
-        const repoKey = s.repoName || s.name || '';
-        const repoClean = repoKey.replace(/\.zip$/i, '');
-        const liveCrit = repoCritMap[s.repoId] || 
-                         repoCritMap[repoKey] || 
-                         repoCritMap[repoClean] || 
-                         repoCritMap[repoClean.toLowerCase()] || 
-                         s.businessCriticality || 
-                         s.criticality_tier || 
-                         'Not tagged';
-        return (s.findings || []).map(f => ({
-          ...f,
-          repoName: s.repoName || s.name,
-          repoId: s.repoId,
-          businessCriticality: liveCrit,
-          criticality_tier: liveCrit,
-        }));
-      });
-
-      if (allFindings.length === 0) {
-        if (noDataEl) noDataEl.style.display = 'block';
-        if (activeEl) activeEl.style.display = 'none';
-        if (exportBtn) exportBtn.style.display = 'none';
-        return;
-      }
-
-      if (noDataEl) noDataEl.style.display = 'none';
-      if (activeEl) activeEl.style.display = 'flex';
-      if (exportBtn) exportBtn.style.display = 'inline-flex';
-
-      populateAlgorithmFilter();
-      updateSummaryStats();
-      updateRiskChart();
-      updateTopRisks();
-      updateDetectionCoverage();
-
-      const urlSearch = getUrlParam('search') || getUrlParam('system') || getUrlParam('repo');
-      if (urlSearch) document.getElementById('filter-search').value = urlSearch;
-
-      const urlAlgo = getUrlParam('algo');
-      if (urlAlgo) {
-        const algFilter = document.getElementById('filter-algo');
-        if ([...algFilter.options].some(o => o.value === urlAlgo)) {
-          algFilter.value = urlAlgo;
+      function goToMigration() {
+        if (currentDrawerFinding && currentDrawerFinding.algorithm) {
+          window.location.href = `risk-migration.html?algo=${encodeURIComponent(currentDrawerFinding.algorithm)}`;
+        } else if (currentDrawerFinding && currentDrawerFinding.title) {
+          window.location.href = `risk-migration.html?algo=${encodeURIComponent(currentDrawerFinding.title.split(' ')[0])}`;
         } else {
-          // If option not present yet, add it
-          const opt = document.createElement('option');
-          opt.value = urlAlgo;
-          opt.textContent = urlAlgo;
-          algFilter.appendChild(opt);
-          algFilter.value = urlAlgo;
+          window.location.href = 'risk-migration.html';
         }
       }
 
-      handleFilterChange();
-    }
+      function getUrlParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
 
-    function populateAlgorithmFilter() {
-      const algoSet = new Set();
-      allFindings.forEach(f => {
-        if (f.algorithm) algoSet.add(f.algorithm);
-        else if (f.title) algoSet.add(f.title.split(' ')[0]);
-      });
+      async function init() {
+        const data = CryptoEngine.getData();
+        const noDataEl = document.getElementById('view-no-data');
+        const activeEl = document.getElementById('view-active');
+        const exportBtn = document.getElementById('btn-export');
 
-      const sel = document.getElementById('filter-algo');
-      Array.from(algoSet).sort().forEach(algo => {
-        const opt = document.createElement('option');
-        opt.value = algo;
-        opt.textContent = algo;
-        sel.appendChild(opt);
-      });
-    }
+        if (!data.scans || data.scans.length === 0) {
+          if (noDataEl) noDataEl.style.display = 'block';
+          if (activeEl) activeEl.style.display = 'none';
+          if (exportBtn) exportBtn.style.display = 'none';
+          return;
+        }
 
-    function updateSummaryStats() {
-      document.getElementById('stat-total').textContent = allFindings.length;
-      document.getElementById('stat-crit').textContent = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
-      document.getElementById('stat-high').textContent = allFindings.filter(f => getSeverity(f) === 'HIGH').length;
-      document.getElementById('stat-med').textContent = allFindings.filter(f => getSeverity(f) === 'MEDIUM').length;
-      document.getElementById('stat-low').textContent = allFindings.filter(f => getSeverity(f) === 'LOW').length;
-      document.getElementById('stat-quant').textContent = allFindings.filter(f => isQuantum(f)).length;
-    }
+        // Live-fetch repositories from backend for live join (single source of truth)
+        const repoCritMap = {};
+        const addCrit = (k, v) => {
+          if (!k || !v) return;
+          repoCritMap[k] = v;
+          const clean = String(k).replace(/\.zip$/i, '');
+          repoCritMap[clean] = v;
+          repoCritMap[clean.toLowerCase()] = v;
+        };
 
-    function getSeverity(f) {
-      return (f.severity || '').toUpperCase();
-    }
-    function isQuantum(f) {
-      if (!f) return false;
-      const qs = (f.quantumStatus || '').toLowerCase();
-      return f.quantum === 'yes' || qs.includes('vuln') || Boolean(f.isQuantumVulnerable);
-    }
-    function getBadgeClass(sev) {
-      if (sev === 'CRITICAL') return 'badge-crit';
-      if (sev === 'HIGH') return 'badge-high';
-      if (sev === 'MEDIUM') return 'badge-med';
-      return 'badge-low';
-    }
+        try {
+          const token = localStorage.getItem('cs_token');
+          const res = await fetch('http://localhost:3000/repos', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
+          if (res.ok) {
+            const liveRepos = await res.json();
+            liveRepos.forEach(r => {
+              const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+              if (r.id) addCrit(r.id, crit);
+              if (r.name) addCrit(r.name, crit);
+            });
+          }
+        } catch (err) {
+          console.warn('Live repos fetch failed, using cached store:', err);
+        }
 
-    function getArtefactType(f) {
-      if (!f) return 'Cryptographic Asset';
-      if (f.type && f.type !== 'Asset') return f.type;
-      
-      const algo = (f.algorithm || f.title || '').toUpperCase();
-      const usage = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
+        (data.repositories || []).forEach(r => {
+          const crit = r.businessCriticality || r.criticality_tier;
+          if (r.id && crit) addCrit(r.id, crit);
+          if (r.name && crit) addCrit(r.name, crit);
+        });
+        (data.scans || []).forEach(s => {
+          const crit = s.businessCriticality || s.criticality_tier;
+          if (s.repoId && crit) addCrit(s.repoId, crit);
+          if (s.repoName && crit) addCrit(s.repoName, crit);
+        });
 
-      if (algo.includes('RSA') || algo.includes('ECDSA') || algo.includes('ECDH') || algo.includes('ECC') || algo.includes('CURVE25519') || algo.includes('ED25519') || algo.includes('DSA') || algo.includes('ASYMMETRIC') || usage.includes('ASYMMETRIC') || usage.includes('PUBLIC KEY') || usage.includes('KEY PAIR')) {
-        return 'Asymmetric Key';
-      }
-      if (algo.includes('AES') || algo.includes('DES') || algo.includes('BLOWFISH') || algo.includes('RC4') || algo.includes('CHACHA') || algo.includes('SYMMETRIC') || usage.includes('SYMMETRIC') || usage.includes('BLOCK CIPHER') || usage.includes('STREAM CIPHER')) {
-        return 'Symmetric Cipher';
-      }
-      if (algo.includes('SHA') || algo.includes('MD5') || algo.includes('HASH') || algo.includes('DIGEST') || usage.includes('HASH') || usage.includes('DIGEST')) {
-        return 'Cryptographic Hash';
-      }
-      if (algo.includes('PBKDF') || algo.includes('BCRYPT') || algo.includes('ARGON') || algo.includes('SCRYPT') || algo.includes('KDF') || usage.includes('PASSWORD') || usage.includes('DERIVATION')) {
-        return 'Key Derivation';
-      }
-      if (algo.includes('HMAC') || algo.includes('MAC') || usage.includes('AUTHENTICATION CODE')) {
-        return 'MAC / HMAC';
-      }
-      if (algo.includes('SECRET') || algo.includes('KEY MATERIAL') || algo.includes('PRIVATE KEY') || usage.includes('SECRET') || usage.includes('CREDENTIAL')) {
-        return 'Secret Material';
-      }
-      if (algo.includes('TLS') || algo.includes('SSL') || usage.includes('TRANSPORT') || usage.includes('CERTIFICATE')) {
-        return 'Protocol / TLS';
-      }
-      if (algo.includes('PRNG') || algo.includes('RANDOM') || usage.includes('RANDOM')) {
-        return 'PRNG / Entropy';
-      }
-      return 'Cryptographic Asset';
-    }
+        const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
+        const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
 
-    function getArtefactLifetime(f) {
-      if (!f) return 'Medium-term';
-      if (f.lifetime) return f.lifetime;
-      const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '') + ' ' + (f.title || '')).toUpperCase();
-      const file = (f.file || f.filePath || '').toLowerCase();
-      
-      // Permanent / Sovereign / Root / Master keys / Health records
-      if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || file.includes('ca-') || file.includes('master')) {
-        return 'Permanent';
+        allFindings = targetScans.flatMap(s => {
+          // Inherit live tier from parent repo record
+          const repoKey = s.repoName || s.name || '';
+          const repoClean = repoKey.replace(/\.zip$/i, '');
+          const liveCrit = repoCritMap[s.repoId] ||
+            repoCritMap[repoKey] ||
+            repoCritMap[repoClean] ||
+            repoCritMap[repoClean.toLowerCase()] ||
+            s.businessCriticality ||
+            s.criticality_tier ||
+            'Not tagged';
+          return (s.findings || []).map(f => ({
+            ...f,
+            repoName: s.repoName || s.name,
+            repoId: s.repoId,
+            businessCriticality: liveCrit,
+            criticality_tier: liveCrit,
+          }));
+        });
+
+        if (allFindings.length === 0) {
+          if (noDataEl) noDataEl.style.display = 'block';
+          if (activeEl) activeEl.style.display = 'none';
+          if (exportBtn) exportBtn.style.display = 'none';
+          return;
+        }
+
+        if (noDataEl) noDataEl.style.display = 'none';
+        if (activeEl) activeEl.style.display = 'flex';
+        if (exportBtn) exportBtn.style.display = 'inline-flex';
+
+        populateAlgorithmFilter();
+        updateSummaryStats();
+        updateRiskChart();
+        updateTopRisks();
+        updateDetectionCoverage();
+
+        const urlSearch = getUrlParam('search') || getUrlParam('system') || getUrlParam('repo');
+        if (urlSearch) document.getElementById('filter-search').value = urlSearch;
+
+        const urlAlgo = getUrlParam('algo');
+        if (urlAlgo) {
+          const algFilter = document.getElementById('filter-algo');
+          if ([...algFilter.options].some(o => o.value === urlAlgo)) {
+            algFilter.value = urlAlgo;
+          } else {
+            // If option not present yet, add it
+            const opt = document.createElement('option');
+            opt.value = urlAlgo;
+            opt.textContent = urlAlgo;
+            algFilter.appendChild(opt);
+            algFilter.value = urlAlgo;
+          }
+        }
+
+        handleFilterChange();
       }
-      // Long-term: PII, Financial / Payment records, customer data, biometric credentials
-      if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || sens.includes('CREDENTIAL') || file.includes('auth') || file.includes('user')) {
-        return 'Long-term';
+
+      function populateAlgorithmFilter() {
+        const algoSet = new Set();
+        allFindings.forEach(f => {
+          if (f.algorithm) algoSet.add(f.algorithm);
+          else if (f.title) algoSet.add(f.title.split(' ')[0]);
+        });
+
+        const sel = document.getElementById('filter-algo');
+        Array.from(algoSet).sort().forEach(algo => {
+          const opt = document.createElement('option');
+          opt.value = algo;
+          opt.textContent = algo;
+          sel.appendChild(opt);
+        });
       }
-      // Short-term: Ephemeral tokens, session keys, transient TLS sessions, caches, nonces
-      if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || sens.includes('TOKEN') || file.includes('session') || file.includes('cache') || file.includes('temp')) {
-        return 'Short-term';
+
+      function updateSummaryStats() {
+        document.getElementById('stat-total').textContent = allFindings.length;
+        document.getElementById('stat-crit').textContent = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
+        document.getElementById('stat-high').textContent = allFindings.filter(f => getSeverity(f) === 'HIGH').length;
+        document.getElementById('stat-med').textContent = allFindings.filter(f => getSeverity(f) === 'MEDIUM').length;
+        document.getElementById('stat-low').textContent = allFindings.filter(f => getSeverity(f) === 'LOW').length;
+        document.getElementById('stat-quant').textContent = allFindings.filter(f => isQuantum(f)).length;
       }
-      if (f.dataLifetimeYears) {
-        if (f.dataLifetimeYears > 20) return 'Permanent';
-        if (f.dataLifetimeYears >= 10) return 'Long-term';
-        if (f.dataLifetimeYears <= 1) return 'Short-term';
+
+      function getSeverity(f) {
+        return (f.severity || '').toUpperCase();
+      }
+      function isQuantum(f) {
+        if (!f) return false;
+        const qs = (f.quantumStatus || '').toLowerCase();
+        return f.quantum === 'yes' || qs.includes('vuln') || Boolean(f.isQuantumVulnerable);
+      }
+      function getBadgeClass(sev) {
+        if (sev === 'CRITICAL') return 'badge-crit';
+        if (sev === 'HIGH') return 'badge-high';
+        if (sev === 'MEDIUM') return 'badge-med';
+        return 'badge-low';
+      }
+
+      function getArtefactType(f) {
+        if (!f) return 'Cryptographic Asset';
+        if (f.type && f.type !== 'Asset') return f.type;
+
+        const algo = (f.algorithm || f.title || '').toUpperCase();
+        const usage = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
+
+        if (algo.includes('RSA') || algo.includes('ECDSA') || algo.includes('ECDH') || algo.includes('ECC') || algo.includes('CURVE25519') || algo.includes('ED25519') || algo.includes('DSA') || algo.includes('ASYMMETRIC') || usage.includes('ASYMMETRIC') || usage.includes('PUBLIC KEY') || usage.includes('KEY PAIR')) {
+          return 'Asymmetric Key';
+        }
+        if (algo.includes('AES') || algo.includes('DES') || algo.includes('BLOWFISH') || algo.includes('RC4') || algo.includes('CHACHA') || algo.includes('SYMMETRIC') || usage.includes('SYMMETRIC') || usage.includes('BLOCK CIPHER') || usage.includes('STREAM CIPHER')) {
+          return 'Symmetric Cipher';
+        }
+        if (algo.includes('SHA') || algo.includes('MD5') || algo.includes('HASH') || algo.includes('DIGEST') || usage.includes('HASH') || usage.includes('DIGEST')) {
+          return 'Cryptographic Hash';
+        }
+        if (algo.includes('PBKDF') || algo.includes('BCRYPT') || algo.includes('ARGON') || algo.includes('SCRYPT') || algo.includes('KDF') || usage.includes('PASSWORD') || usage.includes('DERIVATION')) {
+          return 'Key Derivation';
+        }
+        if (algo.includes('HMAC') || algo.includes('MAC') || usage.includes('AUTHENTICATION CODE')) {
+          return 'MAC / HMAC';
+        }
+        if (algo.includes('SECRET') || algo.includes('KEY MATERIAL') || algo.includes('PRIVATE KEY') || usage.includes('SECRET') || usage.includes('CREDENTIAL')) {
+          return 'Secret Material';
+        }
+        if (algo.includes('TLS') || algo.includes('SSL') || usage.includes('TRANSPORT') || usage.includes('CERTIFICATE')) {
+          return 'Protocol / TLS';
+        }
+        if (algo.includes('PRNG') || algo.includes('RANDOM') || usage.includes('RANDOM')) {
+          return 'PRNG / Entropy';
+        }
+        return 'Cryptographic Asset';
+      }
+
+      function getArtefactLifetime(f) {
+        if (!f) return 'Medium-term';
+        if (f.lifetime) return f.lifetime;
+        const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '') + ' ' + (f.title || '')).toUpperCase();
+        const file = (f.file || f.filePath || '').toLowerCase();
+
+        // Permanent / Sovereign / Root / Master keys / Health records
+        if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || file.includes('ca-') || file.includes('master')) {
+          return 'Permanent';
+        }
+        // Long-term: PII, Financial / Payment records, customer data, biometric credentials
+        if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || sens.includes('CREDENTIAL') || file.includes('auth') || file.includes('user')) {
+          return 'Long-term';
+        }
+        // Short-term: Ephemeral tokens, session keys, transient TLS sessions, caches, nonces
+        if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || sens.includes('TOKEN') || file.includes('session') || file.includes('cache') || file.includes('temp')) {
+          return 'Short-term';
+        }
+        if (f.dataLifetimeYears) {
+          if (f.dataLifetimeYears > 20) return 'Permanent';
+          if (f.dataLifetimeYears >= 10) return 'Long-term';
+          if (f.dataLifetimeYears <= 1) return 'Short-term';
+          return 'Medium-term';
+        }
         return 'Medium-term';
       }
-      return 'Medium-term';
-    }
 
-    function getBusinessCriticality(f) {
-      if (!f) return 'Medium';
-      if (f.criticality_label) return f.criticality_label;
-      if (typeof CryptoEngine !== 'undefined') {
-        return CryptoEngine.computeCriticality(f).criticality_label;
+      function getBusinessCriticality(f) {
+        if (!f) return 'Medium';
+        if (f.criticality_label) return f.criticality_label;
+        if (typeof CryptoEngine !== 'undefined') {
+          return CryptoEngine.computeCriticality(f).criticality_label;
+        }
+        return 'Medium';
       }
-      return 'Medium';
-    }
 
-    function computeFindingRisk(f) {
-      const sev = getSeverity(f).toUpperCase();
-      let exploitability = 2.0;
-      if (sev === 'CRITICAL') exploitability = 10.0;
-      else if (sev === 'HIGH') exploitability = 8.0;
-      else if (sev === 'MEDIUM') exploitability = 5.0;
-      else if (sev === 'LOW' || sev === 'INFORMATIONAL') exploitability = 2.0;
+      function computeFindingRisk(f) {
+        const sev = getSeverity(f).toUpperCase();
+        let exploitability = 2.0;
+        if (sev === 'CRITICAL') exploitability = 10.0;
+        else if (sev === 'HIGH') exploitability = 8.0;
+        else if (sev === 'MEDIUM') exploitability = 5.0;
+        else if (sev === 'LOW' || sev === 'INFORMATIONAL') exploitability = 2.0;
 
-      const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '')).toUpperCase();
-      let dataSensitivity = 4.0;
-      if (sens.includes('HEALTH') || sens.includes('ROOT') || sens.includes('CRITICAL')) dataSensitivity = 10.0;
-      else if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT')) dataSensitivity = 8.0;
-      else if (sens.includes('CONFIDENTIAL') || sens.includes('INTERNAL')) dataSensitivity = 6.0;
+        const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '')).toUpperCase();
+        let dataSensitivity = 4.0;
+        if (sens.includes('HEALTH') || sens.includes('ROOT') || sens.includes('CRITICAL')) dataSensitivity = 10.0;
+        else if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT')) dataSensitivity = 8.0;
+        else if (sens.includes('CONFIDENTIAL') || sens.includes('INTERNAL')) dataSensitivity = 6.0;
 
-      const exp = (f.exposure || '').toLowerCase();
-      const exposure = exp === 'external-facing' ? 10.0 : 4.0;
+        const exp = (f.exposure || '').toLowerCase();
+        const exposure = exp === 'external-facing' ? 10.0 : 4.0;
 
-      const isQ = isQuantum(f);
-      const qStatus = (f.quantumStatus || '').toLowerCase();
-      let quantumTimeline = 2.0;
-      if (isQ || qStatus.includes('broken') || qStatus.includes('vuln')) quantumTimeline = 10.0;
-      else if (qStatus.includes('weaken')) quantumTimeline = 6.0;
+        const isQ = isQuantum(f);
+        const qStatus = (f.quantumStatus || '').toLowerCase();
+        let quantumTimeline = 2.0;
+        if (isQ || qStatus.includes('broken') || qStatus.includes('vuln')) quantumTimeline = 10.0;
+        else if (qStatus.includes('weaken')) quantumTimeline = 6.0;
 
-      // Formula: Risk Score = Exploitability*0.3 + DataSensitivity*0.3 + Exposure*0.2 + QuantumTimeline*0.2
-      const baseScore = (exploitability * 0.3) + (dataSensitivity * 0.3) + (exposure * 0.2) + (quantumTimeline * 0.2);
+        // Formula: Risk Score = Exploitability*0.3 + DataSensitivity*0.3 + Exposure*0.2 + QuantumTimeline*0.2
+        const baseScore = (exploitability * 0.3) + (dataSensitivity * 0.3) + (exposure * 0.2) + (quantumTimeline * 0.2);
 
-      // Business Criticality multiplier: Critical: 1.5x, Important: 1.25x, Standard: 1.0x, Low: 0.8x, Not tagged: 1.0x
-      const crit = getBusinessCriticality(f);
-      let multiplier = 1.0;
-      if (crit === 'Critical') multiplier = 1.5;
-      else if (crit === 'Important') multiplier = 1.25;
-      else if (crit === 'Standard') multiplier = 1.0;
-      else if (crit === 'Low') multiplier = 0.8;
-      else multiplier = 1.0;
+        // Business Criticality multiplier: Critical: 1.5x, Important: 1.25x, Standard: 1.0x, Low: 0.8x, Not tagged: 1.0x
+        const crit = getBusinessCriticality(f);
+        let multiplier = 1.0;
+        if (crit === 'Critical') multiplier = 1.5;
+        else if (crit === 'Important') multiplier = 1.25;
+        else if (crit === 'Standard') multiplier = 1.0;
+        else if (crit === 'Low') multiplier = 0.8;
+        else multiplier = 1.0;
 
-      const finalScore = Math.min(10.0, parseFloat((baseScore * multiplier).toFixed(1)));
-      return { baseScore: parseFloat(baseScore.toFixed(1)), multiplier, finalScore, crit };
-    }
+        const finalScore = Math.min(10.0, parseFloat((baseScore * multiplier).toFixed(1)));
+        return { baseScore: parseFloat(baseScore.toFixed(1)), multiplier, finalScore, crit };
+      }
 
-    function getLifetimeBadgeClass(lt) {
-      if (!lt) return 'badge-ast';
-      if (lt.includes('Permanent')) return 'badge-quant';
-      if (lt.includes('Long-term')) return 'badge-high';
-      if (lt.includes('Short-term')) return 'badge-safe';
-      return 'badge-ast';
-    }
+      function getLifetimeBadgeClass(lt) {
+        if (!lt) return 'badge-ast';
+        if (lt.includes('Permanent')) return 'badge-quant';
+        if (lt.includes('Long-term')) return 'badge-high';
+        if (lt.includes('Short-term')) return 'badge-safe';
+        return 'badge-ast';
+      }
 
-    function getCritBadgeClass(crit) {
-      if (crit === 'Critical') return 'badge-crit';
-      if (crit === 'Important') return 'badge-high';
-      if (crit === 'Standard') return 'badge-med';
-      if (crit === 'Low') return 'badge-low';
-      return 'badge-not-tagged';
-    }
-    function getConfBadgeClass(conf) {
-      if (conf === 'Confirmed') return 'badge-conf';
-      if (conf === 'Likely') return 'badge-likely';
-      return 'badge-poss';
-    }
-    function getDetBadgeClass(m) {
-      const map = { ast: 'badge-ast', entropy: 'badge-entropy', sca: 'badge-sca', config: 'badge-config', infra: 'badge-infra', regex: 'badge-regex', manifest: 'badge-manifest', container: 'badge-container', binary: 'badge-binary', certificate: 'badge-cert' };
-      return map[m] || 'badge-regex';
-    }
-    function getDetLabel(m) {
-      const map = { ast: 'AST', entropy: 'Entropy', sca: 'SCA', config: 'Config', infra: 'Infra', regex: 'Regex', manifest: 'Manifest', container: 'Container', binary: 'Binary', certificate: 'Certificate' };
-      return map[m] || (m || 'Unknown').toUpperCase();
-    }
-    function updateDetectionCoverage() {
-      const panel = document.getElementById('detection-panel');
-      const items = document.getElementById('det-items');
-      if (!panel || !items) return;
-      if (allFindings.length === 0) { panel.style.display = 'none'; return; }
-      panel.style.display = 'flex';
-      const colors = { ast: '#38bdf8', entropy: '#fbbf24', sca: '#a78bfa', config: '#34d399', infra: '#f97316', regex: '#94a3b8', manifest: '#f56565', container: '#a855f7', binary: '#ec4899', certificate: '#06b6d4' };
-      const counts = {};
-      allFindings.forEach(f => {
-        const m = f.detection_method || 'ast';
-        counts[m] = (counts[m] || 0) + 1;
-      });
-      items.innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([m, c]) => `
+      function getCritBadgeClass(crit) {
+        if (crit === 'Critical') return 'badge-crit';
+        if (crit === 'Important') return 'badge-high';
+        if (crit === 'Standard') return 'badge-med';
+        if (crit === 'Low') return 'badge-low';
+        return 'badge-not-tagged';
+      }
+      function getConfBadgeClass(conf) {
+        if (conf === 'Confirmed') return 'badge-conf';
+        if (conf === 'Likely') return 'badge-likely';
+        return 'badge-poss';
+      }
+      function getDetBadgeClass(m) {
+        const map = { ast: 'badge-ast', entropy: 'badge-entropy', sca: 'badge-sca', config: 'badge-config', infra: 'badge-infra', regex: 'badge-regex', manifest: 'badge-manifest', container: 'badge-container', binary: 'badge-binary', certificate: 'badge-cert' };
+        return map[m] || 'badge-regex';
+      }
+      function getDetLabel(m) {
+        const map = { ast: 'AST', entropy: 'Entropy', sca: 'SCA', config: 'Config', infra: 'Infra', regex: 'Regex', manifest: 'Manifest', container: 'Container', binary: 'Binary', certificate: 'Certificate' };
+        return map[m] || (m || 'Unknown').toUpperCase();
+      }
+      function updateDetectionCoverage() {
+        const panel = document.getElementById('detection-panel');
+        const items = document.getElementById('det-items');
+        if (!panel || !items) return;
+        if (allFindings.length === 0) { panel.style.display = 'none'; return; }
+        panel.style.display = 'flex';
+        const colors = { ast: '#38bdf8', entropy: '#fbbf24', sca: '#a78bfa', config: '#34d399', infra: '#f97316', regex: '#94a3b8', manifest: '#f56565', container: '#a855f7', binary: '#ec4899', certificate: '#06b6d4' };
+        const counts = {};
+        allFindings.forEach(f => {
+          const m = f.detection_method || 'ast';
+          counts[m] = (counts[m] || 0) + 1;
+        });
+        items.innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([m, c]) => `
     <div class="det-item">
       <span class="det-dot" style="background:${colors[m] || '#94a3b8'}"></span>
       ${getDetLabel(m)}
       <span class="det-count">${c}</span>
     </div>
   `).join('');
-    }
-
-    function updateRiskChart() {
-      if (allFindings.length === 0) {
-        document.getElementById('chart-risk').style.display = 'none';
-        document.getElementById('chart-risk-empty').style.display = 'block';
-        return;
-      }
-      document.getElementById('chart-risk').style.display = 'block';
-      document.getElementById('chart-risk-empty').style.display = 'none';
-
-      const tot = allFindings.length;
-      const c = (allFindings.filter(f => getSeverity(f) === 'CRITICAL').length / tot) * 100;
-      const h = (allFindings.filter(f => getSeverity(f) === 'HIGH').length / tot) * 100;
-      const m = (allFindings.filter(f => getSeverity(f) === 'MEDIUM').length / tot) * 100;
-      const l = (allFindings.filter(f => getSeverity(f) === 'LOW').length / tot) * 100;
-
-      document.getElementById('rb-crit').style.width = c + '%';
-      document.getElementById('rb-high').style.width = h + '%';
-      document.getElementById('rb-med').style.width = m + '%';
-      document.getElementById('rb-low').style.width = l + '%';
-    }
-
-    function updateTopRisks() {
-      if (allFindings.length === 0) {
-        document.getElementById('top-risks-empty').style.display = 'flex';
-        return;
       }
 
-      const map = {};
-      allFindings.forEach(f => {
-        const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
-        if (!map[algo]) map[algo] = { count: 0, sev: getSeverity(f) };
-        map[algo].count++;
-      });
-      const sorted = Object.keys(map).sort((a, b) => map[b].count - map[a].count).slice(0, 5);
+      function updateRiskChart() {
+        if (allFindings.length === 0) {
+          document.getElementById('chart-risk').style.display = 'none';
+          document.getElementById('chart-risk-empty').style.display = 'block';
+          return;
+        }
+        document.getElementById('chart-risk').style.display = 'block';
+        document.getElementById('chart-risk-empty').style.display = 'none';
 
-      const list = document.getElementById('top-risks-list');
-      list.innerHTML = sorted.map(algo => `
+        const tot = allFindings.length;
+        const c = (allFindings.filter(f => getSeverity(f) === 'CRITICAL').length / tot) * 100;
+        const h = (allFindings.filter(f => getSeverity(f) === 'HIGH').length / tot) * 100;
+        const m = (allFindings.filter(f => getSeverity(f) === 'MEDIUM').length / tot) * 100;
+        const l = (allFindings.filter(f => getSeverity(f) === 'LOW').length / tot) * 100;
+
+        document.getElementById('rb-crit').style.width = c + '%';
+        document.getElementById('rb-high').style.width = h + '%';
+        document.getElementById('rb-med').style.width = m + '%';
+        document.getElementById('rb-low').style.width = l + '%';
+      }
+
+      function updateTopRisks() {
+        if (allFindings.length === 0) {
+          document.getElementById('top-risks-empty').style.display = 'flex';
+          return;
+        }
+
+        const map = {};
+        allFindings.forEach(f => {
+          const algo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
+          if (!map[algo]) map[algo] = { count: 0, sev: getSeverity(f) };
+          map[algo].count++;
+        });
+        const sorted = Object.keys(map).sort((a, b) => map[b].count - map[a].count).slice(0, 5);
+
+        const list = document.getElementById('top-risks-list');
+        list.innerHTML = sorted.map(algo => `
     <div class="risk-item" style="cursor:pointer;" onclick="setAlgoFilter('${algo}')">
       <div>
         <div class="risk-algo">${algo}</div>
@@ -1959,164 +1982,164 @@
       <span class="badge ${getBadgeClass(map[algo].sev)}">${map[algo].sev}</span>
     </div>
   `).join('');
-    }
-
-    function setAlgoFilter(algo) {
-      document.getElementById('filter-algo').value = algo;
-      handleFilterChange();
-    }
-
-    function handleFilterChange() {
-      const search = document.getElementById('filter-search').value.toLowerCase();
-      const risk = document.getElementById('filter-risk').value;
-      const type = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'ALL';
-      const lifetime = document.getElementById('filter-lifetime') ? document.getElementById('filter-lifetime').value : 'ALL';
-      const criticality = document.getElementById('filter-criticality') ? document.getElementById('filter-criticality').value : 'ALL';
-      const exposure = document.getElementById('filter-exposure') ? document.getElementById('filter-exposure').value : 'ALL';
-      const algo = document.getElementById('filter-algo').value;
-
-      filteredFindings = allFindings.filter(f => {
-        const matchSearch = search === '' ||
-          (f.file || '').toLowerCase().includes(search) ||
-          (f.repoName || '').toLowerCase().includes(search) ||
-          (f.algorithm || f.title || '').toLowerCase().includes(search);
-        const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
-        const fExposure = f.exposure || 'internal';
-        const matchExposure = exposure === 'ALL' || fExposure === exposure;
-        const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
-        const matchAlgo = algo === 'ALL' || fAlgo === algo;
-
-        const fType = getArtefactType(f);
-        const matchType = type === 'ALL' || fType === type;
-
-        const fLifetime = getArtefactLifetime(f);
-        const matchLifetime = lifetime === 'ALL' || fLifetime === lifetime;
-
-        const fCrit = getBusinessCriticality(f);
-        const matchCriticality = criticality === 'ALL' || fCrit === criticality;
-
-        return matchSearch && matchRisk && matchType && matchLifetime && matchCriticality && matchExposure && matchAlgo;
-      });
-
-      currentPage = 1;
-      updateSummaryStats();
-      renderChips(search, risk, type, lifetime, criticality, exposure, algo);
-      renderTable();
-    }
-
-    function clearFilters() {
-      document.getElementById('filter-search').value = '';
-      document.getElementById('filter-risk').value = 'ALL';
-      if (document.getElementById('filter-type')) document.getElementById('filter-type').value = 'ALL';
-      if (document.getElementById('filter-lifetime')) document.getElementById('filter-lifetime').value = 'ALL';
-      if (document.getElementById('filter-criticality')) document.getElementById('filter-criticality').value = 'ALL';
-      if (document.getElementById('filter-exposure')) document.getElementById('filter-exposure').value = 'ALL';
-      document.getElementById('filter-algo').value = 'ALL';
-      handleFilterChange();
-    }
-
-    function renderChips(search, risk, type, lifetime, criticality, exposure, algo) {
-      const container = document.getElementById('chips-container');
-      container.innerHTML = '';
-      let active = false;
-
-      if (risk && risk !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Risk:</span> ${risk} <button onclick="document.getElementById('filter-risk').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (type && type !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Type:</span> ${type} <button onclick="document.getElementById('filter-type').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (lifetime && lifetime !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Lifetime:</span> ${lifetime} <button onclick="document.getElementById('filter-lifetime').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (criticality && criticality !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Criticality:</span> ${criticality} <button onclick="document.getElementById('filter-criticality').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (exposure && exposure !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Exposure:</span> ${exposure} <button onclick="document.getElementById('filter-exposure').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (algo && algo !== 'ALL') {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Algo:</span> ${algo} <button onclick="document.getElementById('filter-algo').value='ALL';handleFilterChange()">×</button></div>`;
-      }
-      if (search) {
-        active = true;
-        container.innerHTML += `<div class="filter-chip"><span>Search:</span> "${search}" <button onclick="document.getElementById('filter-search').value='';handleFilterChange()">×</button></div>`;
       }
 
-      if (active) {
-        container.innerHTML += `<button class="btn-clear" onclick="clearFilters()">Clear Filters</button>`;
-        container.style.display = 'flex';
-      } else {
-        container.style.display = 'none';
+      function setAlgoFilter(algo) {
+        document.getElementById('filter-algo').value = algo;
+        handleFilterChange();
       }
-    }
 
-    function renderTable() {
-      document.getElementById('lbl-showing-count').textContent = `Showing ${filteredFindings.length} findings`;
+      function handleFilterChange() {
+        const search = document.getElementById('filter-search').value.toLowerCase();
+        const risk = document.getElementById('filter-risk').value;
+        const type = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'ALL';
+        const lifetime = document.getElementById('filter-lifetime') ? document.getElementById('filter-lifetime').value : 'ALL';
+        const criticality = document.getElementById('filter-criticality') ? document.getElementById('filter-criticality').value : 'ALL';
+        const exposure = document.getElementById('filter-exposure') ? document.getElementById('filter-exposure').value : 'ALL';
+        const algo = document.getElementById('filter-algo').value;
 
-      const tbody = document.getElementById('findings-tbody');
-      const table = document.getElementById('findings-table');
-      const emptySearch = document.getElementById('empty-search');
-      const emptySafe = document.getElementById('empty-safe');
-      const pag = document.getElementById('pagination-ctrl');
+        filteredFindings = allFindings.filter(f => {
+          const matchSearch = search === '' ||
+            (f.file || '').toLowerCase().includes(search) ||
+            (f.repoName || '').toLowerCase().includes(search) ||
+            (f.algorithm || f.title || '').toLowerCase().includes(search);
+          const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
+          const fExposure = f.exposure || 'internal';
+          const matchExposure = exposure === 'ALL' || fExposure === exposure;
+          const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
+          const matchAlgo = algo === 'ALL' || fAlgo === algo;
 
-      if (allFindings.length === 0) {
-        table.style.display = 'none';
+          const fType = getArtefactType(f);
+          const matchType = type === 'ALL' || fType === type;
+
+          const fLifetime = getArtefactLifetime(f);
+          const matchLifetime = lifetime === 'ALL' || fLifetime === lifetime;
+
+          const fCrit = getBusinessCriticality(f);
+          const matchCriticality = criticality === 'ALL' || fCrit === criticality;
+
+          return matchSearch && matchRisk && matchType && matchLifetime && matchCriticality && matchExposure && matchAlgo;
+        });
+
+        currentPage = 1;
+        updateSummaryStats();
+        renderChips(search, risk, type, lifetime, criticality, exposure, algo);
+        renderTable();
+      }
+
+      function clearFilters() {
+        document.getElementById('filter-search').value = '';
+        document.getElementById('filter-risk').value = 'ALL';
+        if (document.getElementById('filter-type')) document.getElementById('filter-type').value = 'ALL';
+        if (document.getElementById('filter-lifetime')) document.getElementById('filter-lifetime').value = 'ALL';
+        if (document.getElementById('filter-criticality')) document.getElementById('filter-criticality').value = 'ALL';
+        if (document.getElementById('filter-exposure')) document.getElementById('filter-exposure').value = 'ALL';
+        document.getElementById('filter-algo').value = 'ALL';
+        handleFilterChange();
+      }
+
+      function renderChips(search, risk, type, lifetime, criticality, exposure, algo) {
+        const container = document.getElementById('chips-container');
+        container.innerHTML = '';
+        let active = false;
+
+        if (risk && risk !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Risk:</span> ${risk} <button onclick="document.getElementById('filter-risk').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (type && type !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Type:</span> ${type} <button onclick="document.getElementById('filter-type').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (lifetime && lifetime !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Lifetime:</span> ${lifetime} <button onclick="document.getElementById('filter-lifetime').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (criticality && criticality !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Criticality:</span> ${criticality} <button onclick="document.getElementById('filter-criticality').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (exposure && exposure !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Exposure:</span> ${exposure} <button onclick="document.getElementById('filter-exposure').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (algo && algo !== 'ALL') {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Algo:</span> ${algo} <button onclick="document.getElementById('filter-algo').value='ALL';handleFilterChange()">×</button></div>`;
+        }
+        if (search) {
+          active = true;
+          container.innerHTML += `<div class="filter-chip"><span>Search:</span> "${search}" <button onclick="document.getElementById('filter-search').value='';handleFilterChange()">×</button></div>`;
+        }
+
+        if (active) {
+          container.innerHTML += `<button class="btn-clear" onclick="clearFilters()">Clear Filters</button>`;
+          container.style.display = 'flex';
+        } else {
+          container.style.display = 'none';
+        }
+      }
+
+      function renderTable() {
+        document.getElementById('lbl-showing-count').textContent = `Showing ${filteredFindings.length} findings`;
+
+        const tbody = document.getElementById('findings-tbody');
+        const table = document.getElementById('findings-table');
+        const emptySearch = document.getElementById('empty-search');
+        const emptySafe = document.getElementById('empty-safe');
+        const pag = document.getElementById('pagination-ctrl');
+
+        if (allFindings.length === 0) {
+          table.style.display = 'none';
+          emptySearch.style.display = 'none';
+          emptySafe.style.display = 'flex';
+          pag.style.display = 'none';
+          return;
+        }
+
+        if (filteredFindings.length === 0) {
+          table.style.display = 'none';
+          emptySearch.style.display = 'flex';
+          emptySafe.style.display = 'none';
+          pag.style.display = 'none';
+          return;
+        }
+
+        table.style.display = 'table';
         emptySearch.style.display = 'none';
-        emptySafe.style.display = 'flex';
-        pag.style.display = 'none';
-        return;
-      }
-
-      if (filteredFindings.length === 0) {
-        table.style.display = 'none';
-        emptySearch.style.display = 'flex';
         emptySafe.style.display = 'none';
-        pag.style.display = 'none';
-        return;
-      }
 
-      table.style.display = 'table';
-      emptySearch.style.display = 'none';
-      emptySafe.style.display = 'none';
+        const totalPages = Math.ceil(filteredFindings.length / itemsPerPage);
+        const start = (currentPage - 1) * itemsPerPage;
+        const pageData = filteredFindings.slice(start, start + itemsPerPage);
+        tbody.innerHTML = pageData.map((f, i) => {
+          const sev = getSeverity(f);
+          const algo = f.algorithm || (f.title || 'Unknown').split(' ')[0] || 'Unknown';
+          const purpose = f.usage || f.category || '-';
+          const quant = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
+          const qClass = isQuantum(f) ? 'badge-quant' : 'badge-safe';
+          const conf = f.confidence || 'Likely';
+          const confClass = getConfBadgeClass(conf);
+          const detMethod = f.detection_method || 'ast';
+          const detClass = getDetBadgeClass(detMethod);
+          const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
+          const expLabelRaw = f.exposure_label || expObj.exposure_label;
+          const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
+          const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
+          const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
+          const expDisplayText = `${expLabelRaw} (${expConfRaw})`;
 
-      const totalPages = Math.ceil(filteredFindings.length / itemsPerPage);
-      const start = (currentPage - 1) * itemsPerPage;
-      const pageData = filteredFindings.slice(start, start + itemsPerPage);
-      tbody.innerHTML = pageData.map((f, i) => {
-        const sev = getSeverity(f);
-        const algo = f.algorithm || (f.title || 'Unknown').split(' ')[0] || 'Unknown';
-        const purpose = f.usage || f.category || '-';
-        const quant = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
-        const qClass = isQuantum(f) ? 'badge-quant' : 'badge-safe';
-        const conf = f.confidence || 'Likely';
-        const confClass = getConfBadgeClass(conf);
-        const detMethod = f.detection_method || 'ast';
-        const detClass = getDetBadgeClass(detMethod);
-        const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
-        const expLabelRaw = f.exposure_label || expObj.exposure_label;
-        const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
-        const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
-        const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
-        const expDisplayText = `${expLabelRaw} (${expConfRaw})`;
+          const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
+          const lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
+            ? Number(f.user_confirmed_lifetime)
+            : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
 
-        const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
-        const lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
-          ? Number(f.user_confirmed_lifetime)
-          : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
+          const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
+          const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? f.criticality_score : critObj.criticality_score;
+          const bizCrit = f.criticality_label || critObj.criticality_label;
+          const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
 
-        const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
-        const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? f.criticality_score : critObj.criticality_score;
-        const bizCrit = f.criticality_label || critObj.criticality_label;
-        const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
-
-        return `
+          return `
       <tr class="finding-row" style="cursor:pointer;" data-index="${i}">
         <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
@@ -2148,257 +2171,257 @@
         </td>
       </tr>
     `;
-      }).join('');
+        }).join('');
 
-      document.querySelectorAll('.finding-row').forEach(row => {
-        row.addEventListener('click', () => {
-          openDrawer(pageData[row.getAttribute('data-index')]);
+        document.querySelectorAll('.finding-row').forEach(row => {
+          row.addEventListener('click', () => {
+            openDrawer(pageData[row.getAttribute('data-index')]);
+          });
         });
-      });
 
-      if (totalPages > 1) {
-        pag.style.display = 'flex';
-        document.getElementById('page-info').textContent = `Showing ${start + 1}-${Math.min(start + itemsPerPage, filteredFindings.length)} of ${filteredFindings.length}`;
-        document.getElementById('btn-prev').disabled = currentPage === 1;
-        document.getElementById('btn-next').disabled = currentPage === totalPages;
-      } else {
-        pag.style.display = 'none';
-      }
-    }
-
-    function changePage(dir) {
-      currentPage += dir;
-      renderTable();
-    }
-
-    function openDrawer(f) {
-      currentDrawerFinding = f;
-      const sev = getSeverity(f);
-
-      document.getElementById('drw-algo').textContent = f.algorithm || f.title.split(' ')[0] || 'Unknown';
-      document.getElementById('drw-fileline').textContent = `${f.file || 'unknown'}:${f.line || '?'}`;
-
-      const riskInfo = computeFindingRisk(f);
-      const b = document.getElementById('drw-risk-badge');
-      b.className = 'badge ' + getBadgeClass(sev);
-      b.innerHTML = `${sev} <span style="font-size:11px; opacity:0.85;">(Score: ${riskInfo.finalScore}/10)</span>`;
-
-      const type = getArtefactType(f);
-      const drwTypeEl = document.getElementById('drw-type');
-      if (drwTypeEl) {
-        drwTypeEl.innerHTML = `<span class="badge badge-ast">${type}</span>`;
-      }
-
-      const exp = f.exposure || 'internal';
-      const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
-      const expLabel = exp === 'external-facing' ? 'External-Facing' : 'Internal';
-      document.getElementById('drw-exposure').innerHTML = `<span class="badge ${expClass}">${expLabel}</span>`;
-
-      const sens = f.dataSensitivity || 'GENERAL';
-      const sensColor = sens === 'HEALTH' || sens === 'PII' ? 'var(--red)' : (sens === 'FINANCIAL' ? 'var(--amber)' : 'var(--text-h)');
-      document.getElementById('drw-sensitivity').innerHTML = `<span style="font-weight:600; color:${sensColor}">${sens}</span>`;
-
-      const lifetime = getArtefactLifetime(f);
-      const bizCrit = getBusinessCriticality(f);
-      const ltEl = document.getElementById('drw-lifetime');
-      if (ltEl) {
-        ltEl.innerHTML = `<span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span>`;
-      }
-      const critEl = document.getElementById('drw-criticality');
-      if (critEl) {
-        critEl.innerHTML = `<span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit} (${riskInfo.multiplier}x multiplier)</span>`;
-      }
-
-      document.getElementById('drw-purpose').textContent = f.usage || f.category || '-';
-      document.getElementById('drw-lib').textContent = f.library || f.category || 'Standard';
-      document.getElementById('drw-keysize').textContent = f.keySize || 'N/A';
-
-      const qStr = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
-      document.getElementById('drw-quantum').innerHTML = `<span style="color:${isQuantum(f) ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${qStr}</span>`;
-
-      // Add Detection Method & Confidence badges to drawer
-      const detMethod = f.detection_method || 'ast';
-      const confStr = f.confidence || 'Likely';
-      const drwBadgeArea = document.querySelector('#drawer .drawer-hd');
-      const existingDetBadges = drwBadgeArea.querySelectorAll('.drw-extra-badge');
-      existingDetBadges.forEach(el => el.remove());
-      const confBadge = document.createElement('span');
-      confBadge.className = `badge ${getConfBadgeClass(confStr)} drw-extra-badge`;
-      confBadge.style.marginLeft = '8px';
-      confBadge.textContent = confStr;
-      const detBadge = document.createElement('span');
-      detBadge.className = `badge ${getDetBadgeClass(detMethod)} drw-extra-badge`;
-      detBadge.style.marginLeft = '6px';
-      detBadge.textContent = getDetLabel(detMethod);
-      b.parentNode.appendChild(confBadge);
-      b.parentNode.appendChild(detBadge);
-
-      document.getElementById('drw-desc').textContent = f.remediation || f.snippet || 'No remediation instructions available. Please update your cryptographic practices to modern standards.';
-      document.getElementById('drw-impact-file').textContent = f.file || 'unknown';
-
-      // Compute & display Mosca's Inequality: X + Y > Z
-      if (typeof CryptoEngine !== 'undefined') {
-        CryptoEngine.enrichFinding(f);
-      }
-      const X = f.X !== undefined ? f.X : (f.user_confirmed_lifetime || f.suggested_lifetime || 5);
-      const Y = f.Y !== undefined ? f.Y : 1.0;
-      const Z = f.Z !== undefined ? f.Z : 12;
-      const moscaHolds = (X + Y) > Z;
-
-      const readoutEl = document.getElementById('drw-mosca-readout');
-      const verdictEl = document.getElementById('drw-mosca-verdict');
-      if (readoutEl && verdictEl) {
-        readoutEl.textContent = `Formula: X (${X}y lifetime) + Y (${Y}y migration) ${moscaHolds ? '>' : '≤'} Z (${Z}y threat) | Urgency Margin: ${f.urgency_margin}y`;
-        verdictEl.textContent = `Verdict: Mosca Urgency Tier is ${f.urgency_tier || (moscaHolds ? 'Critical' : 'Low')} (Priority Score: ${f.priority_score || 'N/A'})`;
-        verdictEl.style.color = (f.urgency_tier === 'Critical' || moscaHolds) ? 'var(--red)' : (f.urgency_tier === 'High' ? 'var(--amber)' : 'var(--green)');
-      }
-
-      // Populate Sub-factors Sliders & Values
-      const sub = f.subfactors || { data_sensitivity: 3.5, exposure: 3.0, system_role: 3.0, regulatory_impact: 2.0 };
-      document.getElementById('slider-sub-sens').value = sub.data_sensitivity || 3.5;
-      document.getElementById('slider-sub-exp').value = sub.exposure || 3.0;
-      document.getElementById('slider-sub-sys').value = sub.system_role || 3.0;
-      document.getElementById('slider-sub-reg').value = sub.regulatory_impact || 2.0;
-      updateDrawerSubfactorsLive();
-
-      const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
-      const expDrwLabel = f.exposure_label || expObj.exposure_label;
-      const expDrwConf = f.exposure_confidence || expObj.exposure_confidence;
-      const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals : expObj.triggered_signals;
-
-      const confEl = document.getElementById('drw-exposure-confidence');
-      if (confEl) {
-        confEl.textContent = `Auto-Detected: ${expDrwLabel} (Confidence: ${expDrwConf})`;
-        confEl.style.color = expDrwConf === 'High' ? 'var(--green)' : (expDrwConf === 'Medium' ? 'var(--amber)' : 'var(--purple)');
-      }
-
-      const sigEl = document.getElementById('drw-exposure-signals');
-      if (sigEl) {
-        sigEl.innerHTML = (expSignals || []).map(s => `<div>• ${s}</div>`).join('');
-      }
-
-      const auditSpan = document.getElementById('drw-audit-trail');
-      if (auditSpan) {
-        if (f.last_modified_by && f.modified_at) {
-          const modTime = new Date(f.modified_at).toLocaleDateString();
-          auditSpan.textContent = `Last edit by ${f.last_modified_by} on ${modTime}: "${f.modification_reason || 'No reason'}"`;
+        if (totalPages > 1) {
+          pag.style.display = 'flex';
+          document.getElementById('page-info').textContent = `Showing ${start + 1}-${Math.min(start + itemsPerPage, filteredFindings.length)} of ${filteredFindings.length}`;
+          document.getElementById('btn-prev').disabled = currentPage === 1;
+          document.getElementById('btn-next').disabled = currentPage === totalPages;
         } else {
-          auditSpan.textContent = 'Auto-calculated from heuristics';
+          pag.style.display = 'none';
         }
       }
 
-      document.getElementById('drawer-overlay').classList.add('active');
-      document.getElementById('drawer').classList.add('active');
-    }
-
-    function updateDrawerSubfactorsLive() {
-      const sens = parseFloat(document.getElementById('slider-sub-sens').value);
-      const exp = parseFloat(document.getElementById('slider-sub-exp').value);
-      const sys = parseFloat(document.getElementById('slider-sub-sys').value);
-      const reg = parseFloat(document.getElementById('slider-sub-reg').value);
-
-      document.getElementById('lbl-sub-sens').textContent = sens.toFixed(1);
-      document.getElementById('lbl-sub-exp').textContent = exp.toFixed(1);
-      document.getElementById('lbl-sub-sys').textContent = sys.toFixed(1);
-      document.getElementById('lbl-sub-reg').textContent = reg.toFixed(1);
-
-      const score = Math.round(((sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20)) * 10) / 10;
-      let label = 'Low';
-      if (score >= 4.0) label = 'Critical';
-      else if (score >= 3.0) label = 'High';
-      else if (score >= 2.0) label = 'Medium';
-
-      const badgeEl = document.getElementById('drw-crit-score-badge');
-      if (badgeEl) {
-        badgeEl.textContent = `${label} (${score})`;
-        badgeEl.className = 'badge ' + (label === 'Critical' ? 'badge-crit' : label === 'High' ? 'badge-high' : label === 'Medium' ? 'badge-med' : 'badge-low');
-      }
-    }
-
-    function openCriticalityPanelForIndex(idx) {
-      const f = filteredFindings[idx];
-      if (f) openDrawer(f);
-    }
-
-    function updateFindingLifetime(idx, newYears) {
-      const f = filteredFindings[idx];
-      if (!f) return;
-      f.user_confirmed_lifetime = Number(newYears);
-      if (typeof CryptoEngine !== 'undefined') {
-        CryptoEngine.enrichFinding(f);
-        saveFindingsState();
-      }
-      handleFilterChange();
-    }
-
-    function saveCriticalityOverride() {
-      if (!currentDrawerFinding) return;
-      const sens = parseFloat(document.getElementById('slider-sub-sens').value);
-      const exp = parseFloat(document.getElementById('slider-sub-exp').value);
-      const sys = parseFloat(document.getElementById('slider-sub-sys').value);
-      const reg = parseFloat(document.getElementById('slider-sub-reg').value);
-      const reason = document.getElementById('drw-mod-reason').value.trim() || 'Manual override via Findings UI';
-
-      currentDrawerFinding.subfactors = {
-        data_sensitivity: sens,
-        exposure: exp,
-        system_role: sys,
-        regulatory_impact: reg
-      };
-
-      const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
-      currentDrawerFinding.last_modified_by = user.name || user.email || 'Security Analyst';
-      currentDrawerFinding.modification_reason = reason;
-      currentDrawerFinding.modified_at = new Date().toISOString();
-
-      if (typeof CryptoEngine !== 'undefined') {
-        const crit = CryptoEngine.computeCriticality(currentDrawerFinding);
-        currentDrawerFinding.criticality_score = crit.criticality_score;
-        currentDrawerFinding.criticality_label = crit.criticality_label;
-        CryptoEngine.enrichFinding(currentDrawerFinding);
-        saveFindingsState();
+      function changePage(dir) {
+        currentPage += dir;
+        renderTable();
       }
 
-      openDrawer(currentDrawerFinding);
-      handleFilterChange();
-    }
+      function openDrawer(f) {
+        currentDrawerFinding = f;
+        const sev = getSeverity(f);
 
-    function saveFindingsState() {
-      if (typeof CryptoEngine === 'undefined') return;
-      const data = CryptoEngine.getData();
-      if (data.scans && data.scans.length > 0) {
-        data.scans.forEach(s => {
-          if (s.findings && Array.isArray(s.findings)) {
-            s.findings.forEach((sf, idx) => {
-              const match = allFindings.find(f => f.id === sf.id || (f.file === sf.file && f.line === sf.line));
-              if (match) {
-                s.findings[idx] = match;
-              }
-            });
+        document.getElementById('drw-algo').textContent = f.algorithm || f.title.split(' ')[0] || 'Unknown';
+        document.getElementById('drw-fileline').textContent = `${f.file || 'unknown'}:${f.line || '?'}`;
+
+        const riskInfo = computeFindingRisk(f);
+        const b = document.getElementById('drw-risk-badge');
+        b.className = 'badge ' + getBadgeClass(sev);
+        b.innerHTML = `${sev} <span style="font-size:11px; opacity:0.85;">(Score: ${riskInfo.finalScore}/10)</span>`;
+
+        const type = getArtefactType(f);
+        const drwTypeEl = document.getElementById('drw-type');
+        if (drwTypeEl) {
+          drwTypeEl.innerHTML = `<span class="badge badge-ast">${type}</span>`;
+        }
+
+        const exp = f.exposure || 'internal';
+        const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
+        const expLabel = exp === 'external-facing' ? 'External-Facing' : 'Internal';
+        document.getElementById('drw-exposure').innerHTML = `<span class="badge ${expClass}">${expLabel}</span>`;
+
+        const sens = f.dataSensitivity || 'GENERAL';
+        const sensColor = sens === 'HEALTH' || sens === 'PII' ? 'var(--red)' : (sens === 'FINANCIAL' ? 'var(--amber)' : 'var(--text-h)');
+        document.getElementById('drw-sensitivity').innerHTML = `<span style="font-weight:600; color:${sensColor}">${sens}</span>`;
+
+        const lifetime = getArtefactLifetime(f);
+        const bizCrit = getBusinessCriticality(f);
+        const ltEl = document.getElementById('drw-lifetime');
+        if (ltEl) {
+          ltEl.innerHTML = `<span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span>`;
+        }
+        const critEl = document.getElementById('drw-criticality');
+        if (critEl) {
+          critEl.innerHTML = `<span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit} (${riskInfo.multiplier}x multiplier)</span>`;
+        }
+
+        document.getElementById('drw-purpose').textContent = f.usage || f.category || '-';
+        document.getElementById('drw-lib').textContent = f.library || f.category || 'Standard';
+        document.getElementById('drw-keysize').textContent = f.keySize || 'N/A';
+
+        const qStr = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
+        document.getElementById('drw-quantum').innerHTML = `<span style="color:${isQuantum(f) ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${qStr}</span>`;
+
+        // Add Detection Method & Confidence badges to drawer
+        const detMethod = f.detection_method || 'ast';
+        const confStr = f.confidence || 'Likely';
+        const drwBadgeArea = document.querySelector('#drawer .drawer-hd');
+        const existingDetBadges = drwBadgeArea.querySelectorAll('.drw-extra-badge');
+        existingDetBadges.forEach(el => el.remove());
+        const confBadge = document.createElement('span');
+        confBadge.className = `badge ${getConfBadgeClass(confStr)} drw-extra-badge`;
+        confBadge.style.marginLeft = '8px';
+        confBadge.textContent = confStr;
+        const detBadge = document.createElement('span');
+        detBadge.className = `badge ${getDetBadgeClass(detMethod)} drw-extra-badge`;
+        detBadge.style.marginLeft = '6px';
+        detBadge.textContent = getDetLabel(detMethod);
+        b.parentNode.appendChild(confBadge);
+        b.parentNode.appendChild(detBadge);
+
+        document.getElementById('drw-desc').textContent = f.remediation || f.snippet || 'No remediation instructions available. Please update your cryptographic practices to modern standards.';
+        document.getElementById('drw-impact-file').textContent = f.file || 'unknown';
+
+        // Compute & display Mosca's Inequality: X + Y > Z
+        if (typeof CryptoEngine !== 'undefined') {
+          CryptoEngine.enrichFinding(f);
+        }
+        const X = f.X !== undefined ? f.X : (f.user_confirmed_lifetime || f.suggested_lifetime || 5);
+        const Y = f.Y !== undefined ? f.Y : 1.0;
+        const Z = f.Z !== undefined ? f.Z : 12;
+        const moscaHolds = (X + Y) > Z;
+
+        const readoutEl = document.getElementById('drw-mosca-readout');
+        const verdictEl = document.getElementById('drw-mosca-verdict');
+        if (readoutEl && verdictEl) {
+          readoutEl.textContent = `Formula: X (${X}y lifetime) + Y (${Y}y migration) ${moscaHolds ? '>' : '≤'} Z (${Z}y threat) | Urgency Margin: ${f.urgency_margin}y`;
+          verdictEl.textContent = `Verdict: Mosca Urgency Tier is ${f.urgency_tier || (moscaHolds ? 'Critical' : 'Low')} (Priority Score: ${f.priority_score || 'N/A'})`;
+          verdictEl.style.color = (f.urgency_tier === 'Critical' || moscaHolds) ? 'var(--red)' : (f.urgency_tier === 'High' ? 'var(--amber)' : 'var(--green)');
+        }
+
+        // Populate Sub-factors Sliders & Values
+        const sub = f.subfactors || { data_sensitivity: 3.5, exposure: 3.0, system_role: 3.0, regulatory_impact: 2.0 };
+        document.getElementById('slider-sub-sens').value = sub.data_sensitivity || 3.5;
+        document.getElementById('slider-sub-exp').value = sub.exposure || 3.0;
+        document.getElementById('slider-sub-sys').value = sub.system_role || 3.0;
+        document.getElementById('slider-sub-reg').value = sub.regulatory_impact || 2.0;
+        updateDrawerSubfactorsLive();
+
+        const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
+        const expDrwLabel = f.exposure_label || expObj.exposure_label;
+        const expDrwConf = f.exposure_confidence || expObj.exposure_confidence;
+        const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals : expObj.triggered_signals;
+
+        const confEl = document.getElementById('drw-exposure-confidence');
+        if (confEl) {
+          confEl.textContent = `Auto-Detected: ${expDrwLabel} (Confidence: ${expDrwConf})`;
+          confEl.style.color = expDrwConf === 'High' ? 'var(--green)' : (expDrwConf === 'Medium' ? 'var(--amber)' : 'var(--purple)');
+        }
+
+        const sigEl = document.getElementById('drw-exposure-signals');
+        if (sigEl) {
+          sigEl.innerHTML = (expSignals || []).map(s => `<div>• ${s}</div>`).join('');
+        }
+
+        const auditSpan = document.getElementById('drw-audit-trail');
+        if (auditSpan) {
+          if (f.last_modified_by && f.modified_at) {
+            const modTime = new Date(f.modified_at).toLocaleDateString();
+            auditSpan.textContent = `Last edit by ${f.last_modified_by} on ${modTime}: "${f.modification_reason || 'No reason'}"`;
+          } else {
+            auditSpan.textContent = 'Auto-calculated from heuristics';
           }
-        });
-      }
-      if (data.activeScan && data.activeScan.findings) {
-        data.activeScan.findings.forEach((af, idx) => {
-          const match = allFindings.find(f => f.id === af.id || (f.file === af.file && f.line === af.line));
-          if (match) {
-            data.activeScan.findings[idx] = match;
-          }
-        });
-      }
-      CryptoEngine.saveData(data);
-    }
+        }
 
-    function closeDrawer() {
-      document.getElementById('drawer-overlay').classList.remove('active');
-      document.getElementById('drawer').classList.remove('active');
-    }
+        document.getElementById('drawer-overlay').classList.add('active');
+        document.getElementById('drawer').classList.add('active');
+      }
 
-    window.addEventListener('load', init);
-    window.addEventListener('cryptoscan_data_updated', init);
-  </script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/shell.js"></script>
+      function updateDrawerSubfactorsLive() {
+        const sens = parseFloat(document.getElementById('slider-sub-sens').value);
+        const exp = parseFloat(document.getElementById('slider-sub-exp').value);
+        const sys = parseFloat(document.getElementById('slider-sub-sys').value);
+        const reg = parseFloat(document.getElementById('slider-sub-reg').value);
+
+        document.getElementById('lbl-sub-sens').textContent = sens.toFixed(1);
+        document.getElementById('lbl-sub-exp').textContent = exp.toFixed(1);
+        document.getElementById('lbl-sub-sys').textContent = sys.toFixed(1);
+        document.getElementById('lbl-sub-reg').textContent = reg.toFixed(1);
+
+        const score = Math.round(((sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20)) * 10) / 10;
+        let label = 'Low';
+        if (score >= 4.0) label = 'Critical';
+        else if (score >= 3.0) label = 'High';
+        else if (score >= 2.0) label = 'Medium';
+
+        const badgeEl = document.getElementById('drw-crit-score-badge');
+        if (badgeEl) {
+          badgeEl.textContent = `${label} (${score})`;
+          badgeEl.className = 'badge ' + (label === 'Critical' ? 'badge-crit' : label === 'High' ? 'badge-high' : label === 'Medium' ? 'badge-med' : 'badge-low');
+        }
+      }
+
+      function openCriticalityPanelForIndex(idx) {
+        const f = filteredFindings[idx];
+        if (f) openDrawer(f);
+      }
+
+      function updateFindingLifetime(idx, newYears) {
+        const f = filteredFindings[idx];
+        if (!f) return;
+        f.user_confirmed_lifetime = Number(newYears);
+        if (typeof CryptoEngine !== 'undefined') {
+          CryptoEngine.enrichFinding(f);
+          saveFindingsState();
+        }
+        handleFilterChange();
+      }
+
+      function saveCriticalityOverride() {
+        if (!currentDrawerFinding) return;
+        const sens = parseFloat(document.getElementById('slider-sub-sens').value);
+        const exp = parseFloat(document.getElementById('slider-sub-exp').value);
+        const sys = parseFloat(document.getElementById('slider-sub-sys').value);
+        const reg = parseFloat(document.getElementById('slider-sub-reg').value);
+        const reason = document.getElementById('drw-mod-reason').value.trim() || 'Manual override via Findings UI';
+
+        currentDrawerFinding.subfactors = {
+          data_sensitivity: sens,
+          exposure: exp,
+          system_role: sys,
+          regulatory_impact: reg
+        };
+
+        const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
+        currentDrawerFinding.last_modified_by = user.name || user.email || 'Security Analyst';
+        currentDrawerFinding.modification_reason = reason;
+        currentDrawerFinding.modified_at = new Date().toISOString();
+
+        if (typeof CryptoEngine !== 'undefined') {
+          const crit = CryptoEngine.computeCriticality(currentDrawerFinding);
+          currentDrawerFinding.criticality_score = crit.criticality_score;
+          currentDrawerFinding.criticality_label = crit.criticality_label;
+          CryptoEngine.enrichFinding(currentDrawerFinding);
+          saveFindingsState();
+        }
+
+        openDrawer(currentDrawerFinding);
+        handleFilterChange();
+      }
+
+      function saveFindingsState() {
+        if (typeof CryptoEngine === 'undefined') return;
+        const data = CryptoEngine.getData();
+        if (data.scans && data.scans.length > 0) {
+          data.scans.forEach(s => {
+            if (s.findings && Array.isArray(s.findings)) {
+              s.findings.forEach((sf, idx) => {
+                const match = allFindings.find(f => f.id === sf.id || (f.file === sf.file && f.line === sf.line));
+                if (match) {
+                  s.findings[idx] = match;
+                }
+              });
+            }
+          });
+        }
+        if (data.activeScan && data.activeScan.findings) {
+          data.activeScan.findings.forEach((af, idx) => {
+            const match = allFindings.find(f => f.id === af.id || (f.file === af.file && f.line === af.line));
+            if (match) {
+              data.activeScan.findings[idx] = match;
+            }
+          });
+        }
+        CryptoEngine.saveData(data);
+      }
+
+      function closeDrawer() {
+        document.getElementById('drawer-overlay').classList.remove('active');
+        document.getElementById('drawer').classList.remove('active');
+      }
+
+      window.addEventListener('load', init);
+      window.addEventListener('cryptoscan_data_updated', init);
+    </script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/shell.js"></script>
 </body>
 
 </html>
