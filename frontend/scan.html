@@ -924,24 +924,7 @@
                   </div>
                   <div class="toggle" style="align-self:flex-start;"></div>
                 </div>
-                <div class="config-row" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.25);">
-                  <div class="cr-left">
-                    <div class="cr-title" style="display: flex; align-items: center; gap: 8px;">
-                      <span>Business Criticality Tier</span>
-                      <span style="font-size: 11px; font-weight: 600; color: var(--purple); background: var(--purple-bg); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">Security & Risk Posture</span>
-                    </div>
-                    <div class="cr-sub">Set the operational criticality of this repository for impact weighting and risk scoring.</div>
-                  </div>
-                  <div>
-                    <select id="scan-business-criticality" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--r-sm); background: var(--bg-card); color: var(--text-h); border: 1px solid var(--border-color); outline: none; cursor: pointer;">
-                      <option value="Critical">Critical (Tier 1 — Core Operations)</option>
-                      <option value="Important" selected>Important (Tier 2 — High Impact)</option>
-                      <option value="Standard">Standard (Tier 3 — Internal)</option>
-                      <option value="Low">Low (Tier 4 — Dev/Non-prod)</option>
-                      <option value="Not tagged">Not tagged</option>
-                    </select>
-                  </div>
-                </div>
+
               </div>
               <div style="text-align: right;">
                 <button class="btn-sec" onclick="resetScan()" style="margin-right: 8px;">Cancel</button>
@@ -1484,12 +1467,9 @@
           findings: detectedFindings
         };
 
-        const selectedCriticality = document.getElementById('scan-business-criticality')?.value || 'Important';
         const repoInfo = {
           id: selectedRepoId || ('repo_' + Date.now()),
-          name: repoNameClean,
-          businessCriticality: selectedCriticality,
-          criticality_tier: selectedCriticality
+          name: repoNameClean
         };
         CryptoEngine.processRealBackendFindings(repoInfo, mockScanId, detectedFindings);
         saveAndDisplayScanDuration(clientScanStart, clientScanEnd, mockScanId);
@@ -1504,7 +1484,6 @@
 
       async function startRealScan() {
         if (!selectedFile && !selectedRepoId) return;
-        const selectedCriticality = document.getElementById('scan-business-criticality')?.value || 'Important';
         showState('state-scanning');
         document.getElementById('scan-hdr').textContent = `Analyzing ${currentRepoName}...`;
         document.getElementById('scan-log').innerHTML = '';
@@ -1526,8 +1505,6 @@
             const formData = new FormData();
             formData.append('repo', selectedFile);
             formData.append('name', currentRepoName);
-            formData.append('businessCriticality', selectedCriticality);
-            formData.append('criticality_tier', selectedCriticality);
 
             addLog(`Uploading archive: ${currentRepoName} ...`);
             const uploadRes = await fetch(`${API_BASE}/repos/upload`, {
@@ -1595,9 +1572,7 @@
 
           const repoInfo = {
             id: repo.id || selectedRepoId || 'repo-1',
-            name: repo.name || currentRepoName || 'Scanned Repository',
-            businessCriticality: selectedCriticality,
-            criticality_tier: selectedCriticality
+            name: repo.name || currentRepoName || 'Scanned Repository'
           };
           CryptoEngine.processRealBackendFindings(repoInfo, scanData.scanId, allFindings);
           saveAndDisplayScanDuration(scanRealStart, scanRealEnd, scanData.scanId);

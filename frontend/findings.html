@@ -1816,15 +1816,12 @@
     }
 
     function getBusinessCriticality(f) {
-      if (!f) return 'Not tagged';
-      const raw = f.businessCriticality || f.criticality_tier || f.repoCriticality || null;
-      if (!raw || raw === 'NOT TAGGED' || raw === 'NOT_TAGGED' || raw === 'UNKNOWN' || raw === 'NONE') return 'Not tagged';
-      const u = String(raw).toUpperCase().trim();
-      if (u === 'CRITICAL' || u === 'TIER 1') return 'Critical';
-      if (u === 'HIGH' || u === 'IMPORTANT' || u === 'TIER 2') return 'Important';
-      if (u === 'MEDIUM' || u === 'STANDARD' || u === 'TIER 3') return 'Standard';
-      if (u === 'LOW' || u === 'TIER 4') return 'Low';
-      return u;
+      if (!f) return 'Medium';
+      if (f.criticality_label) return f.criticality_label;
+      if (typeof CryptoEngine !== 'undefined') {
+        return CryptoEngine.computeCriticality(f).criticality_label;
+      }
+      return 'Medium';
     }
 
     function computeFindingRisk(f) {
@@ -2110,8 +2107,9 @@
           ? Number(f.user_confirmed_lifetime)
           : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
 
-        const critScore = f.criticality_score !== undefined ? f.criticality_score : 3.0;
-        const bizCrit = f.criticality_label || 'Medium';
+        const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
+        const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? f.criticality_score : critObj.criticality_score;
+        const bizCrit = f.criticality_label || critObj.criticality_label;
         const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
 
         return `

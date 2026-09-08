@@ -277,21 +277,25 @@ const CryptoEngine = {
   computeCriticality: function(finding) {
     const file = (finding.file || finding.filePath || '').toLowerCase();
     const repo = (finding.repoName || finding.repository || '').toLowerCase();
-    const text = (file + ' ' + repo + ' ' + (finding.title || '') + ' ' + (finding.snippet || '')).toLowerCase();
+    const text = (file + ' ' + repo + ' ' + (finding.title || '') + ' ' + (finding.snippet || '') + ' ' + (finding.library || '')).toLowerCase();
 
-    // 1. Data Sensitivity (0.30)
+    // 1. Data Sensitivity (0.30) — keyword density & classification
     let sens = 2.0;
-    if (text.includes('payment') || text.includes('pci') || text.includes('card') || text.includes('billing') || text.includes('bank') || text.includes('account')) {
+    const sensKeywords = ['payment', 'auth', 'pii', 'health', 'secret', 'token', 'password', 'key', 'cred', 'credential', 'card', 'ssn', 'bank', 'account', 'crypto', 'cipher', 'wallet'];
+    const sensMatches = sensKeywords.filter(k => text.includes(k)).length;
+    if (sensMatches >= 3 || text.includes('payment') || text.includes('card') || text.includes('pii') || text.includes('wallet')) {
       sens = 5.0;
-    } else if (text.includes('auth') || text.includes('secret') || text.includes('private') || text.includes('pass') || text.includes('token') || text.includes('pii') || text.includes('health') || text.includes('medical')) {
-      sens = 4.5;
-    } else if (text.includes('user') || text.includes('db') || text.includes('session') || text.includes('customer')) {
-      sens = 3.5;
+    } else if (sensMatches >= 2 || text.includes('auth') || text.includes('secret') || text.includes('token') || text.includes('password')) {
+      sens = 4.0;
+    } else if (sensMatches >= 1 || text.includes('user') || text.includes('db') || text.includes('session')) {
+      sens = 3.0;
+    } else {
+      sens = 1.0;
     }
 
-    // 2. Exposure (0.25)
-    let exp = 2.5;
-    if (text.includes('public') || text.includes('api') || text.includes('endpoint') || text.includes('gateway') || text.includes('external') || text.includes('web') || text.includes('routes') || text.includes('controller') || (finding.exposure || '').toLowerCase() === 'external') {
+    // 2. Exposure (0.25) — route / service location
+    let exp = 3.0;
+    if (text.includes('public') || text.includes('api/') || text.includes('endpoint') || text.includes('gateway') || text.includes('external') || text.includes('web/') || text.includes('routes') || text.includes('controller') || text.includes('ingress') || (finding.exposure || '').toLowerCase() === 'external') {
       exp = 5.0;
     } else if (text.includes('internal') || text.includes('service') || text.includes('shared') || text.includes('middleware')) {
       exp = 3.0;
@@ -299,25 +303,27 @@ const CryptoEngine = {
       exp = 1.0;
     }
 
-    // 3. System Role (0.25)
+    // 3. System Role (0.25) — production vs staging vs dev
     let sys = 3.0;
-    if (text.includes('prod') || text.includes('production') || text.includes('main') || text.includes('master') || text.includes('release')) {
+    if (text.includes('prod') || text.includes('production') || text.includes('main') || text.includes('master') || text.includes('release') || text.includes('core/') || text.includes('sys/')) {
       sys = 5.0;
-    } else if (text.includes('staging') || text.includes('stage') || text.includes('qa') || text.includes('preprod')) {
-      sys = 3.5;
-    } else if (text.includes('dev') || text.includes('development') || text.includes('test') || text.includes('sandbox') || text.includes('scratch')) {
-      sys = 1.5;
+    } else if (text.includes('staging') || text.includes('stage') || text.includes('qa') || text.includes('beta')) {
+      sys = 3.0;
+    } else if (text.includes('test') || text.includes('dev') || text.includes('sandbox') || text.includes('scratch') || text.includes('demo')) {
+      sys = 1.0;
     }
 
-    // 4. Regulatory Impact (0.20)
+    // 4. Regulatory Impact (0.20) — compliance frameworks & security standards
     let reg = 2.0;
-    if (text.includes('gdpr') || text.includes('pci') || text.includes('hipaa') || text.includes('rbi') || text.includes('compliance') || text.includes('sox') || text.includes('fips')) {
+    if (text.includes('gdpr') || text.includes('pci') || text.includes('hipaa') || text.includes('rbi') || text.includes('compliance') || text.includes('billing') || text.includes('financial') || text.includes('sox') || text.includes('fips') || text.includes('iso27001')) {
       reg = 5.0;
-    } else if (text.includes('audit') || text.includes('security') || text.includes('policy')) {
-      reg = 3.5;
+    } else if (text.includes('auth') || text.includes('cert') || text.includes('tls') || text.includes('ssl') || text.includes('kms') || text.includes('audit')) {
+      reg = 4.0;
+    } else {
+      reg = 2.0;
     }
 
-    // Allow user override of subfactors if previously stored on finding
+    // Preserve user override of subfactors if manually edited
     if (finding.subfactors) {
       sens = finding.subfactors.data_sensitivity !== undefined ? Number(finding.subfactors.data_sensitivity) : sens;
       exp = finding.subfactors.exposure !== undefined ? Number(finding.subfactors.exposure) : exp;
@@ -462,7 +468,6 @@ const CryptoEngine = {
   },
 
   processRealBackendFindings: function(repo, scanId, dbFindings) {
-    const bizCrit = repo.businessCriticality || 'Not tagged';
     const globalZ = this.getGlobalZ();
 
     const allMappedFindings = dbFindings.map(f => {
@@ -474,8 +479,6 @@ const CryptoEngine = {
         version: f.version || f.libraryVersion || '',
         exposure: f.exposure || 'internal',
         dataSensitivity: f.dataSensitivity || 'GENERAL',
-        businessCriticality: f.businessCriticality || bizCrit,
-        repoCriticality: bizCrit,
         severity: f.severity.toLowerCase(),
         quantum: (f.quantumStatus || '').toLowerCase().includes('vulnerable') ? 'yes' : 'safe',
         file: f.filePath,
@@ -569,8 +572,6 @@ const CryptoEngine = {
       scanId: scanId,
       repoId: repo.id || 'repo-1',
       repoName: repoName,
-      businessCriticality: bizCrit,
-      criticality_tier: bizCrit,
       systems: repo.systems || [],
       fileSize: 0,
       timestamp: new Date().toLocaleString(),
@@ -596,8 +597,6 @@ const CryptoEngine = {
     const repoSummary = {
       id: scanResult.repoId,
       name: repoName,
-      businessCriticality: bizCrit,
-      criticality_tier: bizCrit,
       size: 0,
       lastScan: 'Just now',
       status: 'completed',
