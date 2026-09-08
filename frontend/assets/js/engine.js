@@ -603,12 +603,38 @@ const CryptoEngine = {
     };
   },
 
+  extractMode: function(finding) {
+    const algo = (finding.algorithm || '').toUpperCase();
+    const title = (finding.title || '').toUpperCase();
+    const snippet = (finding.snippet || finding.code || '').toUpperCase();
+    const ruleId = (finding.ruleId || finding.rule_id || '').toUpperCase();
+
+    const textToSearch = algo + ' ' + title + ' ' + snippet + ' ' + ruleId;
+
+    const modes = ['GCM', 'CBC', 'ECB', 'CTR', 'CFB', 'OFB', 'CCM', 'OCB', 'POLY1305', 'CHACHA20'];
+
+    for (const m of modes) {
+      // Avoid matching sub-strings inadvertently by using boundaries or checking direct hits
+      if (textToSearch.includes(m)) {
+        if (m === 'CHACHA20' || m === 'POLY1305') {
+          if (textToSearch.includes('CHACHA20') && textToSearch.includes('POLY1305')) {
+            return 'ChaCha20-Poly1305';
+          }
+        }
+        return m;
+      }
+    }
+    
+    return '-';
+  },
+
   enrichFinding: function(f, globalZ) {
     const type = f.type || this.classifyType(f);
     const lt = this.estimateLifetime(f);
     const crit = this.computeCriticality(f);
 
     f.type = type;
+    f.mode = f.mode || this.extractMode(f);
     f.suggested_lifetime = lt.suggested_lifetime;
     f.user_confirmed_lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
       ? Number(f.user_confirmed_lifetime)
