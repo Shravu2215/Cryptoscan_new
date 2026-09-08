@@ -745,17 +745,23 @@ async function init() {
   const activeEl = document.getElementById('view-active');
   const headerActionsEl = document.getElementById('header-actions');
   
-  if (!data.scans || data.scans.length === 0) {
+  const scans = (data.scans && data.scans.length > 0) ? data.scans : (data.activeScan && data.activeScan.findings ? [data.activeScan] : (data.repositories || []));
+  const hasFindings = scans.some(s => s.findings && s.findings.length > 0);
+
+  if (!hasFindings) {
     if (noDataEl) noDataEl.style.display = 'block';
     if (activeEl) activeEl.style.display = 'none';
     if (headerActionsEl) headerActionsEl.style.display = 'none';
     return;
   }
 
-  // Live join repository criticality
+  // Live join repository criticality with 1s timeout
   const repoCritMap = {};
   try {
-    const res = await fetch('http://localhost:3000/repos');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1000);
+    const res = await fetch('http://localhost:3000/repos', { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const repos = await res.json();
       repos.forEach(r => {
@@ -776,7 +782,7 @@ async function init() {
   });
   
   // Transform findings into an inventory representation (CBOM elements)
-  inventory = data.scans.flatMap(s => {
+  inventory = scans.flatMap(s => {
     const parentCrit = (s.repositoryId && repoCritMap[s.repositoryId]) || 
                        (s.repo && repoCritMap[s.repo]) || 
                        (s.targetUrl && repoCritMap[s.targetUrl]) || 

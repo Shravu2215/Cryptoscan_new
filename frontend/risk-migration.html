@@ -2483,7 +2483,10 @@
 
         syncGlobalZUI();
 
-        if (!data.scans || data.scans.length === 0) {
+        const scans = (data.scans && data.scans.length > 0) ? data.scans : (data.activeScan && data.activeScan.findings ? [data.activeScan] : (data.repositories || []));
+        const hasFindings = scans.some(s => s.findings && s.findings.length > 0);
+
+        if (!hasFindings) {
           if (noDataEl) noDataEl.style.display = 'block';
           if (activeEl) activeEl.style.display = 'none';
           if (safeEl) safeEl.style.display = 'none';
@@ -2496,20 +2499,17 @@
           if (r.id) repoCritMap[r.id] = (r.businessCriticality || 'MEDIUM').toUpperCase();
           if (r.name) repoCritMap[r.name] = (r.businessCriticality || 'MEDIUM').toUpperCase();
         });
-        (data.scans || []).forEach(s => {
+        scans.forEach(s => {
           if (s.repoId && s.businessCriticality) repoCritMap[s.repoId] = s.businessCriticality.toUpperCase();
           if (s.repoName && s.businessCriticality) repoCritMap[s.repoName] = s.businessCriticality.toUpperCase();
         });
 
-        const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-        const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
-
-        allFindings = targetScans.flatMap(s => (s.findings || []).map(f => {
+        allFindings = scans.flatMap(s => (s.findings || []).map(f => {
           const enriched = CryptoEngine.enrichFinding(f);
           return {
             ...enriched,
             repoId: s.repoId,
-            repoName: s.repoName,
+            repoName: s.repoName || s.name,
             businessCriticality: f.businessCriticality || s.businessCriticality || repoCritMap[s.repoId] || repoCritMap[s.repoName] || 'MEDIUM'
           };
         }));
