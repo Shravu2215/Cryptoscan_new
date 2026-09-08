@@ -212,34 +212,295 @@ const CryptoEngine = {
     }
   ],
 
+  // ─── PART 1 & 2: TYPE, LIFETIME, CRITICALITY, MIGRATION (Y) & MOSCA (X+Y vs Z) ENGINES ───
+  classifyType: function(finding) {
+    const title = (finding.title || finding.name || '').toLowerCase();
+    const cat = (finding.category || '').toLowerCase();
+    const lib = (finding.library || '').toLowerCase();
+    const algo = (finding.algorithm || '').toLowerCase();
+    const file = (finding.file || finding.filePath || '').toLowerCase();
+    const usage = (finding.usage || finding.description || '').toLowerCase();
+
+    if (file.includes('boto3') || file.includes('kms') || cat.includes('cloud') || usage.includes('kms') || usage.includes('vault') || usage.includes('key vault') || usage.includes('aws') || usage.includes('azure')) {
+      return 'cloud_service';
+    }
+    if (usage.includes('hsm') || usage.includes('pkcs11') || cat.includes('hardware') || usage.includes('tpm') || usage.includes('smart card') || algo.includes('hsm')) {
+      return 'hardware_module';
+    }
+    if (file.endsWith('.pem') || file.endsWith('.crt') || file.endsWith('.cer') || file.endsWith('.der') || file.endsWith('.p12') || file.endsWith('.pfx') || cat.includes('cert') || title.includes('cert') || title.includes('x509')) {
+      return 'certificate';
+    }
+    if (cat.includes('protocol') || title.includes('tls') || title.includes('ssl') || title.includes('ssh') || title.includes('ipsec') || usage.includes('transport') || usage.includes('handshake')) {
+      return 'protocol';
+    }
+    if (cat.includes('key') || title.includes('key') || algo.includes('rsa') || algo.includes('ecdsa') || algo.includes('ecdh') || algo.includes('ecc') || algo.includes('dsa') || usage.includes('secret') || usage.includes('private key') || usage.includes('key pair')) {
+      return 'key';
+    }
+    if (cat.includes('library') || lib.includes('cryptojs') || lib.includes('bouncycastle') || lib.includes('pycryptodome') || lib.includes('openssl') || lib.includes('boringssl')) {
+      return 'library';
+    }
+    return 'algorithm';
+  },
+
+  estimateLifetime: function(finding) {
+    const title = (finding.title || finding.name || '').toLowerCase();
+    const file = (finding.file || finding.filePath || '').toLowerCase();
+    const usage = (finding.usage || finding.description || '').toLowerCase();
+    const type = finding.type || this.classifyType(finding);
+
+    let suggested = 5;
+    if (usage.includes('session') || usage.includes('token') || usage.includes('ephemeral') || usage.includes('jwt') || usage.includes('nonce') || file.includes('session') || file.includes('cookie')) {
+      suggested = 1;
+    } else if (type === 'certificate' || title.includes('tls') || title.includes('ssl') || title.includes('cert')) {
+      suggested = 2;
+    } else if (type === 'key' || algoIsAsymmetric(finding)) {
+      suggested = 10;
+    } else if (usage.includes('archive') || usage.includes('at-rest') || usage.includes('db') || usage.includes('storage') || file.includes('database') || type === 'cloud_service') {
+      suggested = 20;
+    }
+
+    function algoIsAsymmetric(f) {
+      const a = (f.algorithm || f.title || '').toLowerCase();
+      return a.includes('rsa') || a.includes('ecdsa') || a.includes('ecdh') || a.includes('dsa') || a.includes('ecc');
+    }
+
+    const confirmed = (finding.user_confirmed_lifetime !== undefined && finding.user_confirmed_lifetime !== null)
+      ? Number(finding.user_confirmed_lifetime)
+      : null;
+
+    return {
+      suggested_lifetime: suggested,
+      user_confirmed_lifetime: confirmed
+    };
+  },
+
+  computeCriticality: function(finding) {
+    const file = (finding.file || finding.filePath || '').toLowerCase();
+    const repo = (finding.repoName || finding.repository || '').toLowerCase();
+    const text = (file + ' ' + repo + ' ' + (finding.title || '') + ' ' + (finding.snippet || '')).toLowerCase();
+
+    // 1. Data Sensitivity (0.30)
+    let sens = 2.0;
+    if (text.includes('payment') || text.includes('pci') || text.includes('card') || text.includes('billing') || text.includes('bank') || text.includes('account')) {
+      sens = 5.0;
+    } else if (text.includes('auth') || text.includes('secret') || text.includes('private') || text.includes('pass') || text.includes('token') || text.includes('pii') || text.includes('health') || text.includes('medical')) {
+      sens = 4.5;
+    } else if (text.includes('user') || text.includes('db') || text.includes('session') || text.includes('customer')) {
+      sens = 3.5;
+    }
+
+    // 2. Exposure (0.25)
+    let exp = 2.5;
+    if (text.includes('public') || text.includes('api') || text.includes('endpoint') || text.includes('gateway') || text.includes('external') || text.includes('web') || text.includes('routes') || text.includes('controller') || (finding.exposure || '').toLowerCase() === 'external') {
+      exp = 5.0;
+    } else if (text.includes('internal') || text.includes('service') || text.includes('shared') || text.includes('middleware')) {
+      exp = 3.0;
+    } else if (text.includes('test') || text.includes('dev') || text.includes('mock') || text.includes('spec') || text.includes('fixture')) {
+      exp = 1.0;
+    }
+
+    // 3. System Role (0.25)
+    let sys = 3.0;
+    if (text.includes('prod') || text.includes('production') || text.includes('main') || text.includes('master') || text.includes('release')) {
+      sys = 5.0;
+    } else if (text.includes('staging') || text.includes('stage') || text.includes('qa') || text.includes('preprod')) {
+      sys = 3.5;
+    } else if (text.includes('dev') || text.includes('development') || text.includes('test') || text.includes('sandbox') || text.includes('scratch')) {
+      sys = 1.5;
+    }
+
+    // 4. Regulatory Impact (0.20)
+    let reg = 2.0;
+    if (text.includes('gdpr') || text.includes('pci') || text.includes('hipaa') || text.includes('rbi') || text.includes('compliance') || text.includes('sox') || text.includes('fips')) {
+      reg = 5.0;
+    } else if (text.includes('audit') || text.includes('security') || text.includes('policy')) {
+      reg = 3.5;
+    }
+
+    // Allow user override of subfactors if previously stored on finding
+    if (finding.subfactors) {
+      sens = finding.subfactors.data_sensitivity !== undefined ? Number(finding.subfactors.data_sensitivity) : sens;
+      exp = finding.subfactors.exposure !== undefined ? Number(finding.subfactors.exposure) : exp;
+      sys = finding.subfactors.system_role !== undefined ? Number(finding.subfactors.system_role) : sys;
+      reg = finding.subfactors.regulatory_impact !== undefined ? Number(finding.subfactors.regulatory_impact) : reg;
+    }
+
+    const rawScore = (sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20);
+    const score = Math.round(rawScore * 10) / 10;
+
+    let label = 'Low';
+    if (score >= 4.0) label = 'Critical';
+    else if (score >= 3.0) label = 'High';
+    else if (score >= 2.0) label = 'Medium';
+
+    return {
+      criticality_score: score,
+      criticality_label: label,
+      subfactors: {
+        data_sensitivity: sens,
+        exposure: exp,
+        system_role: sys,
+        regulatory_impact: reg
+      },
+      last_modified_by: finding.last_modified_by || null,
+      modification_reason: finding.modification_reason || null,
+      modified_at: finding.modified_at || null
+    };
+  },
+
+  MIGRATION_LOOKUP: {
+    algorithm: { simple: 0.25, complex: 1.5 },
+    key: { simple: 0.5, complex: 2.0 },
+    certificate: { simple: 0.1, complex: 0.5 },
+    protocol: { simple: 0.5, complex: 2.0 },
+    library: { simple: 0.5, complex: 1.5 },
+    hardware_module: { simple: 1.0, complex: 3.0 },
+    cloud_service: { simple: 0.25, complex: 1.0 }
+  },
+
+  getMigrationLookup: function() {
+    try {
+      const stored = localStorage.getItem('cs_migration_lookup');
+      if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return this.MIGRATION_LOOKUP;
+  },
+
+  saveMigrationLookup: function(lookup) {
+    try {
+      localStorage.setItem('cs_migration_lookup', JSON.stringify(lookup));
+      window.dispatchEvent(new Event('cryptoscan_data_updated'));
+    } catch(e) {}
+  },
+
+  estimateMigrationTime: function(finding) {
+    const type = finding.type || this.classifyType(finding);
+    const lookup = this.getMigrationLookup();
+    const entry = lookup[type] || { simple: 0.5, complex: 1.5 };
+    const isComplex = finding.isComplex ||
+      (finding.severity === 'critical' || finding.quantum === 'yes' || (finding.file && (finding.file.includes('core') || finding.file.includes('crypto'))));
+    const complexityKey = isComplex ? 'complex' : 'simple';
+    return Number(entry[complexityKey] || 1.0);
+  },
+
+  getGlobalZ: function() {
+    const saved = localStorage.getItem('cs_global_z');
+    return saved ? Number(saved) : 12;
+  },
+
+  setGlobalZ: function(val) {
+    localStorage.setItem('cs_global_z', String(val));
+    window.dispatchEvent(new Event('cryptoscan_data_updated'));
+  },
+
+  computeMoscaRisk: function(finding, globalZ) {
+    const Z = globalZ !== undefined ? Number(globalZ) : this.getGlobalZ();
+    const X = (finding.user_confirmed_lifetime !== undefined && finding.user_confirmed_lifetime !== null && finding.user_confirmed_lifetime !== '')
+      ? Number(finding.user_confirmed_lifetime)
+      : Number(finding.suggested_lifetime || this.estimateLifetime(finding).suggested_lifetime);
+
+    const Y = this.estimateMigrationTime(finding);
+    const urgency_margin = Math.round((Z - (X + Y)) * 10) / 10;
+    const mosca_at_risk = (X + Y) > Z;
+
+    let urgency_tier = 'Low';
+    if (urgency_margin < 0) {
+      urgency_tier = 'Critical';
+    } else if (urgency_margin <= 2) {
+      urgency_tier = 'High';
+    } else if (urgency_margin <= 5) {
+      urgency_tier = 'Medium';
+    }
+
+    const tierWeights = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+    const critScore = finding.criticality_score !== undefined ? Number(finding.criticality_score) : 3.0;
+    const priority_score = Math.round((tierWeights[urgency_tier] * critScore) * 10) / 10;
+
+    return {
+      X,
+      Y,
+      Z,
+      urgency_margin,
+      mosca_at_risk,
+      urgency_tier,
+      priority_score
+    };
+  },
+
+  enrichFinding: function(f, globalZ) {
+    const type = f.type || this.classifyType(f);
+    const lt = this.estimateLifetime(f);
+    const crit = this.computeCriticality(f);
+
+    f.type = type;
+    f.suggested_lifetime = lt.suggested_lifetime;
+    f.user_confirmed_lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
+      ? Number(f.user_confirmed_lifetime)
+      : lt.user_confirmed_lifetime;
+
+    f.criticality_score = (f.criticality_score !== undefined && f.criticality_score !== null)
+      ? Number(f.criticality_score)
+      : crit.criticality_score;
+
+    f.criticality_label = f.criticality_label || crit.criticality_label;
+    f.subfactors = f.subfactors || crit.subfactors;
+    f.last_modified_by = f.last_modified_by || crit.last_modified_by;
+    f.modification_reason = f.modification_reason || crit.modification_reason;
+    f.modified_at = f.modified_at || crit.modified_at;
+
+    const mosca = this.computeMoscaRisk(f, globalZ);
+    f.risk = mosca;
+    f.X = mosca.X;
+    f.Y = mosca.Y;
+    f.Z = mosca.Z;
+    f.urgency_margin = mosca.urgency_margin;
+    f.mosca_at_risk = mosca.mosca_at_risk;
+    f.urgency_tier = mosca.urgency_tier;
+    f.priority_score = mosca.priority_score;
+
+    return f;
+  },
+
   processRealBackendFindings: function(repo, scanId, dbFindings) {
     const bizCrit = repo.businessCriticality || 'Not tagged';
-    const allMappedFindings = dbFindings.map(f => ({
-      id: f.id,
-      title: f.algorithm + ' ' + (f.usage || ''),
-      category: f.library || 'Standard API',
-      library: f.library || 'Standard API',
-      version: f.version || f.libraryVersion || '',
-      exposure: f.exposure || 'internal',
-      dataSensitivity: f.dataSensitivity || 'GENERAL',
-      businessCriticality: f.businessCriticality || bizCrit,
-      repoCriticality: bizCrit,
-      severity: f.severity.toLowerCase(),
-      quantum: (f.quantumStatus || '').toLowerCase().includes('vulnerable') ? 'yes' : 'safe',
-      file: f.filePath,
-      line: f.lineNumber,
-      snippet: f.description || '',
-      remediation: f.recommendation || '',
-      algorithm: f.algorithm,
-      usage: f.usage,
-      keySize: f.keySize ? `${f.keySize}-bit` : 'N/A',
-      quantumStatus: f.quantumStatus,
-      confidence: (f.confidence || 'Likely|ast').split('|')[0],
-      detection_method: (f.confidence || 'Likely|ast').split('|')[1] || 'ast',
-      suppressed: Boolean(f.suppressed),
-      suppressionReason: f.suppressionReason || null,
-      status: f.status || 'ACTIVE'
-    }));
+    const globalZ = this.getGlobalZ();
+
+    const allMappedFindings = dbFindings.map(f => {
+      const baseFinding = {
+        id: f.id,
+        title: f.algorithm + ' ' + (f.usage || ''),
+        category: f.library || 'Standard API',
+        library: f.library || 'Standard API',
+        version: f.version || f.libraryVersion || '',
+        exposure: f.exposure || 'internal',
+        dataSensitivity: f.dataSensitivity || 'GENERAL',
+        businessCriticality: f.businessCriticality || bizCrit,
+        repoCriticality: bizCrit,
+        severity: f.severity.toLowerCase(),
+        quantum: (f.quantumStatus || '').toLowerCase().includes('vulnerable') ? 'yes' : 'safe',
+        file: f.filePath,
+        line: f.lineNumber,
+        snippet: f.description || '',
+        remediation: f.recommendation || '',
+        algorithm: f.algorithm,
+        usage: f.usage,
+        keySize: f.keySize ? `${f.keySize}-bit` : 'N/A',
+        quantumStatus: f.quantumStatus,
+        confidence: (f.confidence || 'Likely|ast').split('|')[0],
+        detection_method: (f.confidence || 'Likely|ast').split('|')[1] || 'ast',
+        suppressed: Boolean(f.suppressed),
+        suppressionReason: f.suppressionReason || null,
+        status: f.status || 'ACTIVE',
+        user_confirmed_lifetime: f.user_confirmed_lifetime !== undefined ? f.user_confirmed_lifetime : null,
+        criticality_score: f.criticality_score,
+        criticality_label: f.criticality_label,
+        subfactors: f.subfactors,
+        last_modified_by: f.last_modified_by,
+        modification_reason: f.modification_reason,
+        modified_at: f.modified_at
+      };
+      return this.enrichFinding(baseFinding, globalZ);
+    });
 
     const activeDbFindings = dbFindings.filter(f => !f.suppressed && f.status !== 'RESOLVED');
     const activeFindings = allMappedFindings.filter(f => !f.suppressed && f.status !== 'RESOLVED');

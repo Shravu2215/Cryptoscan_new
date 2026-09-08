@@ -783,24 +783,32 @@ async function init() {
                        s.businessCriticality || s.criticality_tier ||
                        'Not tagged';
     return (s.findings || []).map(f => {
-      const algo = f.algorithm || (f.title ? f.title.split(' ')[0] : 'Unknown');
-      const itemCrit = (f.repositoryId && repoCritMap[f.repositoryId]) ||
-                       f.businessCriticality || f.criticality_tier || parentCrit;
+      const enriched = typeof CryptoEngine !== 'undefined' ? CryptoEngine.enrichFinding(f) : f;
+      const algo = enriched.algorithm || (enriched.title ? enriched.title.split(' ')[0] : 'Unknown');
+      const itemCrit = (enriched.repositoryId && repoCritMap[enriched.repositoryId]) ||
+                       enriched.businessCriticality || enriched.criticality_tier || parentCrit;
       return {
-        id: f.id || Math.random().toString(36).substr(2, 9),
+        id: enriched.id || Math.random().toString(36).substr(2, 9),
+        rawFinding: enriched,
         algorithm: algo,
-        type: getAlgoType(algo),
-        purpose: f.usage || f.category || 'Data Protection',
-        exposure: f.exposure || 'internal',
+        type: enriched.type || getAlgoType(algo),
+        suggested_lifetime: enriched.suggested_lifetime || 5,
+        user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
+        subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
+        criticality_score: enriched.criticality_score || 2.0,
+        criticality_label: enriched.criticality_label || 'Medium',
+        moscaRisk: enriched.risk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 },
+        purpose: enriched.usage || enriched.category || 'Data Protection',
+        exposure: enriched.exposure || 'internal',
         criticality: itemCrit,
-        file: f.file || 'unknown',
-        line: f.line || '',
-        library: f.library || 'Standard/Unknown',
-        version: f.version || f.libraryVersion || '—',
-        keySize: f.keySize || '—',
-        risk: (f.severity || 'SAFE').toUpperCase(),
-        quantumVulnerable: f.quantum === 'yes' || (f.quantumStatus || '').toLowerCase().includes('vulnerable'),
-        usageContext: f.snippet || f.remediation || 'Standard implementation detected.'
+        file: enriched.file || 'unknown',
+        line: enriched.line || '',
+        library: enriched.library || 'Standard/Unknown',
+        version: enriched.version || enriched.libraryVersion || '—',
+        keySize: enriched.keySize || '—',
+        risk: (enriched.severity || 'SAFE').toUpperCase(),
+        quantumVulnerable: enriched.quantum === 'yes' || (enriched.quantumStatus || '').toLowerCase().includes('vulnerable'),
+        usageContext: enriched.snippet || enriched.remediation || 'Standard implementation detected.'
       };
     });
   });
@@ -1017,7 +1025,7 @@ function renderTable() {
     return `
       <tr class="cbom-row" style="cursor:pointer;" data-index="${i}">
         <td><span style="font-weight:600;color:var(--text-h)">${c.algorithm}</span></td>
-        <td>${c.type}</td>
+        <td><span class="badge badge-quant" style="text-transform:uppercase;">${c.type}</span></td>
         <td>${c.purpose}</td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
         <td><span class="badge ${critClass}">${c.criticality || 'Not tagged'}</span></td>
@@ -1098,21 +1106,39 @@ function generateCycloneDX() {
       timestamp: new Date().toISOString(),
       tools: [{ vendor: "CryptoScan", name: "CryptoScanner API" }]
     },
-    components: inventory.map(c => ({
-      type: "cryptographic-asset",
-      name: c.algorithm,
-      group: c.library,
-      properties: [
-        { name: "crypto:type", value: c.type },
-        { name: "crypto:purpose", value: c.purpose },
-        { name: "crypto:exposure", value: c.exposure || "internal" },
-        { name: "crypto:businessCriticality", value: c.criticality || "Not tagged" },
-        { name: "crypto:keySize", value: c.keySize },
-        { name: "crypto:quantumVulnerable", value: c.quantumVulnerable.toString() },
-        { name: "crypto:risk", value: c.risk },
-        { name: "crypto:location", value: `${c.file}:${c.line}` }
-      ]
-    }))
+    components: inventory.map(c => {
+      const risk = c.moscaRisk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 };
+      const sf = c.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 };
+      return {
+        type: "cryptographic-asset",
+        name: c.algorithm,
+        group: c.library,
+        properties: [
+          { name: "crypto:type", value: c.type || "algorithm" },
+          { name: "crypto:suggested_lifetime", value: String(c.suggested_lifetime || 5) },
+          { name: "crypto:user_confirmed_lifetime", value: c.user_confirmed_lifetime ? String(c.user_confirmed_lifetime) : "null" },
+          { name: "crypto:effective_lifetime_X", value: String(risk.X) },
+          { name: "crypto:criticality_score", value: String(c.criticality_score || 2.0) },
+          { name: "crypto:criticality_label", value: c.criticality_label || "Medium" },
+          { name: "crypto:subfactor_data_sensitivity", value: String(sf.data_sensitivity) },
+          { name: "crypto:subfactor_exposure", value: String(sf.exposure) },
+          { name: "crypto:subfactor_system_role", value: String(sf.system_role) },
+          { name: "crypto:subfactor_regulatory_impact", value: String(sf.regulatory_impact) },
+          { name: "crypto:migration_time_Y", value: String(risk.Y) },
+          { name: "crypto:threat_horizon_Z", value: String(risk.Z) },
+          { name: "crypto:urgency_margin", value: String(risk.urgency_margin) },
+          { name: "crypto:urgency_tier", value: String(risk.urgency_tier) },
+          { name: "crypto:priority_score", value: String(risk.priority_score) },
+          { name: "crypto:purpose", value: c.purpose },
+          { name: "crypto:exposure", value: c.exposure || "internal" },
+          { name: "crypto:businessCriticality", value: c.criticality || "Not tagged" },
+          { name: "crypto:keySize", value: c.keySize },
+          { name: "crypto:quantumVulnerable", value: c.quantumVulnerable.toString() },
+          { name: "crypto:risk", value: c.risk },
+          { name: "crypto:location", value: `${c.file}:${c.line}` }
+        ]
+      };
+    })
   }, null, 2);
 }
 

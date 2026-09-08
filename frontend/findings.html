@@ -1305,29 +1305,28 @@
                 </select>
                 <select id="filter-type" class="filter-sel" onchange="handleFilterChange()">
                   <option value="ALL">All Types</option>
-                  <option value="Asymmetric Key">Asymmetric Key</option>
-                  <option value="Symmetric Cipher">Symmetric Cipher</option>
-                  <option value="Cryptographic Hash">Cryptographic Hash</option>
-                  <option value="Key Derivation">Key Derivation</option>
-                  <option value="MAC / HMAC">MAC / HMAC</option>
-                  <option value="Secret Material">Secret Material</option>
-                  <option value="Protocol / TLS">Protocol / TLS</option>
-                  <option value="PRNG / Entropy">PRNG / Entropy</option>
+                  <option value="algorithm">Algorithm</option>
+                  <option value="key">Key</option>
+                  <option value="certificate">Certificate</option>
+                  <option value="protocol">Protocol</option>
+                  <option value="library">Library</option>
+                  <option value="hardware_module">Hardware Module</option>
+                  <option value="cloud_service">Cloud Service</option>
                 </select>
                 <select id="filter-lifetime" class="filter-sel" onchange="handleFilterChange()">
                   <option value="ALL">All Lifetimes</option>
-                  <option value="Permanent">Permanent (10+ yrs)</option>
-                  <option value="Long-term">Long-term (3-10 yrs)</option>
-                  <option value="Medium-term">Medium-term (1-3 yrs)</option>
-                  <option value="Short-term">Short-term (&lt;1 yr / Ephemeral)</option>
+                  <option value="1">&le; 1 Year (Ephemeral)</option>
+                  <option value="2">2 Years (Certificates)</option>
+                  <option value="5">5 Years (Standard)</option>
+                  <option value="10">10 Years (Signing / Key Pair)</option>
+                  <option value="20">20+ Years (Archival / At-Rest)</option>
                 </select>
                 <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
                   <option value="ALL">All Business Criticality</option>
-                  <option value="Critical">Critical (Tier 1)</option>
-                  <option value="Important">Important (Tier 2)</option>
-                  <option value="Standard">Standard (Tier 3)</option>
-                  <option value="Low">Low (Tier 4)</option>
-                  <option value="Not tagged">Not tagged</option>
+                  <option value="Critical">Critical (Score &ge; 4.0)</option>
+                  <option value="High">High (Score &ge; 3.0)</option>
+                  <option value="Medium">Medium (Score &ge; 2.0)</option>
+                  <option value="Low">Low (Score &lt; 2.0)</option>
                 </select>
                 <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
                   <option value="ALL">All Exposure</option>
@@ -1497,14 +1496,59 @@
         </div>
       </div>
 
-      <div class="explanation-box">
-        <h4>Why is this a risk?</h4>
-        <p id="drw-desc">Explanation goes here.</p>
+      <div class="explanation-box" style="margin-top:12px; background:var(--bg-card); border-color:var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="margin:0; font-size:14px; color:var(--text-h);">Business Criticality (4 Sub-factors)</h4>
+          <span id="drw-crit-score-badge" class="badge badge-high" style="font-size:12px; font-weight:700;">High (3.5)</span>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Data Sensitivity (30% weight):</span>
+              <strong id="lbl-sub-sens">3.5</strong>
+            </div>
+            <input type="range" id="slider-sub-sens" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Exposure Level (25% weight):</span>
+              <strong id="lbl-sub-exp">3.0</strong>
+            </div>
+            <input type="range" id="slider-sub-exp" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>System Role (25% weight):</span>
+              <strong id="lbl-sub-sys">3.0</strong>
+            </div>
+            <input type="range" id="slider-sub-sys" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>Regulatory Impact (20% weight):</span>
+              <strong id="lbl-sub-reg">2.0</strong>
+            </div>
+            <input type="range" id="slider-sub-reg" min="1.0" max="5.0" step="0.5" style="width:100%; cursor:pointer;" oninput="updateDrawerSubfactorsLive()">
+          </div>
+        </div>
+
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-color);">
+          <label style="font-size:11px; font-weight:600; color:var(--text-s); display:block; margin-bottom:4px;">REASON FOR OVERRIDE (AUDIT TRAIL):</label>
+          <input type="text" id="drw-mod-reason" placeholder="e.g., Upgraded sensitivity per compliance audit" class="inp-search" style="width:100%; font-size:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <button class="btn-sec" style="font-size:12px; padding:6px 12px; background:var(--purple); color:white; border:none;" onclick="saveCriticalityOverride()">Save Criticality Override</button>
+            <span id="drw-audit-trail" style="font-size:10px; color:var(--text-m); font-style:italic;"></span>
+          </div>
+        </div>
       </div>
 
       <div class="explanation-box" style="margin-top:12px; background:rgba(139,92,246,0.06); border-color:rgba(139,92,246,0.2);">
         <h4 style="color:var(--purple);">Mosca's Inequality (X + Y &gt; Z)</h4>
-        <p id="drw-mosca-readout" style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--text-h); margin-bottom:4px;">Formula: X (1.5y migration) + Y (10y lifetime) &gt; Z (7y threat)</p>
+        <p id="drw-mosca-readout" style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--text-h); margin-bottom:4px;">Formula: X (10y lifetime) + Y (1.5y migration) &gt; Z (12y threat)</p>
         <p id="drw-mosca-verdict" style="font-size:12px; color:var(--amber);">Verdict: Risk is HIGH (Data will still need protection after CRQC arrival)</p>
       </div>
 
@@ -2062,23 +2106,55 @@
         const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
         const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
 
-        const type = getArtefactType(f);
-        const lifetime = getArtefactLifetime(f);
-        const bizCrit = getBusinessCriticality(f);
-        const riskInfo = computeFindingRisk(f);
+      tbody.innerHTML = pageData.map((f, i) => {
+        const sev = getSeverity(f);
+        const algo = f.algorithm || (f.title || 'Unknown').split(' ')[0] || 'Unknown';
+        const purpose = f.usage || f.category || '-';
+        const quant = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
+        const qClass = isQuantum(f) ? 'badge-quant' : 'badge-safe';
+        const conf = f.confidence || 'Likely';
+        const confClass = getConfBadgeClass(conf);
+        const detMethod = f.detection_method || 'ast';
+        const detClass = getDetBadgeClass(detMethod);
+        const detLabel = getDetLabel(detMethod);
+        const exp = f.exposure || 'internal';
+        const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
+        const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
+
+        const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
+        const lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
+          ? Number(f.user_confirmed_lifetime)
+          : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
+
+        const critScore = f.criticality_score !== undefined ? f.criticality_score : 3.0;
+        const bizCrit = f.criticality_label || 'Medium';
+        const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
 
         return `
       <tr class="finding-row" style="cursor:pointer;" data-index="${i}">
-        <td><span class="badge ${getBadgeClass(sev)}">${sev}</span><div style="font-size:10px; color:var(--text-s); margin-top:2px; font-weight:700;">Score: ${riskInfo.finalScore}</div></td>
+        <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
-        <td><span class="badge badge-ast" style="font-size:11px;">${type}</span></td>
+        <td><span class="badge badge-ast" style="font-size:11px; text-transform:uppercase;">${type}</span></td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
         <td><span class="badge ${detClass}">${detLabel}</span></td>
         <td><span class="badge ${confClass}">${conf}</span></td>
         <td><span class="badge ${qClass}">${quant}</span></td>
         <td>${purpose}</td>
-        <td><span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span></td>
-        <td><span class="badge ${getCritBadgeClass(bizCrit)}">${bizCrit}</span></td>
+        <td>
+          <select class="filter-sel" style="padding:2px 6px; font-size:11px;" onclick="event.stopPropagation()" onchange="updateFindingLifetime(${start + i}, this.value)">
+            <option value="1" ${lifetime === 1 ? 'selected' : ''}>1 yr</option>
+            <option value="2" ${lifetime === 2 ? 'selected' : ''}>2 yrs</option>
+            <option value="5" ${lifetime === 5 ? 'selected' : ''}>5 yrs</option>
+            <option value="10" ${lifetime === 10 ? 'selected' : ''}>10 yrs</option>
+            <option value="20" ${lifetime === 20 ? 'selected' : ''}>20 yrs</option>
+            <option value="30" ${lifetime === 30 ? 'selected' : ''}>30 yrs</option>
+          </select>
+        </td>
+        <td>
+          <span class="badge ${critBadgeClass}" style="cursor:pointer;" title="Click to view & override sub-factors" onclick="event.stopPropagation(); openCriticalityPanelForIndex(${start + i})">
+            ${bizCrit} (${critScore}) ⚙️
+          </span>
+        </td>
         <td><span class="code-font" style="color:var(--text-m);">${f.file || 'unknown'}</span></td>
         <td><span class="code-font" style="color:var(--text-m);">${f.line || '?'}</span></td>
         <td>
@@ -2086,6 +2162,7 @@
         </td>
       </tr>
     `;
+      }).join('');
       }).join('');
 
       document.querySelectorAll('.finding-row').forEach(row => {
@@ -2175,18 +2252,141 @@
       document.getElementById('drw-impact-file').textContent = f.file || 'unknown';
 
       // Compute & display Mosca's Inequality: X + Y > Z
-      const isHardcoded = (f.snippet || f.title || '').toLowerCase().includes('hardcoded');
-      const X = f.migrationTimeYears || parseFloat((1.0 + (isHardcoded ? 1.5 : 0.5)).toFixed(1));
-      const Y = f.dataLifetimeYears || (isQuantum(f) ? 10.0 : 5.0);
-      const Z = f.yearsToQuantumThreat || 7.0;
+      if (typeof CryptoEngine !== 'undefined') {
+        CryptoEngine.enrichFinding(f);
+      }
+      const X = f.X !== undefined ? f.X : (f.user_confirmed_lifetime || f.suggested_lifetime || 5);
+      const Y = f.Y !== undefined ? f.Y : 1.0;
+      const Z = f.Z !== undefined ? f.Z : 12;
       const moscaHolds = (X + Y) > Z;
+
       const readoutEl = document.getElementById('drw-mosca-readout');
       const verdictEl = document.getElementById('drw-mosca-verdict');
       if (readoutEl && verdictEl) {
-        readoutEl.textContent = `Formula: X (${X}y migration) + Y (${Y}y lifetime) ${moscaHolds ? '>' : '≤'} Z (${Z}y threat)`;
-        verdictEl.textContent = `Verdict: Mosca Risk is ${moscaHolds ? 'HIGH' : 'LOW'} (${moscaHolds ? 'Data remains exposed post-CRQC arrival' : 'Sufficient migration margin prior to CRQC'})`;
-        verdictEl.style.color = moscaHolds ? 'var(--red)' : 'var(--green)';
+        readoutEl.textContent = `Formula: X (${X}y lifetime) + Y (${Y}y migration) ${moscaHolds ? '>' : '≤'} Z (${Z}y threat) | Urgency Margin: ${f.urgency_margin}y`;
+        verdictEl.textContent = `Verdict: Mosca Urgency Tier is ${f.urgency_tier || (moscaHolds ? 'Critical' : 'Low')} (Priority Score: ${f.priority_score || 'N/A'})`;
+        verdictEl.style.color = (f.urgency_tier === 'Critical' || moscaHolds) ? 'var(--red)' : (f.urgency_tier === 'High' ? 'var(--amber)' : 'var(--green)');
       }
+
+      // Populate Sub-factors Sliders & Values
+      const sub = f.subfactors || { data_sensitivity: 3.5, exposure: 3.0, system_role: 3.0, regulatory_impact: 2.0 };
+      document.getElementById('slider-sub-sens').value = sub.data_sensitivity || 3.5;
+      document.getElementById('slider-sub-exp').value = sub.exposure || 3.0;
+      document.getElementById('slider-sub-sys').value = sub.system_role || 3.0;
+      document.getElementById('slider-sub-reg').value = sub.regulatory_impact || 2.0;
+      updateDrawerSubfactorsLive();
+
+      const auditSpan = document.getElementById('drw-audit-trail');
+      if (auditSpan) {
+        if (f.last_modified_by && f.modified_at) {
+          const modTime = new Date(f.modified_at).toLocaleDateString();
+          auditSpan.textContent = `Last edit by ${f.last_modified_by} on ${modTime}: "${f.modification_reason || 'No reason'}"`;
+        } else {
+          auditSpan.textContent = 'Auto-calculated from heuristics';
+        }
+      }
+
+      document.getElementById('drawer-overlay').classList.add('active');
+      document.getElementById('drawer').classList.add('active');
+    }
+
+    function updateDrawerSubfactorsLive() {
+      const sens = parseFloat(document.getElementById('slider-sub-sens').value);
+      const exp = parseFloat(document.getElementById('slider-sub-exp').value);
+      const sys = parseFloat(document.getElementById('slider-sub-sys').value);
+      const reg = parseFloat(document.getElementById('slider-sub-reg').value);
+
+      document.getElementById('lbl-sub-sens').textContent = sens.toFixed(1);
+      document.getElementById('lbl-sub-exp').textContent = exp.toFixed(1);
+      document.getElementById('lbl-sub-sys').textContent = sys.toFixed(1);
+      document.getElementById('lbl-sub-reg').textContent = reg.toFixed(1);
+
+      const score = Math.round(((sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20)) * 10) / 10;
+      let label = 'Low';
+      if (score >= 4.0) label = 'Critical';
+      else if (score >= 3.0) label = 'High';
+      else if (score >= 2.0) label = 'Medium';
+
+      const badgeEl = document.getElementById('drw-crit-score-badge');
+      if (badgeEl) {
+        badgeEl.textContent = `${label} (${score})`;
+        badgeEl.className = 'badge ' + (label === 'Critical' ? 'badge-crit' : label === 'High' ? 'badge-high' : label === 'Medium' ? 'badge-med' : 'badge-low');
+      }
+    }
+
+    function openCriticalityPanelForIndex(idx) {
+      const f = filteredFindings[idx];
+      if (f) openDrawer(f);
+    }
+
+    function updateFindingLifetime(idx, newYears) {
+      const f = filteredFindings[idx];
+      if (!f) return;
+      f.user_confirmed_lifetime = Number(newYears);
+      if (typeof CryptoEngine !== 'undefined') {
+        CryptoEngine.enrichFinding(f);
+        saveFindingsState();
+      }
+      handleFilterChange();
+    }
+
+    function saveCriticalityOverride() {
+      if (!currentDrawerFinding) return;
+      const sens = parseFloat(document.getElementById('slider-sub-sens').value);
+      const exp = parseFloat(document.getElementById('slider-sub-exp').value);
+      const sys = parseFloat(document.getElementById('slider-sub-sys').value);
+      const reg = parseFloat(document.getElementById('slider-sub-reg').value);
+      const reason = document.getElementById('drw-mod-reason').value.trim() || 'Manual override via Findings UI';
+
+      currentDrawerFinding.subfactors = {
+        data_sensitivity: sens,
+        exposure: exp,
+        system_role: sys,
+        regulatory_impact: reg
+      };
+
+      const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
+      currentDrawerFinding.last_modified_by = user.name || user.email || 'Security Analyst';
+      currentDrawerFinding.modification_reason = reason;
+      currentDrawerFinding.modified_at = new Date().toISOString();
+
+      if (typeof CryptoEngine !== 'undefined') {
+        const crit = CryptoEngine.computeCriticality(currentDrawerFinding);
+        currentDrawerFinding.criticality_score = crit.criticality_score;
+        currentDrawerFinding.criticality_label = crit.criticality_label;
+        CryptoEngine.enrichFinding(currentDrawerFinding);
+        saveFindingsState();
+      }
+
+      openDrawer(currentDrawerFinding);
+      handleFilterChange();
+    }
+
+    function saveFindingsState() {
+      if (typeof CryptoEngine === 'undefined') return;
+      const data = CryptoEngine.getData();
+      if (data.scans && data.scans.length > 0) {
+        data.scans.forEach(s => {
+          if (s.findings && Array.isArray(s.findings)) {
+            s.findings.forEach((sf, idx) => {
+              const match = allFindings.find(f => f.id === sf.id || (f.file === sf.file && f.line === sf.line));
+              if (match) {
+                s.findings[idx] = match;
+              }
+            });
+          }
+        });
+      }
+      if (data.activeScan && data.activeScan.findings) {
+        data.activeScan.findings.forEach((af, idx) => {
+          const match = allFindings.find(f => f.id === af.id || (f.file === af.file && f.line === af.line));
+          if (match) {
+            data.activeScan.findings[idx] = match;
+          }
+        });
+      }
+      CryptoEngine.saveData(data);
+    }
 
       document.getElementById('drawer-overlay').classList.add('active');
       document.getElementById('drawer').classList.add('active');
