@@ -850,7 +850,10 @@
           timestamp: r.lastScan || new Date().toISOString(),
           findings: r.findings || [],
           cbom: r.cbom || [],
-          quantumCount: r.quantumCount || 0
+          quantumCount: r.quantumCount || 0,
+          verified: r.verified || false,
+          isVerified: r.isVerified || r.verified || false,
+          verificationResult: r.verificationResult || null
         }));
       }
       updateMetrics();
@@ -979,6 +982,65 @@
             displayDate = d.toString() !== 'Invalid Date' ? d.toLocaleDateString() : s.timestamp;
           }
 
+          function normalizeRepoName(str) {
+            if (!str) return '';
+            return String(str)
+              .toLowerCase()
+              .replace(/\.zip$/i, '')
+              .split('/')
+              .pop()
+              .trim();
+          }
+
+          // Compute Verification Status across scan, activeScan, scans list, and repositories list
+          const repoNameNorm = normalizeRepoName(repoName);
+          const repoIdNorm = normalizeRepoName(s.repoId || s.id);
+          const scanIdNorm = String(s.scanId || '').toLowerCase();
+
+          let isVerified = Boolean(
+            (s.verificationResult && s.verificationResult.verified && !s.verificationResult.failed) ||
+            s.verified === true ||
+            s.isVerified === true ||
+            (repoNameNorm && localStorage.getItem('cs_verified_' + repoNameNorm) === 'true') ||
+            (s.repoName && localStorage.getItem('cs_verified_' + s.repoName) === 'true') ||
+            (scanIdNorm && localStorage.getItem('cs_verified_' + scanIdNorm) === 'true')
+          );
+
+          if (!isVerified && typeof CryptoEngine !== 'undefined') {
+            const engineData = CryptoEngine.getData();
+
+            if (engineData.activeScan) {
+              const actNorm = normalizeRepoName(engineData.activeScan.repoName || engineData.activeScan.name || engineData.activeScan.repoId);
+              if (actNorm && (actNorm === repoNameNorm || actNorm === repoIdNorm || repoNameNorm.includes(actNorm) || actNorm.includes(repoNameNorm))) {
+                if (engineData.activeScan.verified || (engineData.activeScan.verificationResult && engineData.activeScan.verificationResult.verified && !engineData.activeScan.verificationResult.failed)) {
+                  isVerified = true;
+                }
+              }
+            }
+
+            if (!isVerified && engineData.scans && Array.isArray(engineData.scans)) {
+              const matchScan = engineData.scans.find(sc => {
+                const scNorm = normalizeRepoName(sc.repoName || sc.name || sc.repoId);
+                return scNorm && (scNorm === repoNameNorm || scNorm === repoIdNorm || repoNameNorm.includes(scNorm) || scNorm.includes(repoNameNorm)) &&
+                       (sc.verified || (sc.verificationResult && sc.verificationResult.verified && !sc.verificationResult.failed));
+              });
+              if (matchScan) isVerified = true;
+            }
+
+            if (!isVerified && engineData.repositories && Array.isArray(engineData.repositories)) {
+              const matchRepo = engineData.repositories.find(rp => {
+                const rpNorm = normalizeRepoName(rp.name || rp.id);
+                return rpNorm && (rpNorm === repoNameNorm || rpNorm === repoIdNorm || repoNameNorm.includes(rpNorm) || rpNorm.includes(repoNameNorm)) &&
+                       (rp.verified || (rp.verificationResult && rp.verificationResult.verified && !rp.verificationResult.failed));
+              });
+              if (matchRepo) isVerified = true;
+            }
+          }
+
+          const verifyBadge = isVerified 
+            ? '<span class="badge badge-safe">VERIFIED</span>' 
+            : '<span class="badge badge-low">NOT VERIFIED</span>';
+
           const row = document.createElement('tr');
           row.innerHTML = `
           <td>
@@ -1002,7 +1064,11 @@
           <td><span class="badge ${risk.class}">${risk.label}</span></td>
           <td>${quantBadge}</td>
           <td>${cbomStatus}</td>
-          <td><span class="badge badge-low">Not Verified</span></td>
+          <td>
+            <a href="verification.html" onclick="selectRepoForVerification('${s.scanId || s.repoId || repoName}')" style="text-decoration:none; cursor:pointer;" title="Click to view verification details">
+              ${verifyBadge}
+            </a>
+          </td>
           <td>
             <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'">View</button>
           </td>
@@ -1160,9 +1226,31 @@
       });
     }
 
+    function selectRepoForVerification(identifier) {
+      if (typeof CryptoEngine === 'undefined') return;
+      const data = CryptoEngine.getData();
+      const cleanId = String(identifier || '').replace(/\.zip$/i, '').toLowerCase();
+
+      const targetScan = (data.scans || []).find(sc => {
+        const scName = (sc.repoName || sc.name || '').replace(/\.zip$/i, '').toLowerCase();
+        const scId = String(sc.repoId || sc.id || '').toLowerCase();
+        return sc.scanId === identifier || sc.repoId === identifier || scName === cleanId || scId === cleanId;
+      });
+
+      if (targetScan) {
+        data.activeScan = targetScan;
+        CryptoEngine.saveData(data);
+      }
+    }
+
     window.onload = init;
     window.addEventListener('load', init);
     window.addEventListener('cryptoscan_data_updated', init);
+    window.addEventListener('storage', (e) => {
+      if (typeof CryptoEngine !== 'undefined' && e.key === CryptoEngine.STORAGE_KEY) {
+        init();
+      }
+    });
   </script>
   <script src="assets/js/shell.js"></script>
 </body>

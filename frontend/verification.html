@@ -1212,11 +1212,67 @@
     window.selectedNodeHash = '';
     window.currentMerkleData = null;
 
+    function normalizeRepoName(str) {
+      if (!str) return '';
+      return String(str)
+        .toLowerCase()
+        .replace(/\.zip$/i, '')
+        .split('/')
+        .pop()
+        .trim();
+    }
+
     function restoreSavedVerification(record, cachedMerkleData) {
       if (!record) return;
 
       merkleRootHex = record.merkleRoot || '';
       currentHashHex = merkleRootHex;
+
+      if (activeScan && record) {
+        const isSuccess = Boolean(record.verified && !record.failed);
+        activeScan.verified = isSuccess;
+        activeScan.isVerified = isSuccess;
+
+        const activeNorm = normalizeRepoName(activeScan.repoName || activeScan.name || activeScan.repoId);
+        if (isSuccess && activeNorm) {
+          localStorage.setItem('cs_verified_' + activeNorm, 'true');
+        }
+        if (isSuccess && activeScan.repoName) {
+          localStorage.setItem('cs_verified_' + activeScan.repoName, 'true');
+        }
+        if (isSuccess && activeScan.scanId) {
+          localStorage.setItem('cs_verified_' + activeScan.scanId, 'true');
+        }
+
+        if (typeof CryptoEngine !== 'undefined') {
+          const currentData = CryptoEngine.getData();
+          currentData.activeScan = activeScan;
+
+          if (currentData.scans && Array.isArray(currentData.scans)) {
+            currentData.scans.forEach(s => {
+              const sNorm = normalizeRepoName(s.repoName || s.name || s.repoId);
+              if (s.scanId === activeScan.scanId || (activeNorm && (sNorm === activeNorm || sNorm.includes(activeNorm) || activeNorm.includes(sNorm)))) {
+                s.verificationResult = record;
+                s.verified = isSuccess;
+                s.isVerified = isSuccess;
+              }
+            });
+          }
+
+          if (currentData.repositories && Array.isArray(currentData.repositories)) {
+            currentData.repositories.forEach(r => {
+              const rNorm = normalizeRepoName(r.name || r.id);
+              if (r.id === activeScan.repoId || (activeNorm && (rNorm === activeNorm || rNorm.includes(activeNorm) || activeNorm.includes(rNorm)))) {
+                r.verificationResult = record;
+                r.verified = isSuccess;
+                r.isVerified = isSuccess;
+              }
+            });
+          }
+
+          CryptoEngine.saveData(currentData);
+        }
+      }
 
       document.getElementById('hash-text').textContent = merkleRootHex || 'N/A';
       document.getElementById('hash-text').style.color = 'var(--text-h)';
@@ -1770,6 +1826,8 @@
       // Save to activeScan and CryptoEngine storage!
       if (record) {
         activeScan.verificationResult = record;
+        activeScan.verified = true;
+        activeScan.isVerified = true;
         activeScan.verificationHistory = activeScan.verificationHistory || [];
         activeScan.verificationHistory.unshift(record);
         if (activeScan.verificationHistory.length > 20) {
@@ -1779,12 +1837,36 @@
 
         const currentData = CryptoEngine.getData();
         currentData.activeScan = activeScan;
+
+        const activeNorm = normalizeRepoName(activeScan.repoName || activeScan.name || activeScan.repoId);
+        if (activeNorm) localStorage.setItem('cs_verified_' + activeNorm, 'true');
+        if (activeScan.repoName) localStorage.setItem('cs_verified_' + activeScan.repoName, 'true');
+        if (activeScan.scanId) localStorage.setItem('cs_verified_' + activeScan.scanId, 'true');
+
         if (currentData.scans && Array.isArray(currentData.scans)) {
-          const idx = currentData.scans.findIndex(s => s.scanId === activeScan.scanId);
-          if (idx >= 0) {
-            currentData.scans[idx] = activeScan;
-          }
+          currentData.scans.forEach(s => {
+            const sNorm = normalizeRepoName(s.repoName || s.name || s.repoId);
+            if (s.scanId === activeScan.scanId || (activeNorm && (sNorm === activeNorm || sNorm.includes(activeNorm) || activeNorm.includes(sNorm)))) {
+              s.verificationResult = record;
+              s.verified = true;
+              s.isVerified = true;
+              s.verificationHistory = activeScan.verificationHistory;
+              s.merkleData = merkleData;
+            }
+          });
         }
+
+        if (currentData.repositories && Array.isArray(currentData.repositories)) {
+          currentData.repositories.forEach(r => {
+            const rNorm = normalizeRepoName(r.name || r.id);
+            if (r.id === activeScan.repoId || (activeNorm && (rNorm === activeNorm || rNorm.includes(activeNorm) || activeNorm.includes(rNorm)))) {
+              r.verificationResult = record;
+              r.verified = true;
+              r.isVerified = true;
+            }
+          });
+        }
+
         CryptoEngine.saveData(currentData);
         renderBlockchainHistory(activeScan.verificationHistory);
       }
