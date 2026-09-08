@@ -542,6 +542,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
                   <tr>
                     <th>Algorithm</th>
                     <th>Type</th>
+                    <th>Mode</th>
                     <th>Purpose</th>
                     <th>Exposure</th>
                     <th>Criticality</th>
@@ -798,6 +799,7 @@ async function init() {
         rawFinding: enriched,
         algorithm: algo,
         type: enriched.type || getAlgoType(algo),
+        mode: (algo.split('-')[1] || '—').toUpperCase(),
         suggested_lifetime: enriched.suggested_lifetime || 5,
         user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
         subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
@@ -1032,6 +1034,7 @@ function renderTable() {
       <tr class="cbom-row" style="cursor:pointer;" data-index="${i}">
         <td><span style="font-weight:600;color:var(--text-h)">${c.algorithm}</span></td>
         <td><span class="badge badge-quant" style="text-transform:uppercase;">${c.type}</span></td>
+        <td>${c.mode}</td>
         <td>${c.purpose}</td>
         <td><span class="badge ${expClass}">${expLabel}</span></td>
         <td><span class="badge ${critClass}">${c.criticality || 'Not tagged'}</span></td>

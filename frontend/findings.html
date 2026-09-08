@@ -1337,6 +1337,11 @@
                     <option value="external-facing">External-Facing</option>
                     <option value="internal">Internal</option>
                   </select>
+                    <div class="exposure-def" style="font-size:12px; color:var(--text-s); margin-top:4px;">
+                      Internal exposure = code/system only accessible within the company (e.g., admin tools, batch jobs).<br>
+                      External exposure = code/system directly accessible from the internet (e.g., public API, login page).<br>
+                      Hence, external findings are considered higher risk.
+                    </div>
                   <select id="filter-algo" class="filter-sel" onchange="handleFilterChange()">
                     <option value="ALL">All Algorithms</option>
                   </select>
@@ -1353,6 +1358,7 @@
                         <th>Type</th>
                         <th>Exposure</th>
                         <th>Detection</th>
+                        <th>Mode</th>
                         <th>Confidence</th>
                         <th>Quantum Status</th>
                         <th>Purpose</th>
@@ -2135,6 +2141,7 @@
           const purpose = f.usage || f.category || '-';
           const quant = isQuantum(f) ? 'Quantum-Broken' : (f.quantumStatus || 'Quantum-Safe');
           const qClass = isQuantum(f) ? 'badge-quant' : 'badge-safe';
+          const mode = f.mode || '-';
           const conf = f.confidence || 'Likely';
           const confClass = getConfBadgeClass(conf);
           const detMethod = f.detection_method || 'ast';
@@ -2168,6 +2175,7 @@
         <td><span class="badge badge-ast" style="font-size:11px; text-transform:uppercase;">${type}</span></td>
         <td><span class="badge ${expClass}" title="Triggered Exposure Signals: ${expSignals}">${expDisplayText}</span></td>
         <td><span class="badge ${detClass}">${detLabel}</span></td>
+        <td>${mode}</td>
         <td><span class="badge ${confClass}">${conf}</span></td>
         <td><span class="badge ${qClass}">${quant}</span></td>
         <td>${purpose}</td>
