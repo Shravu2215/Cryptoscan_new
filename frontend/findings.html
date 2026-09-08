@@ -1351,7 +1351,7 @@
                         <th>Risk</th>
                         <th>Algorithm</th>
                         <th>Type</th>
-                        <th title="Internal: code/system only accessible inside the company (admin tools, batch jobs). External: code/system directly reachable from the internet (public API, login page) — external findings carry higher risk.">Exposure ℹ️</th>
+                        <th title="Internal: code/system only accessible inside the company (admin tools, batch jobs). External: code/system directly reachable from the internet (public API, login page) — external findings carry higher risk.">Exposure</th>
                         <th>Detection</th>
                         <th>Mode</th>
                         <th>Confidence</th>
@@ -2147,7 +2147,7 @@
           const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
           const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
           const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
-          const expDisplayText = `${expLabelRaw} (${expConfRaw})`;
+          const expDisplayText = expLabelRaw;
 
           const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
           const lifetimeObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.estimateLifetime)
