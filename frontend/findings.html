@@ -2139,6 +2139,7 @@
           const confClass = getConfBadgeClass(conf);
           const detMethod = f.detection_method || 'ast';
           const detClass = getDetBadgeClass(detMethod);
+          const detLabel = getDetLabel(detMethod);
           const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Unknown', exposure_confidence: 'Low', triggered_signals: [] };
           const expLabelRaw = f.exposure_label || expObj.exposure_label;
           const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
@@ -2152,7 +2153,7 @@
             : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
 
           const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
-          const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? f.criticality_score : critObj.criticality_score;
+          const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? Number(f.criticality_score).toFixed(2) : Number(critObj.criticality_score).toFixed(2);
           const bizCrit = f.criticality_label || critObj.criticality_label;
           const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
 

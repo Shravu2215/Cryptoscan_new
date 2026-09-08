@@ -2529,6 +2529,81 @@
         return 'badge-info';
       }
 
+      function computeFindingMosca(rawFinding, fileCount) {
+        const risk = (rawFinding && rawFinding.risk) ? rawFinding.risk : { X: 5, Y: 1.5, Z: 12, urgency_margin: 5.5, urgency_tier: 'Low' };
+        const x = risk.X !== undefined ? risk.X : 5;
+        const y = risk.Y !== undefined ? risk.Y : 1.5;
+        const z = risk.Z !== undefined ? risk.Z : 12;
+        const margin = (risk.urgency_margin !== undefined) ? risk.urgency_margin : (z - (x + y));
+        const isMet = (x + y) > z;
+        let cat = 'SAFE_TIMELINE';
+        let catLabel = 'Safe Under Current Timeline';
+        if (margin < 0) {
+          cat = 'VULNERABLE_NOW';
+          catLabel = 'Vulnerable Now (X + Y > Z)';
+        } else if (margin <= 2) {
+          cat = 'WITHIN_HORIZON';
+          catLabel = 'Vulnerable Within Horizon';
+        }
+        return {
+          ...risk,
+          moscaX: `${x}y`,
+          moscaY: `${y}y`,
+          moscaZ: `${z}y`,
+          diff: margin,
+          isMet: isMet,
+          category: cat,
+          categoryLabel: catLabel
+        };
+      }
+
+      function updateMoscaCategorizationPanel() {
+        const pV = document.getElementById('mosca-vulnerable-count');
+        const pH = document.getElementById('mosca-horizon-count');
+        const pS = document.getElementById('mosca-safe-count');
+        if (!pV && !pH && !pS) return;
+        let v = 0, h = 0, s = 0;
+        migrationCandidates.forEach(c => {
+          const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+          if (m.category === 'VULNERABLE_NOW') v++;
+          else if (m.category === 'WITHIN_HORIZON') h++;
+          else s++;
+        });
+        if (pV) pV.textContent = v;
+        if (pH) pH.textContent = h;
+        if (pS) pS.textContent = s;
+      }
+
+      function getRecommendedMode(algo, replacement, purpose) {
+        if (!algo) return 'Direct Upgrade';
+        const a = algo.toLowerCase();
+        if (a.includes('rsa') || a.includes('ec') || a.includes('dh')) {
+          return 'Hybrid (Classic + PQC Dual-Mode)';
+        }
+        return 'Direct PQC Upgrade';
+      }
+
+      function computeCostImpact(algo, replacement, purpose) {
+        const a = (algo || '').toLowerCase();
+        if (a.includes('rsa-4096') || a.includes('ecdsa')) {
+          return { level: 'Medium Impact', badgeClass: 'badge-med', summary: 'Requires client library updates and cipher suite negotiation config.' };
+        }
+        if (a.includes('rsa') || a.includes('dh')) {
+          return { level: 'High Impact', badgeClass: 'badge-high', summary: 'Significant key-size expansion (Kyber/Dilithium) & packet overhead.' };
+        }
+        return { level: 'Low Impact', badgeClass: 'badge-safe', summary: 'Standard algorithm drop-in replacement with minimal architectural changes.' };
+      }
+
+      function getRiskProfileRationale(c, mosca) {
+        if (mosca && mosca.category === 'VULNERABLE_NOW') {
+          return `Critical priority: Retained lifetime exceeds estimated CRQC arrival. Immediate migration to ${c.replacement || 'PQC standard'} required.`;
+        }
+        if (mosca && mosca.category === 'WITHIN_HORIZON') {
+          return `High priority: Migration timeline approaches quantum risk window. Plan phased rollout of ${c.replacement || 'PQC standard'}.`;
+        }
+        return `Routine lifecycle replacement. Maintain crypto-agility and monitor NIST standards progression for ${c.replacement || 'PQC standard'}.`;
+      }
+
       function init() {
         const data = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.getData() : {};
         const noDataEl = document.getElementById('view-no-data');
