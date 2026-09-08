@@ -550,6 +550,7 @@ tbody tr:hover { background: var(--bg-card-hover); }
                     <th>Library</th>
                     <th>Version</th>
                     <th>Key Size</th>
+                    <th>Latency Impact</th>
                     <th>Risk</th>
                   </tr>
                 </thead>
@@ -814,6 +815,7 @@ async function init() {
         library: enriched.library || 'Standard/Unknown',
         version: enriched.version || enriched.libraryVersion || '—',
         keySize: enriched.keySize || '—',
+        latencyImpactMs: enriched.latencyImpactMs ?? (enriched.performanceImpact ? enriched.performanceImpact.latencyImpactMs : 2.0),
         risk: (enriched.severity || 'SAFE').toUpperCase(),
         quantumVulnerable: enriched.quantum === 'yes' || (enriched.quantumStatus || '').toLowerCase().includes('vulnerable'),
         usageContext: enriched.snippet || enriched.remediation || 'Standard implementation detected.'
@@ -1042,6 +1044,7 @@ function renderTable() {
         <td>${c.library}</td>
         <td><span class="code-font">${c.version}</span></td>
         <td><span class="code-font">${c.keySize}</span></td>
+        <td><span class="code-font">${c.latencyImpactMs} ms</span></td>
         <td><span class="badge ${getBadgeClass(c.risk)}">${c.risk}</span></td>
       </tr>
     `;

@@ -665,6 +665,21 @@ const CryptoEngine = {
     f.urgency_tier = mosca.urgency_tier;
     f.priority_score = mosca.priority_score;
 
+    if (f.latencyImpactMs === undefined || f.latencyImpactMs === null) {
+      const algo = (f.algorithm || f.title || '').toUpperCase();
+      if (algo.includes('RSA') || algo.includes('DH') || algo.includes('ECDH') || algo.includes('KYBER') || algo.includes('ML-KEM')) {
+        f.latencyImpactMs = 1.8;
+      } else if (algo.includes('DSA') || algo.includes('ECDSA') || algo.includes('DILITHIUM') || algo.includes('ML-DSA')) {
+        f.latencyImpactMs = 3.5;
+      } else if (algo.includes('SPHINCS') || algo.includes('SLH-DSA')) {
+        f.latencyImpactMs = 12.0;
+      } else if (algo.includes('AES') || algo.includes('GCM')) {
+        f.latencyImpactMs = 0.1;
+      } else {
+        f.latencyImpactMs = 2.0;
+      }
+    }
+
     return f;
   },
 

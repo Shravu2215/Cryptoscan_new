@@ -293,6 +293,7 @@ const PQC_IMPACT_SPECS = {
     businessImportance: scoreResult.businessImportance,
     hndlRiskScore: scoreResult.hndlScore,
     cryptoAgilityScore,
+    latencyImpactMs: performanceImpact.latencyImpactMs,
     performanceImpact,
     steps,
     blockers,

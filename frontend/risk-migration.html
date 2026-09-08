@@ -1773,6 +1773,7 @@
                       <th style="padding: 12px 16px; text-align: center;">Urgency Margin</th>
                       <th style="padding: 12px 16px; text-align: center;">Urgency Tier</th>
                       <th style="padding: 12px 16px; text-align: center;">Business Criticality</th>
+                      <th style="padding: 12px 16px; text-align: center;">Latency Impact</th>
                       <th
                         style="padding: 12px 16px; text-align: center; background: rgba(139, 92, 246, 0.1); color: var(--purple); font-weight: 700;">
                         Priority Score</th>
@@ -2424,7 +2425,7 @@
         if (filtered.length === 0) {
           tbody.innerHTML = `
       <tr>
-        <td colspan="9" style="text-align: center; padding: 32px; color: var(--text-m);">
+        <td colspan="10" style="text-align: center; padding: 32px; color: var(--text-m);">
           No findings match the selected matrix cell.
         </td>
       </tr>
@@ -2465,6 +2466,9 @@
         </td>
         <td style="padding: 12px 16px; text-align: center;">
           <span class="badge ${getCriticalityBadgeClass(f.criticality_label)}">${f.criticality_label} (${(f.criticality_score || 2.0).toFixed(2)})</span>
+        </td>
+        <td style="padding: 12px 16px; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-h);">
+          ${f.latencyImpactMs !== undefined ? f.latencyImpactMs : 2.0} ms
         </td>
         <td style="padding: 12px 16px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: var(--purple); background: rgba(139, 92, 246, 0.05); border-left: 1px solid var(--border-color);">
           ${risk.priority_score.toFixed(2)}
