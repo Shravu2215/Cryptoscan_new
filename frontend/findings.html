@@ -2148,9 +2148,13 @@
           const expDisplayText = `${expLabelRaw} (${expConfRaw})`;
 
           const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
-          const lifetime = (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
-            ? Number(f.user_confirmed_lifetime)
-            : Number(f.suggested_lifetime || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.estimateLifetime(f).suggested_lifetime : 5));
+          const lifetimeObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.estimateLifetime)
+            ? CryptoEngine.estimateLifetime(f)
+            : { suggested_lifetime: 5, effective_lifetime: 5, rationale: 'Standard 5y protection baseline' };
+          const lifetime = Number((f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
+            ? f.user_confirmed_lifetime
+            : (f.suggested_lifetime || lifetimeObj.effective_lifetime || 5));
+          const lifetimeBadgeClass = lifetime <= 2 ? 'badge-safe' : (lifetime <= 5 ? 'badge-med' : (lifetime <= 10 ? 'badge-high' : 'badge-crit'));
 
           const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
           const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? Number(f.criticality_score).toFixed(2) : Number(critObj.criticality_score).toFixed(2);
@@ -2168,14 +2172,9 @@
         <td><span class="badge ${qClass}">${quant}</span></td>
         <td>${purpose}</td>
         <td>
-          <select class="filter-sel" style="padding:2px 6px; font-size:11px;" onclick="event.stopPropagation()" onchange="updateFindingLifetime(${start + i}, this.value)">
-            <option value="1" ${lifetime === 1 ? 'selected' : ''}>1 yr</option>
-            <option value="2" ${lifetime === 2 ? 'selected' : ''}>2 yrs</option>
-            <option value="5" ${lifetime === 5 ? 'selected' : ''}>5 yrs</option>
-            <option value="10" ${lifetime === 10 ? 'selected' : ''}>10 yrs</option>
-            <option value="20" ${lifetime === 20 ? 'selected' : ''}>20 yrs</option>
-            <option value="30" ${lifetime === 30 ? 'selected' : ''}>30 yrs</option>
-          </select>
+          <span class="badge ${lifetimeBadgeClass}" style="font-family:'JetBrains Mono',monospace; font-weight:700; cursor:help;" title="${lifetimeObj.rationale || 'System-Calculated Protection Lifetime'}">
+            ${lifetime} yrs
+          </span>
         </td>
         <td>
           <span class="badge ${critBadgeClass}" style="cursor:pointer;" title="Click to view & override sub-factors" onclick="event.stopPropagation(); openCriticalityPanelForIndex(${start + i})">

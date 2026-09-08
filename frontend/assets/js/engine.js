@@ -247,16 +247,28 @@ const CryptoEngine = {
     const file = (finding.file || finding.filePath || '').toLowerCase();
     const usage = (finding.usage || finding.description || '').toLowerCase();
     const type = finding.type || this.classifyType(finding);
+    const cat = (finding.category || '').toLowerCase();
+    const snippet = (finding.snippet || finding.code || '').toLowerCase();
+    const text = (file + ' ' + title + ' ' + usage + ' ' + cat + ' ' + snippet).toLowerCase();
 
     let suggested = 5;
-    if (usage.includes('session') || usage.includes('token') || usage.includes('ephemeral') || usage.includes('jwt') || usage.includes('nonce') || file.includes('session') || file.includes('cookie')) {
+    let rationale = 'Standard application cryptographic asset (5y baseline retention)';
+
+    if (text.includes('session') || text.includes('token') || text.includes('ephemeral') || text.includes('jwt') || text.includes('nonce') || file.includes('session') || file.includes('cookie') || text.includes('otp')) {
       suggested = 1;
-    } else if (type === 'certificate' || title.includes('tls') || title.includes('ssl') || title.includes('cert')) {
+      rationale = 'Ephemeral token / session material (1y short-term lifetime)';
+    } else if (type === 'certificate' || file.endsWith('.crt') || file.endsWith('.pem') || text.includes('tls') || text.includes('ssl') || text.includes('cert')) {
       suggested = 2;
-    } else if (type === 'key' || algoIsAsymmetric(finding)) {
-      suggested = 10;
-    } else if (usage.includes('archive') || usage.includes('at-rest') || usage.includes('db') || usage.includes('storage') || file.includes('database') || type === 'cloud_service') {
+      rationale = 'TLS / X.509 Certificate validity window (2y standard lifecycle)';
+    } else if (text.includes('health') || text.includes('medical') || text.includes('hipaa') || text.includes('root ca') || text.includes('sovereign') || text.includes('master key')) {
+      suggested = 30;
+      rationale = 'Permanent compliance / healthcare / root master key (30y archival retention)';
+    } else if (text.includes('archive') || text.includes('at-rest') || text.includes('database') || text.includes('backup') || text.includes('s3') || type === 'cloud_service') {
       suggested = 20;
+      rationale = 'Long-term storage / Database data at-rest (20y retention)';
+    } else if (type === 'key' || algoIsAsymmetric(finding) || file.includes('.env') || text.includes('private key') || text.includes('credential')) {
+      suggested = 10;
+      rationale = 'Asymmetric key / Persistent secret credential (10y protection window)';
     }
 
     function algoIsAsymmetric(f) {
@@ -264,13 +276,15 @@ const CryptoEngine = {
       return a.includes('rsa') || a.includes('ecdsa') || a.includes('ecdh') || a.includes('dsa') || a.includes('ecc');
     }
 
-    const confirmed = (finding.user_confirmed_lifetime !== undefined && finding.user_confirmed_lifetime !== null)
+    const confirmed = (finding.user_confirmed_lifetime !== undefined && finding.user_confirmed_lifetime !== null && finding.user_confirmed_lifetime !== '')
       ? Number(finding.user_confirmed_lifetime)
       : null;
 
     return {
       suggested_lifetime: suggested,
-      user_confirmed_lifetime: confirmed
+      user_confirmed_lifetime: confirmed,
+      effective_lifetime: confirmed !== null ? confirmed : suggested,
+      rationale: rationale
     };
   },
 
