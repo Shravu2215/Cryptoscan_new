@@ -1719,7 +1719,7 @@
         updateDetectionCoverage();
 
         const urlSearch = getUrlParam('search') || getUrlParam('system') || getUrlParam('repo');
-        if (urlSearch) document.getElementById('filter-search').value = urlSearch;
+        if (urlSearch) document.getElementById('filter-search').value = urlSearch.replace(/\.zip$/i, '');
 
         const urlAlgo = getUrlParam('algo');
         if (urlAlgo) {
@@ -1999,13 +1999,24 @@
         const algo = document.getElementById('filter-algo').value;
 
         filteredFindings = allFindings.filter(f => {
+          const searchClean = search.replace(/\.zip$/i, '').trim();
           const matchSearch = search === '' ||
             (f.file || '').toLowerCase().includes(search) ||
+            (f.file || '').toLowerCase().includes(searchClean) ||
             (f.repoName || '').toLowerCase().includes(search) ||
-            (f.algorithm || f.title || '').toLowerCase().includes(search);
+            (f.repoName || '').toLowerCase().replace(/\.zip$/i, '').includes(searchClean) ||
+            (f.algorithm || f.title || '').toLowerCase().includes(search) ||
+            (f.algorithm || f.title || '').toLowerCase().includes(searchClean);
           const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
-          const fExposure = f.exposure || 'internal';
-          const matchExposure = exposure === 'ALL' || fExposure === exposure;
+
+          const fExpLabel = f.exposure_label || (f.exposure === 'external-facing' ? 'External' : (f.exposure === 'internal' ? 'Internal' : 'Unknown'));
+          const fExpRaw = f.exposure || 'internal';
+          const matchExposure = exposure === 'ALL' ||
+            fExpLabel.toLowerCase() === exposure.toLowerCase() ||
+            fExpRaw.toLowerCase() === exposure.toLowerCase() ||
+            (exposure === 'external-facing' && fExpLabel === 'External') ||
+            (exposure === 'internal' && fExpLabel === 'Internal');
+
           const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
           const matchAlgo = algo === 'ALL' || fAlgo === algo;
 
