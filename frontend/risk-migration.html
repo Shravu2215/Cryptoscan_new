@@ -2474,8 +2474,63 @@
         }).join('');
       }
 
+      function getSeverity(f) {
+        if (!f) return 'MEDIUM';
+        const s = (f.severity || f.severity_level || (f.details && f.details.severity) || 'MEDIUM').toUpperCase();
+        if (s.includes('CRIT')) return 'CRITICAL';
+        if (s.includes('HIGH')) return 'HIGH';
+        if (s.includes('MED')) return 'MEDIUM';
+        if (s.includes('LOW')) return 'LOW';
+        if (s.includes('INFO') || s.includes('SAFE')) return 'SAFE';
+        return 'MEDIUM';
+      }
+
+      function isQuantum(f) {
+        if (!f) return false;
+        if (f.quantum === 'yes' || f.quantum === true) return true;
+        if (f.quantumVulnerable !== undefined) return Boolean(f.quantumVulnerable);
+        if (f.is_quantum_vulnerable !== undefined) return Boolean(f.is_quantum_vulnerable);
+        const name = (f.algorithm || f.title || '').toLowerCase();
+        return name.includes('rsa') || name.includes('ecc') || name.includes('ecdsa') || name.includes('dh') || name.includes('dsa') || name.includes('elgamal');
+      }
+
+      function determineReplacement(algo) {
+        if (!algo) return 'ML-KEM / ML-DSA';
+        const al = algo.toLowerCase();
+        if (al.includes('rsa') || al.includes('dh') || al.includes('ecdh')) return 'ML-KEM (Kyber-768/1024) or Hybrid X25519+ML-KEM';
+        if (al.includes('dsa') || al.includes('ecdsa') || al.includes('ed25519')) return 'ML-DSA (Dilithium-3/5) or SLH-DSA (SPHINCS+)';
+        if (al.includes('md5') || al.includes('sha1')) return 'SHA-256 / SHA-3 / BLAKE3';
+        if (al.includes('des') || al.includes('3des') || al.includes('rc4')) return 'AES-256-GCM / ChaCha20-Poly1305';
+        return 'NIST Post-Quantum Standard (FIPS 203/204/205)';
+      }
+
+      function getUrgencyBadgeClass(tier) {
+        const t = (tier || '').toLowerCase();
+        if (t === 'critical' || t === 'immediate') return 'badge-crit';
+        if (t === 'high' || t === 'near-term') return 'badge-high';
+        if (t === 'medium' || t === 'medium-term') return 'badge-med';
+        return 'badge-low';
+      }
+
+      function getCriticalityBadgeClass(label) {
+        const l = (label || '').toLowerCase();
+        if (l === 'critical') return 'badge-crit';
+        if (l === 'high') return 'badge-high';
+        if (l === 'medium') return 'badge-med';
+        return 'badge-low';
+      }
+
+      function getBadgeClass(sev) {
+        const s = (sev || '').toUpperCase();
+        if (s === 'CRITICAL') return 'badge-crit';
+        if (s === 'HIGH') return 'badge-high';
+        if (s === 'MEDIUM') return 'badge-med';
+        if (s === 'LOW') return 'badge-low';
+        return 'badge-info';
+      }
+
       function init() {
-        const data = CryptoEngine.getData();
+        const data = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.getData() : {};
         const noDataEl = document.getElementById('view-no-data');
         const activeEl = document.getElementById('view-active');
         const safeEl = document.getElementById('view-safe');
