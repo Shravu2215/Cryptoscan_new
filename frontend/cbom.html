@@ -805,31 +805,36 @@ async function init() {
       const itemCrit = (rawCrit && rawCrit !== 'Not tagged')
         ? rawCrit
         : (enriched.criticality_label || computedCrit || 'Standard');
-      return {
-        id: enriched.id || Math.random().toString(36).substr(2, 9),
-        rawFinding: enriched,
-        algorithm: algo,
-        type: enriched.type || getAlgoType(algo),
-        mode: (algo.split('-')[1] || '—').toUpperCase(),
-        suggested_lifetime: enriched.suggested_lifetime || 5,
-        user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
-        subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
-        criticality_score: enriched.criticality_score || 2.0,
-        criticality_label: enriched.criticality_label || 'Medium',
-        moscaRisk: enriched.risk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 },
-        purpose: enriched.usage || enriched.category || 'Data Protection',
-        exposure: enriched.exposure || 'internal',
-        criticality: itemCrit,
-        file: enriched.file || 'unknown',
-        line: enriched.line || '',
-        library: enriched.library || 'Standard/Unknown',
-        version: enriched.version || enriched.libraryVersion || '—',
-        keySize: enriched.keySize || '—',
-        latencyImpactMs: enriched.latencyImpactMs ?? (enriched.performanceImpact ? enriched.performanceImpact.latencyImpactMs : 2.0),
-        risk: (enriched.severity || 'SAFE').toUpperCase(),
-        quantumVulnerable: enriched.quantum === 'yes' || (enriched.quantumStatus || '').toLowerCase().includes('vulnerable'),
-        usageContext: enriched.snippet || enriched.remediation || 'Standard implementation detected.'
-      };
+        
+        const qRisk = (enriched.quantumStatus || enriched.quantum_risk || '').toLowerCase();
+        const algoUpper = (algo || '').toUpperCase();
+        const isAsymmetricVuln = algoUpper.includes('RSA') || algoUpper.includes('ECDSA') || algoUpper.includes('ECDH') || algoUpper.includes('ECC') || algoUpper.includes('DSA') || algoUpper.includes('ED25519');
+
+        return {
+          id: enriched.id || Math.random().toString(36).substr(2, 9),
+          rawFinding: enriched,
+          algorithm: algo,
+          type: enriched.type || getAlgoType(algo),
+          mode: (algo.split('-')[1] || '—').toUpperCase(),
+          suggested_lifetime: enriched.suggested_lifetime || 5,
+          user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
+          subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
+          criticality_score: enriched.criticality_score || 2.0,
+          criticality_label: enriched.criticality_label || 'Medium',
+          moscaRisk: enriched.risk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 },
+          purpose: enriched.usage || enriched.category || 'Data Protection',
+          exposure: enriched.exposure || 'internal',
+          criticality: itemCrit,
+          file: enriched.file || 'unknown',
+          line: enriched.line || '',
+          library: enriched.library || 'Standard/Unknown',
+          version: enriched.version || enriched.libraryVersion || '—',
+          keySize: enriched.keySize || '—',
+          latencyImpactMs: enriched.latencyImpactMs ?? (enriched.performanceImpact ? enriched.performanceImpact.latencyImpactMs : 2.0),
+          risk: (enriched.severity || 'SAFE').toUpperCase(),
+          quantumVulnerable: enriched.quantum === 'yes' || qRisk.includes('vulnerable') || qRisk.includes('broken') || Boolean(enriched.isQuantumVulnerable) || isAsymmetricVuln,
+          usageContext: enriched.snippet || enriched.remediation || 'Standard implementation detected.'
+        };
     });
   });
   
