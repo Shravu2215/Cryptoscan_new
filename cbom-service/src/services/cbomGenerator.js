@@ -24,6 +24,8 @@ function enrichFinding(raw, businessImportance) {
     version: raw.version || '',
     keySize: raw.keySize ?? null,
     mode: raw.mode ?? null,
+    exposure: raw.exposure || (raw.exposure_label === 'External' ? 'external-facing' : 'internal'),
+    exposure_label: raw.exposure_label || ((raw.exposure === 'external-facing' || raw.exposure === 'external') ? 'External' : 'Internal'),
     purpose: { value: purpose, confidence, source },
     vulnerability,
     pqcMigration: migration,
@@ -86,6 +88,8 @@ function buildCbom(scan) {
           algorithmProperties: { primitive: primitive },
         },
         occurrences: [],
+        exposure: f.exposure || (f.exposure_label === 'External' ? 'external-facing' : 'internal'),
+        exposure_label: f.exposure_label || ((f.exposure === 'external-facing' || f.exposure === 'external') ? 'External' : 'Internal'),
         maxVulnerabilityScore: 0,
         maxSeverity: 'INFO',
       });

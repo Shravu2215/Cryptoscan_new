@@ -295,6 +295,16 @@ const CryptoEngine = {
     const title = (finding.title || finding.algorithm || '').toLowerCase();
     const text = (file + ' ' + repo + ' ' + title + ' ' + snippet).toLowerCase();
 
+    const rawExp = (finding.exposure || '').toLowerCase();
+    if (rawExp === 'external-facing' || rawExp === 'external' || (finding.exposure_label && finding.exposure_label.toLowerCase() === 'external')) {
+      return {
+        exposure_label: 'External',
+        exposure_score: 5.0,
+        exposure_confidence: finding.exposure_confidence || 'High',
+        triggered_signals: (finding.exposure_signals && finding.exposure_signals.length > 0) ? finding.exposure_signals : ['Scanner verified external exposure']
+      };
+    }
+
     const triggeredSignals = [];
     let maxSignalScore = 0;
     let confidence = 'Low';

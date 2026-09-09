@@ -556,9 +556,24 @@
     }
 
     .badge-internal {
-      background: rgba(148, 163, 184, 0.1);
-      color: #94a3b8;
-      border-color: rgba(148, 163, 184, 0.2);
+      background: rgba(100, 116, 139, 0.12);
+      color: #64748b;
+      border-color: rgba(100, 116, 139, 0.3);
+      font-weight: 600;
+    }
+
+    :root.light-mode .badge-internal, html.light-mode .badge-internal {
+      background: rgba(71, 85, 105, 0.12) !important;
+      color: #334155 !important;
+      border-color: rgba(71, 85, 105, 0.3) !important;
+      font-weight: 700 !important;
+    }
+
+    :root.light-mode .badge-low, html.light-mode .badge-low {
+      background: rgba(71, 85, 105, 0.12) !important;
+      color: #334155 !important;
+      border-color: rgba(71, 85, 105, 0.3) !important;
+      font-weight: 700 !important;
     }
 
     /* Empty States */
@@ -2016,13 +2031,14 @@
             (f.algorithm || f.title || '').toLowerCase().includes(searchClean);
           const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
 
-          const fExpLabel = (f.exposure_label && f.exposure_label !== 'Unknown') ? f.exposure_label : (f.exposure === 'external-facing' ? 'External' : 'Internal');
-          const fExpRaw = f.exposure || 'internal';
+          const fExpRaw = (f.exposure || 'internal').toLowerCase();
+          const isExtFinding = fExpRaw === 'external-facing' || fExpRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external');
+          const fExpLabel = isExtFinding ? 'External' : 'Internal';
           const matchExposure = exposure === 'ALL' ||
+            (exposure === 'external-facing' && isExtFinding) ||
+            (exposure === 'internal' && !isExtFinding) ||
             fExpLabel.toLowerCase() === exposure.toLowerCase() ||
-            fExpRaw.toLowerCase() === exposure.toLowerCase() ||
-            (exposure === 'external-facing' && fExpLabel === 'External') ||
-            (exposure === 'internal' && fExpLabel === 'Internal');
+            fExpRaw === exposure.toLowerCase();
 
           const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
           const matchAlgo = algo === 'ALL' || fAlgo === algo;
@@ -2143,10 +2159,12 @@
           const detClass = getDetBadgeClass(detMethod);
           const detLabel = getDetLabel(detMethod);
           const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Internal', exposure_confidence: 'Low', triggered_signals: [] };
-          const expLabelRaw = (f.exposure_label && f.exposure_label !== 'Unknown') ? f.exposure_label : expObj.exposure_label;
+          const rawExpStr = (f.exposure || '').toLowerCase();
+          const isExtRow = rawExpStr === 'external-facing' || rawExpStr === 'external' || f.exposure_label === 'External' || expObj.exposure_label === 'External';
+          const expLabelRaw = isExtRow ? 'External' : (f.exposure_label && f.exposure_label !== 'Unknown' ? f.exposure_label : expObj.exposure_label);
           const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
           const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
-          const expClass = expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
+          const expClass = isExtRow || expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
           const expDisplayText = expLabelRaw;
 
           const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
@@ -2232,9 +2250,10 @@
           drwTypeEl.innerHTML = `<span class="badge badge-ast">${type}</span>`;
         }
 
-        const exp = f.exposure || 'internal';
-        const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
-        const expLabel = exp === 'external-facing' ? 'External-Facing' : 'Internal';
+        const rawDrwExp = (f.exposure || '').toLowerCase();
+        const isDrwExt = rawDrwExp === 'external-facing' || rawDrwExp === 'external' || f.exposure_label === 'External';
+        const expClass = isDrwExt ? 'badge-external' : 'badge-internal';
+        const expLabel = isDrwExt ? 'External-Facing' : 'Internal';
         document.getElementById('drw-exposure').innerHTML = `<span class="badge ${expClass}">${expLabel}</span>`;
 
         const sens = f.dataSensitivity || 'GENERAL';

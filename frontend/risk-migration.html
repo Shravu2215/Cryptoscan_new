@@ -647,9 +647,31 @@
     }
 
     .badge-low {
-      background: var(--gray-bg);
-      color: var(--gray);
-      border-color: rgba(113, 113, 122, 0.2);
+      background: rgba(100, 116, 139, 0.12);
+      color: #64748b;
+      border-color: rgba(100, 116, 139, 0.3);
+      font-weight: 600;
+    }
+
+    .badge-internal {
+      background: rgba(100, 116, 139, 0.12);
+      color: #64748b;
+      border-color: rgba(100, 116, 139, 0.3);
+      font-weight: 600;
+    }
+
+    :root.light-mode .badge-internal, html.light-mode .badge-internal {
+      background: rgba(71, 85, 105, 0.12) !important;
+      color: #334155 !important;
+      border-color: rgba(71, 85, 105, 0.3) !important;
+      font-weight: 700 !important;
+    }
+
+    :root.light-mode .badge-low, html.light-mode .badge-low {
+      background: rgba(71, 85, 105, 0.12) !important;
+      color: #334155 !important;
+      border-color: rgba(71, 85, 105, 0.3) !important;
+      font-weight: 700 !important;
     }
 
     .badge-quant {

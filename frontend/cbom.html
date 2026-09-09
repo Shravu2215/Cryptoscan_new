@@ -225,10 +225,12 @@ tbody tr:hover { background: var(--bg-card-hover); }
 .badge-crit { background: var(--red-bg); color: var(--red); border-color: rgba(239, 68, 68, 0.2); }
 .badge-high { background: var(--amber-bg); color: var(--amber); border-color: rgba(245, 158, 11, 0.2); }
 .badge-med { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234, 179, 8, 0.2); }
-.badge-low { background: var(--gray-bg); color: var(--gray); border-color: rgba(113, 113, 122, 0.2); }
+.badge-low { background: rgba(100, 116, 139, 0.12); color: #64748b; border-color: rgba(100, 116, 139, 0.3); font-weight: 600; }
 .badge-quant { background: var(--purple-bg); color: var(--purple); border-color: rgba(139, 92, 246, 0.2); }
 .badge-external { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
-.badge-internal { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border-color: rgba(148, 163, 184, 0.2); }
+.badge-internal { background: rgba(100, 116, 139, 0.12); color: #64748b; border-color: rgba(100, 116, 139, 0.3); font-weight: 600; }
+:root.light-mode .badge-internal, html.light-mode .badge-internal { background: rgba(71, 85, 105, 0.12); color: #334155; border-color: rgba(71, 85, 105, 0.3); font-weight: 700; }
+:root.light-mode .badge-low, html.light-mode .badge-low { background: rgba(71, 85, 105, 0.12); color: #334155; border-color: rgba(71, 85, 105, 0.3); font-weight: 700; }
 
 /* Empty States */
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; gap: 12px; }
@@ -973,7 +975,11 @@ function handleFilterChange() {
       c.file.toLowerCase().includes(search);
     const matchType = type === 'ALL' || c.type === type;
     const matchRisk = risk === 'ALL' || c.risk === risk;
-    const matchExposure = exposure === 'ALL' || (c.exposure || 'internal') === exposure;
+    const expRaw = (c.exposure || '').toLowerCase();
+    const isExt = expRaw === 'external-facing' || expRaw === 'external' || (c.exposure_label && c.exposure_label.toLowerCase() === 'external');
+    const matchExposure = exposure === 'ALL' ||
+      (exposure === 'external-facing' && isExt) ||
+      (exposure === 'internal' && !isExt);
     const matchCrit = crit === 'ALL' || (c.criticality || 'Not tagged') === crit;
     const matchLib = lib === 'ALL' || c.library === lib;
     
@@ -1028,9 +1034,10 @@ function renderTable() {
   const pageData = filteredInventory.slice(start, start + itemsPerPage);
   
   tbody.innerHTML = pageData.map((c, i) => {
-    const exp = c.exposure || 'internal';
-    const expClass = exp === 'external-facing' ? 'badge-external' : 'badge-internal';
-    const expLabel = exp === 'external-facing' ? 'External' : 'Internal';
+    const expRaw = (c.exposure || '').toLowerCase();
+    const isExt = expRaw === 'external-facing' || expRaw === 'external' || (c.exposure_label && c.exposure_label.toLowerCase() === 'external');
+    const expClass = isExt ? 'badge-external' : 'badge-internal';
+    const expLabel = isExt ? 'External' : 'Internal';
     const critClass = getCriticalityBadgeClass(c.criticality);
     return `
       <tr class="cbom-row" style="cursor:pointer;" data-index="${i}">

@@ -734,6 +734,42 @@ html.light-mode .sb-user-name,
   border-color: rgba(139, 92, 246, 0.3);
 }
 
+.badge-external {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badge-internal {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+  border-color: rgba(100, 116, 139, 0.3);
+}
+
+html.light-mode .badge-internal,
+:root.light-mode .badge-internal {
+  background: rgba(71, 85, 105, 0.12) !important;
+  color: #334155 !important;
+  border-color: rgba(71, 85, 105, 0.3) !important;
+  font-weight: 700 !important;
+}
+
+html.light-mode .badge-low,
+:root.light-mode .badge-low {
+  background: rgba(71, 85, 105, 0.12) !important;
+  color: #334155 !important;
+  border-color: rgba(71, 85, 105, 0.3) !important;
+  font-weight: 700 !important;
+}
+
+html.light-mode .badge-external,
+:root.light-mode .badge-external {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  font-weight: 700 !important;
+}
+
 /* Typography Helpers */
 .page-title {
   font-size: 24px;
