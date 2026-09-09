@@ -8,7 +8,7 @@ tagging can't drift between the two language paths.
 """
 from typing import List, Optional, Dict, Any
 
-from .models import Finding, Severity, QuantumRisk
+from .models import Finding, Severity, QuantumRisk, Confidence
 from . import rules
 
 try:
@@ -246,7 +246,6 @@ class JSAnalyzer:
                     ))
                 else:
                     # Informational for strong HMAC (sha256, sha384, sha512)
-                    from .models import Severity, QuantumRisk, Confidence
                     info_profile = dict(
                         algorithm=f"HMAC-{(algo or algo_lower).upper()}",
                         severity=Severity.INFO,
@@ -261,7 +260,6 @@ class JSAnalyzer:
                     ))
             elif algo is not None:
                 # Unknown / unsupported HMAC algorithm — flag generically
-                from .models import Severity, QuantumRisk
                 generic_profile = dict(
                     algorithm=f"HMAC-{algo.upper()}",
                     severity=Severity.LOW,
@@ -276,7 +274,6 @@ class JSAnalyzer:
                 ))
             # Hardcoded key secondary finding (independent of algorithm weakness)
             if key_hardcoded:
-                from .models import Severity, QuantumRisk
                 hk_profile = dict(rules.HARDCODED_KEY)
                 out.append(self._mk(
                     file_path, line, col,
