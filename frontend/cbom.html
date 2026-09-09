@@ -737,8 +737,8 @@ function getAlgoType(algo) {
 
 function getCriticalityBadgeClass(crit) {
   if (crit === 'Critical') return 'badge-crit';
-  if (crit === 'Important') return 'badge-high';
-  if (crit === 'Standard') return 'badge-med';
+  if (crit === 'High' || crit === 'Important') return 'badge-high';
+  if (crit === 'Medium' || crit === 'Standard') return 'badge-med';
   if (crit === 'Low') return 'badge-low';
   return 'badge-low';
 }
@@ -790,13 +790,21 @@ async function init() {
     const parentCrit = (s.repositoryId && repoCritMap[s.repositoryId]) || 
                        (s.repo && repoCritMap[s.repo]) || 
                        (s.targetUrl && repoCritMap[s.targetUrl]) || 
-                       s.businessCriticality || s.criticality_tier ||
-                       'Not tagged';
+                       s.businessCriticality || s.criticality_tier;
     return (s.findings || []).map(f => {
       const enriched = typeof CryptoEngine !== 'undefined' ? CryptoEngine.enrichFinding(f) : f;
       const algo = enriched.algorithm || (enriched.title ? enriched.title.split(' ')[0] : 'Unknown');
-      const itemCrit = (enriched.repositoryId && repoCritMap[enriched.repositoryId]) ||
-                       enriched.businessCriticality || enriched.criticality_tier || parentCrit;
+
+      const computedCrit = (typeof CryptoEngine !== 'undefined' && CryptoEngine.computeCriticality)
+        ? CryptoEngine.computeCriticality(enriched).criticality_label
+        : 'Medium';
+
+      const rawCrit = (enriched.repositoryId && repoCritMap[enriched.repositoryId]) ||
+                      enriched.businessCriticality || enriched.criticality_tier || parentCrit;
+
+      const itemCrit = (rawCrit && rawCrit !== 'Not tagged')
+        ? rawCrit
+        : (enriched.criticality_label || computedCrit || 'Standard');
       return {
         id: enriched.id || Math.random().toString(36).substr(2, 9),
         rawFinding: enriched,
