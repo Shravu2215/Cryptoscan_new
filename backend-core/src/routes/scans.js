@@ -104,6 +104,7 @@ router.post('/:repoId', requireAuth, async (req, res) => {
 
             scan.status = 'COMPLETED';
             scan.completedAt = new Date();
+            scan.filesScanned = result.files_scanned !== undefined ? result.files_scanned : (result.file_manifest ? result.file_manifest.length : 0);
             scan.systems = result.systems || [];
             saveScan(scan);
           } catch (parseError) {
@@ -190,7 +191,7 @@ router.get('/:scanId/findings', requireAuth, async (req, res) => {
       findings: enrichedFindings,
       businessCriticality,
       criticality_tier: businessCriticality,
-      filesScanned: uniqueFiles || null,
+      filesScanned: (scan.filesScanned !== undefined && scan.filesScanned !== null) ? scan.filesScanned : uniqueFiles,
       components: uniqueAlgos || null
     });
   } catch (err) {

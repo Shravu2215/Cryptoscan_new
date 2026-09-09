@@ -1047,12 +1047,11 @@
                 </div>
               </div>
 
-              <div style="text-align: right; margin-top: 24px;">
-                <button class="btn-sec" onclick="resetScan()" style="margin-right: 8px;">Run Another Scan</button>
-                <button class="btn-p" onclick="viewFindings()" style="margin-right: 8px;">View Findings</button>
-                <button class="btn-p" onclick="viewCBOM()" style="margin-right: 8px;">View CBOM</button>
-                <button class="btn-p" onclick="window.location.href='risk-migration.html'"
-                  style="margin-right: 8px;">View Risk & Migration</button>
+              <div style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 24px;">
+                <button class="btn-sec" onclick="resetScan()">Run Another Scan</button>
+                <button class="btn-p" onclick="viewFindings()">View Findings</button>
+                <button class="btn-p" onclick="viewCBOM()">View CBOM</button>
+                <button class="btn-p" onclick="window.location.href='risk-migration.html'">View Risk &amp; Migration</button>
                 <button class="btn-p" onclick="window.location.href='verification.html'"
                   style="background:var(--text-h); color:var(--bg-main); font-weight:700;">Verify</button>
               </div>
@@ -1462,7 +1461,7 @@
         const mockScanId = 'scan_' + Date.now().toString(36);
 
         const finalData = {
-          filesScanned: totalFilesCount || 1,
+          filesScanned: totalFilesCount,
           components: new Set(detectedFindings.map(f => f.algorithm)).size || detectedFindings.length,
           findings: detectedFindings
         };
@@ -1567,7 +1566,7 @@
           stopLiveScanTimer();
 
           const allFindings = finalData.findings || [];
-          document.getElementById('live-files').textContent = finalData.filesScanned || allFindings.length;
+          document.getElementById('live-files').textContent = (finalData.filesScanned !== undefined && finalData.filesScanned !== null) ? finalData.filesScanned : allFindings.length;
           document.getElementById('live-components').textContent = finalData.components || allFindings.filter(f => f.algorithm && f.algorithm !== 'UNKNOWN').length;
 
           const repoInfo = {
@@ -1594,8 +1593,12 @@
 
         const filesEl = document.getElementById('res-files');
         const compsEl = document.getElementById('res-components');
-        if (filesEl) filesEl.textContent = finalData.filesScanned ? finalData.filesScanned.toLocaleString() : findings.length;
-        if (compsEl) compsEl.textContent = finalData.components || new Set(findings.map(f => f.algorithm)).size || findings.length;
+        if (filesEl) {
+          filesEl.textContent = (finalData && finalData.filesScanned !== undefined && finalData.filesScanned !== null)
+            ? finalData.filesScanned.toLocaleString()
+            : (findings.length > 0 ? new Set(findings.map(f => f.file || f.filePath)).size : 0);
+        }
+        if (compsEl) compsEl.textContent = (finalData && finalData.components) ? finalData.components : (new Set(findings.map(f => f.algorithm)).size || findings.length);
 
         let c = 0, h = 0, m = 0, l = 0, info = 0, q = 0;
         findings.forEach(f => {
