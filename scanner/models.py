@@ -6,6 +6,7 @@ dedup engine and reporters don't need to know which language produced them.
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 import hashlib
+from typing import Optional, List
 
 
 class Severity(str, Enum):
@@ -77,6 +78,9 @@ class Finding:
     suppressed: bool = False
     suppression_reason: str = ""
     exposure: str = "internal"        # "external-facing" | "internal"
+    exposure_signals: List[str] = field(default_factory=list)
+    exposure_rationale: str = ""
+    mode: Optional[str] = None         # "CBC", "GCM", "ECB", etc. (or None for non-ciphers)
     version: str = ""
     library: str = ""
     dataSensitivity: str = ""
@@ -128,6 +132,9 @@ class Finding:
         d["fingerprint"] = self.fingerprint
         d["detection_method"] = self.detection_method
         d["exposure"] = self.exposure
+        d["exposure_signals"] = self.exposure_signals
+        d["exposure_rationale"] = self.exposure_rationale
+        d["mode"] = self.mode
         d["version"] = self.version
         d["library"] = self.library
         d["dataSensitivity"] = self.dataSensitivity

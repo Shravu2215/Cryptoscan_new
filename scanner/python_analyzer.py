@@ -262,7 +262,7 @@ class PythonAnalyzer:
         if fname in ("Fernet", "fernet.Fernet") or fname.endswith(".Fernet"):
             out.append(self._mk_finding(file_path, line, col, "python", "fernet-aes128-cbc-hmac",
                                           "Fernet symmetric encryption", "symmetric-cipher",
-                                          rules.FERNET_PROFILE, snippet, specificity=2, library="cryptography"))
+                                          rules.FERNET_PROFILE, snippet, specificity=2, library="cryptography", mode="CBC"))
 
         # -- CSPRNG (secrets, os.urandom) --------------------------------------
         if fname in ("secrets.token_hex", "token_hex") or fname.endswith(".token_hex"):
@@ -294,7 +294,7 @@ class PythonAnalyzer:
             profile = dict(rules.CHACHA20_POLY1305_PROFILE)
             lib = "cryptography" if ("cryptography" in fname or "hazmat" in fname) else "pycryptodome"
             out.append(self._mk_finding(file_path, line, col, "python", "chacha20-poly1305-aead",
-                                          "ChaCha20-Poly1305 AEAD", "symmetric-cipher", profile, snippet, specificity=1, generic=False, library=lib))
+                                          "ChaCha20-Poly1305 AEAD", "symmetric-cipher", profile, snippet, specificity=1, generic=False, library=lib, mode="Poly1305"))
 
         # -- Argon2id ----------------------------------------------------------
         if "argon2" in fname.lower() or fname in ("PasswordHasher", "hash_password", "hash_secret", "ph.hash"):
@@ -467,22 +467,22 @@ class PythonAnalyzer:
                 profile = rules.symmetric_profile(algo, mode or "")
                 out.append(self._mk_finding(file_path, line, col, "python", f"{algo.lower()}-deprecated-cipher",
                                               f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                              specificity=3, library="cryptography"))
+                                              specificity=3, library="cryptography", mode=mode))
             return out
 
         profile = rules.symmetric_profile("AES", mode or "", key_bits)
         if mode == "ECB":
             out.append(self._mk_finding(file_path, line, col, "python", "aes-ecb-mode",
                                           f"AES-{key_bits or '?'}-ECB", "symmetric-cipher", profile, snippet,
-                                          specificity=3, library="cryptography"))
+                                          specificity=3, library="cryptography", mode="ECB"))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-missing-aead",
                                           f"AES-{key_bits or '?'}-{mode} missing-aead", "symmetric-cipher",
-                                          profile, snippet, specificity=2, generic=True, library="cryptography"))
+                                          profile, snippet, specificity=2, generic=True, library="cryptography", mode=mode))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-aead-mode",
                                           f"AES-{key_bits or '?'}-{mode}", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True, library="cryptography"))
+                                          specificity=1, generic=True, library="cryptography", mode=mode))
         return out
 
     def _check_hmac_digest(self, node, file_path, table, source_lines, aliases) -> List[Finding]:
@@ -552,7 +552,7 @@ class PythonAnalyzer:
             profile = rules.symmetric_profile(algo, mode or "")
             out.append(self._mk_finding(file_path, line, col, "python", f"{algo.lower()}-deprecated-cipher",
                                           f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                          specificity=3, library=lib))
+                                          specificity=3, library=lib, mode=mode))
             return out
 
         if algo != "AES":
@@ -599,18 +599,18 @@ class PythonAnalyzer:
             hp = dict(rules.HARDCODED_KEY)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-hardcoded-key",
                                           f"AES-{key_bits}-{mode or '?'} hardcoded-key", "hardcoded-secret",
-                                          hp, snippet, specificity=4, library=lib))
+                                          hp, snippet, specificity=4, library=lib, mode=mode))
 
         if iv_node is not None and iv_static and mode in ("CBC", "CTR", "CFB", "OFB", "GCM"):
             ivp = dict(rules.STATIC_IV)
             out.append(self._mk_finding(file_path, line, col, "python", "aes-static-iv-reuse",
                                           f"AES-{key_bits}-{mode} static-iv-reuse", "symmetric-cipher",
-                                          ivp, snippet, specificity=4, library=lib))
+                                          ivp, snippet, specificity=4, library=lib, mode=mode))
 
         if mode == "ECB":
             out.append(self._mk_finding(file_path, line, col, "python", "aes-ecb-mode",
                                           f"AES-{key_bits}-ECB", "symmetric-cipher", profile, snippet,
-                                          specificity=3, library=lib))
+                                          specificity=3, library=lib, mode="ECB"))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
             missing_aead = dict(profile)
             if red_flags:
@@ -621,15 +621,15 @@ class PythonAnalyzer:
                 )
             out.append(self._mk_finding(file_path, line, col, "python", "aes-missing-aead",
                                           f"AES-{key_bits}-{mode} missing-aead", "symmetric-cipher",
-                                          missing_aead, snippet, specificity=2, generic=(not red_flags), library=lib))
+                                          missing_aead, snippet, specificity=2, generic=(not red_flags), library=lib, mode=mode))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk_finding(file_path, line, col, "python", "aes-aead-mode",
                                           f"AES-{key_bits}-{mode}", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True, library=lib))
+                                          specificity=1, generic=True, library=lib, mode=mode))
         else:
             out.append(self._mk_finding(file_path, line, col, "python", "aes-encryption",
                                           f"AES encryption", "symmetric-cipher", profile, snippet,
-                                          specificity=1, generic=True, library=lib))
+                                          specificity=1, generic=True, library=lib, mode=mode))
         return out
 
     def _check_rng_context(self, node, file_path, source_lines, fname: str = "") -> List[Finding]:
@@ -708,7 +708,7 @@ class PythonAnalyzer:
 
     @staticmethod
     def _mk_finding(file_path, line, col, language, rule_id, rule_name, category, profile,
-                     snippet, specificity=1, generic=False, tags=None, library="") -> Optional[Finding]:
+                     snippet, specificity=1, generic=False, tags=None, library="", mode=None) -> Optional[Finding]:
         s_strip = (snippet or "").strip()
         if s_strip.startswith('"""') or s_strip.startswith("'''") or s_strip.startswith("#"):
             return None
@@ -720,4 +720,5 @@ class PythonAnalyzer:
             code_snippet=snippet, specificity=specificity, generic=generic,
             tags=tags or profile.get("tags", []) or [],
             library=library,
+            mode=mode,
         )

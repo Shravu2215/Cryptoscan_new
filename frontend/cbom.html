@@ -408,6 +408,19 @@ tbody tr:hover { background: var(--bg-card-hover); }
 
   <div class="content">
     
+    <!-- Page Header & Actions -->
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px;">
+      <div>
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Cryptographic Bill of Materials (CBOM)</h1>
+        <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Software Bill of Materials (SBOM) enriched with cryptographic assets and quantum risk posture</div>
+      </div>
+      <div id="header-actions" style="display:none; align-items:center; gap:12px;">
+        <button class="btn-sec" id="btn-export-cbom-csv" onclick="exportCBOMCSV()">Export CSV</button>
+        <button class="btn-sec" id="btn-export-cbom-json" onclick="downloadCBOM()">Export JSON (CycloneDX)</button>
+        <button class="btn-sec" id="btn-view-cbom-json" onclick="openJsonDrawer()">View JSON</button>
+      </div>
+    </div>
+
     <!-- Empty State -->
     <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
       <div class="empty-state">
@@ -810,12 +823,15 @@ async function init() {
         const algoUpper = (algo || '').toUpperCase();
         const isAsymmetricVuln = algoUpper.includes('RSA') || algoUpper.includes('ECDSA') || algoUpper.includes('ECDH') || algoUpper.includes('ECC') || algoUpper.includes('DSA') || algoUpper.includes('ED25519');
 
+        const rawMode = enriched.mode || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.extractMode(enriched) : null);
+        const cleanMode = (rawMode && rawMode !== '-' && rawMode !== '—') ? String(rawMode).toUpperCase() : '—';
+
         return {
           id: enriched.id || Math.random().toString(36).substr(2, 9),
           rawFinding: enriched,
           algorithm: algo,
           type: enriched.type || getAlgoType(algo),
-          mode: (algo.split('-')[1] || '—').toUpperCase(),
+          mode: cleanMode,
           suggested_lifetime: enriched.suggested_lifetime || 5,
           user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
           subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
@@ -1130,6 +1146,7 @@ function closeDrawer() {
 
 // JSON generation (CycloneDX like)
 function generateCycloneDX() {
+  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
   return JSON.stringify({
     bomFormat: "CycloneDX",
     specVersion: "1.5",
@@ -1138,7 +1155,7 @@ function generateCycloneDX() {
       timestamp: new Date().toISOString(),
       tools: [{ vendor: "CryptoScan", name: "CryptoScanner API" }]
     },
-    components: inventory.map(c => {
+    components: targetItems.map(c => {
       const risk = c.moscaRisk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 };
       const sf = c.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 };
       return {
@@ -1147,6 +1164,7 @@ function generateCycloneDX() {
         group: c.library,
         properties: [
           { name: "crypto:type", value: c.type || "algorithm" },
+          { name: "crypto:mode", value: c.mode || "—" },
           { name: "crypto:suggested_lifetime", value: String(c.suggested_lifetime || 5) },
           { name: "crypto:user_confirmed_lifetime", value: c.user_confirmed_lifetime ? String(c.user_confirmed_lifetime) : "null" },
           { name: "crypto:effective_lifetime_X", value: String(risk.X) },
@@ -1192,13 +1210,75 @@ function copyJSON() {
 }
 
 function downloadCBOM() {
+  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
+  if (!targetItems || targetItems.length === 0) {
+    alert('No CBOM components available to export.');
+    return;
+  }
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const json = generateCycloneDX();
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `cbom_${new Date().getTime()}.json`;
+  a.download = `cryptoscan-cbom-${timestamp}.json`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportCBOMCSV() {
+  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
+  if (!targetItems || targetItems.length === 0) {
+    alert('No CBOM components available to export.');
+    return;
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const headers = [
+    'Algorithm', 'Type', 'Mode', 'Purpose', 'Exposure', 'Criticality',
+    'File', 'Line', 'Library', 'Version', 'Key Size', 'Latency Impact (ms)', 'Risk', 'Quantum Vulnerable'
+  ];
+
+  const escapeCsv = (str) => {
+    if (str === null || str === undefined) return '""';
+    const s = String(str).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const rows = targetItems.map(c => {
+    const expRaw = (c.exposure || '').toLowerCase();
+    const isExt = expRaw === 'external-facing' || expRaw === 'external' || (c.exposure_label && c.exposure_label.toLowerCase() === 'external');
+    const expLabel = isExt ? 'External' : 'Internal';
+
+    return [
+      escapeCsv(c.algorithm || ''),
+      escapeCsv(c.type || ''),
+      escapeCsv(c.mode || '—'),
+      escapeCsv(c.purpose || ''),
+      escapeCsv(expLabel),
+      escapeCsv(c.criticality || 'Not tagged'),
+      escapeCsv(c.file || ''),
+      escapeCsv(c.line || ''),
+      escapeCsv(c.library || ''),
+      escapeCsv(c.version || '—'),
+      escapeCsv(c.keySize || '—'),
+      escapeCsv(c.latencyImpactMs ?? '—'),
+      escapeCsv(c.risk || 'SAFE'),
+      escapeCsv(c.quantumVulnerable ? 'Yes' : 'No')
+    ].join(',');
+  });
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cryptoscan-cbom-${timestamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 

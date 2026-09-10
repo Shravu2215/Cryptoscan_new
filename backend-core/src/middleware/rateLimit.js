@@ -24,7 +24,7 @@ const isDev = process.env.NODE_ENV !== 'production' || !process.env.REDIS_URL;
 // Generous ceiling for normal API traffic (uploads, scans, polling).
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: isDev ? 10000 : 600,
   standardHeaders: true,
   legacyHeaders: false,
   store: buildStore('rl:api:'),

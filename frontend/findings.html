@@ -1239,8 +1239,8 @@
               risks detected in your repository</div>
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
-            <button class="btn-sec" id="btn-export" style="display:none" onclick="alert('Exporting to CSV...')">Export
-              Findings</button>
+            <button class="btn-sec" id="btn-export" style="display:none" onclick="exportFindings('csv')">Export CSV</button>
+            <button class="btn-sec" id="btn-export-json" style="display:none" onclick="exportFindings('json')">Export JSON</button>
             <button class="btn-p" onclick="window.location.href='scan.html'">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -1648,6 +1648,7 @@
         const noDataEl = document.getElementById('view-no-data');
         const activeEl = document.getElementById('view-active');
         const exportBtn = document.getElementById('btn-export');
+        const exportJsonBtn = document.getElementById('btn-export-json');
 
         const scans = (data.scans && data.scans.length > 0) ? data.scans : (data.activeScan && data.activeScan.findings ? [data.activeScan] : (data.repositories || []));
         const hasFindings = scans.some(s => s.findings && s.findings.length > 0);
@@ -1656,6 +1657,7 @@
           if (noDataEl) noDataEl.style.display = 'block';
           if (activeEl) activeEl.style.display = 'none';
           if (exportBtn) exportBtn.style.display = 'none';
+          if (exportJsonBtn) exportJsonBtn.style.display = 'none';
           return;
         }
 
@@ -1727,12 +1729,14 @@
           if (noDataEl) noDataEl.style.display = 'block';
           if (activeEl) activeEl.style.display = 'none';
           if (exportBtn) exportBtn.style.display = 'none';
+          if (exportJsonBtn) exportJsonBtn.style.display = 'none';
           return;
         }
 
         if (noDataEl) noDataEl.style.display = 'none';
         if (activeEl) activeEl.style.display = 'flex';
         if (exportBtn) exportBtn.style.display = 'inline-flex';
+        if (exportJsonBtn) exportJsonBtn.style.display = 'inline-flex';
 
         populateAlgorithmFilter();
         updateSummaryStats();
@@ -1897,12 +1901,12 @@
         // Formula: Risk Score = Exploitability*0.3 + DataSensitivity*0.3 + Exposure*0.2 + QuantumTimeline*0.2
         const baseScore = (exploitability * 0.3) + (dataSensitivity * 0.3) + (exposure * 0.2) + (quantumTimeline * 0.2);
 
-        // Business Criticality multiplier: Critical: 1.5x, Important: 1.25x, Standard: 1.0x, Low: 0.8x, Not tagged: 1.0x
+        // Business Criticality multiplier: Critical: 1.5x, Important/High: 1.25x, Standard/Medium: 1.0x, Low: 0.8x, Not tagged: 1.0x
         const crit = getBusinessCriticality(f);
         let multiplier = 1.0;
         if (crit === 'Critical') multiplier = 1.5;
-        else if (crit === 'Important') multiplier = 1.25;
-        else if (crit === 'Standard') multiplier = 1.0;
+        else if (crit === 'Important' || crit === 'High') multiplier = 1.25;
+        else if (crit === 'Standard' || crit === 'Medium') multiplier = 1.0;
         else if (crit === 'Low') multiplier = 0.8;
         else multiplier = 1.0;
 
@@ -1920,8 +1924,8 @@
 
       function getCritBadgeClass(crit) {
         if (crit === 'Critical') return 'badge-crit';
-        if (crit === 'Important') return 'badge-high';
-        if (crit === 'Standard') return 'badge-med';
+        if (crit === 'Important' || crit === 'High') return 'badge-high';
+        if (crit === 'Standard' || crit === 'Medium') return 'badge-med';
         if (crit === 'Low') return 'badge-low';
         return 'badge-not-tagged';
       }
@@ -2225,6 +2229,108 @@
         } else {
           pag.style.display = 'none';
         }
+      }
+
+      function exportFindings(format) {
+        format = (format || 'csv').toLowerCase();
+        if (!filteredFindings || filteredFindings.length === 0) {
+          alert('No findings available to export.');
+          return;
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+        if (format === 'json') {
+          const exportData = filteredFindings.map(f => {
+            const sev = getSeverity(f);
+            const qRisk = isQuantum(f) ? 'Quantum-Broken' : (f.quantum_risk || 'Safe');
+            const mode = f.mode || '-';
+            const expRaw = (f.exposure || 'internal').toLowerCase();
+            const exposure = (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) ? 'External' : 'Internal';
+            const criticality = getBusinessCriticality(f);
+
+            return {
+              id: f.id,
+              rule_id: f.rule_id || f.ruleId || '',
+              algorithm: f.algorithm || f.title || '',
+              category: f.category || '',
+              severity: sev,
+              quantum_risk: qRisk,
+              mode: mode,
+              exposure: exposure,
+              criticality: criticality,
+              file: f.file || f.filePath || '',
+              line: f.line || 0,
+              column: f.column || 0,
+              raw_call: f.raw_call || f.code_snippet || f.snippet || '',
+              recommendation: f.recommendation || f.remediation || '',
+              confidence: f.confidence || '',
+              detection_method: f.detection_method || '',
+              data_sensitivity: f.dataSensitivity || '',
+              exposure_signals: f.exposure_signals || [],
+              exposure_rationale: f.exposure_rationale || ''
+            };
+          });
+
+          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `cryptoscan-findings-${timestamp}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        // CSV Export
+        const headers = [
+          'Algorithm', 'Category', 'Severity', 'Quantum Risk', 'Mode',
+          'Exposure', 'Criticality', 'File', 'Line', 'Raw Call Site', 'Recommendation'
+        ];
+
+        const escapeCsv = (str) => {
+          if (str === null || str === undefined) return '""';
+          const s = String(str).replace(/"/g, '""');
+          return `"${s}"`;
+        };
+
+        const rows = filteredFindings.map(f => {
+          const sev = getSeverity(f);
+          const qRisk = isQuantum(f) ? 'Quantum-Broken' : (f.quantum_risk || 'Safe');
+          const mode = f.mode || '-';
+          const expRaw = (f.exposure || 'internal').toLowerCase();
+          const exposure = (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) ? 'External' : 'Internal';
+          const criticality = getBusinessCriticality(f);
+          const rawCall = f.raw_call || f.code_snippet || f.snippet || '';
+          const rec = f.recommendation || f.remediation || '';
+
+          return [
+            escapeCsv(f.algorithm || f.title || ''),
+            escapeCsv(f.category || ''),
+            escapeCsv(sev),
+            escapeCsv(qRisk),
+            escapeCsv(mode),
+            escapeCsv(exposure),
+            escapeCsv(criticality),
+            escapeCsv(f.file || f.filePath || ''),
+            escapeCsv(f.line || 0),
+            escapeCsv(rawCall),
+            escapeCsv(rec)
+          ].join(',');
+        });
+
+        const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cryptoscan-findings-${timestamp}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
 
       function changePage(dir) {

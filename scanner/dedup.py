@@ -64,7 +64,20 @@ def dedup(findings: List[Finding]) -> List[Finding]:
         else:
             existing = seen_algo[key]
             if f.specificity > existing.specificity:
+                if not getattr(f, "mode", None) and getattr(existing, "mode", None):
+                    f.mode = existing.mode
+                if not getattr(f, "exposure_signals", None) and getattr(existing, "exposure_signals", None):
+                    f.exposure_signals = existing.exposure_signals
+                if not getattr(f, "exposure_rationale", None) and getattr(existing, "exposure_rationale", None):
+                    f.exposure_rationale = existing.exposure_rationale
                 seen_algo[key] = f
+            else:
+                if not getattr(existing, "mode", None) and getattr(f, "mode", None):
+                    existing.mode = f.mode
+                if not getattr(existing, "exposure_signals", None) and getattr(f, "exposure_signals", None):
+                    existing.exposure_signals = f.exposure_signals
+                if not getattr(existing, "exposure_rationale", None) and getattr(f, "exposure_rationale", None):
+                    existing.exposure_rationale = f.exposure_rationale
     deduped = list(seen_algo.values())
 
     # Pass 1c: Cross-layer dedup — collapse findings where AST, regex, and entropy
@@ -86,7 +99,20 @@ def dedup(findings: List[Finding]) -> List[Finding]:
             cross_layer[key]["layer_count"] += 1
             # Take the more specific finding
             if f.specificity > existing.specificity:
+                if not getattr(f, "mode", None) and getattr(existing, "mode", None):
+                    f.mode = existing.mode
+                if not getattr(f, "exposure_signals", None) and getattr(existing, "exposure_signals", None):
+                    f.exposure_signals = existing.exposure_signals
+                if not getattr(f, "exposure_rationale", None) and getattr(existing, "exposure_rationale", None):
+                    f.exposure_rationale = existing.exposure_rationale
                 cross_layer[key]["winner"] = f
+            else:
+                if not getattr(existing, "mode", None) and getattr(f, "mode", None):
+                    existing.mode = f.mode
+                if not getattr(existing, "exposure_signals", None) and getattr(f, "exposure_signals", None):
+                    existing.exposure_signals = f.exposure_signals
+                if not getattr(existing, "exposure_rationale", None) and getattr(f, "exposure_rationale", None):
+                    existing.exposure_rationale = f.exposure_rationale
 
     # Re-assemble: keep all generic findings and non-cross-layer-conflicting findings,
     # then add the winners (with promoted confidence where warranted).
@@ -122,14 +148,19 @@ def dedup(findings: List[Finding]) -> List[Finding]:
     for site, group in by_site.items():
         has_specific = any(not g.generic for g in group)
         has_kms = any(g.category == "Cloud KMS / HSM" for g in group)
+        max_spec_by_cat = {}
+        for g in group:
+            max_spec_by_cat[g.category] = max(max_spec_by_cat.get(g.category, 0), g.specificity)
 
         for g in group:
             if g.generic and has_specific:
+                continue
+            if g.generic and g.specificity < max_spec_by_cat.get(g.category, 0):
                 continue
             # Drop hardcoded-secret if we found a KMS reference on the same line
             if has_kms and g.category in {"hardcoded-secret", "secret"} and g.category != "Cloud KMS / HSM":
                 continue
             out.append(g)
 
-    out.sort(key=lambda f: (f.file, f.line, -f.severity.rank))
+    out.sort(key=lambda f: (f.file, f.line, -f.severity.rank, -f.specificity))
     return out

@@ -798,51 +798,56 @@
   <script src="assets/js/engine.js"></script>
   <script>
     let scans = [];
+    let isInitializing = false;
 
     async function init() {
-      const data = CryptoEngine.getData();
-      scans = data.scans || [];
+      if (isInitializing) return;
+      isInitializing = true;
 
-      // Live-fetch repositories from backend
       try {
-        const token = localStorage.getItem('cs_token');
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        const data = CryptoEngine.getData();
+        scans = data.scans || [];
 
-        const res = await fetch('http://localhost:3000/repos', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (res.ok) {
-          const liveRepos = await res.json();
-          const repoMap = {};
-          liveRepos.forEach(r => {
-            const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
-            if (r.id) repoMap[r.id] = crit;
-            if (r.name) repoMap[r.name] = crit;
+        // Live-fetch repositories from backend
+        try {
+          const token = localStorage.getItem('cs_token');
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1000);
+          const res = await fetch('http://localhost:3000/repos', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const liveRepos = await res.json();
+            const repoMap = {};
+            liveRepos.forEach(r => {
+              const crit = r.businessCriticality || r.criticality_tier || 'Not tagged';
+              if (r.id) repoMap[r.id] = crit;
+              if (r.name) repoMap[r.name] = crit;
+            });
 
-          // Sync into scans & data.repositories
-          scans.forEach(s => {
-            const liveCrit = repoMap[s.repoId] || repoMap[s.repoName] || repoMap[s.name];
-            if (liveCrit) {
-              s.businessCriticality = liveCrit;
-              s.criticality_tier = liveCrit;
-            }
-          });
-          (data.repositories || []).forEach(r => {
-            const liveCrit = repoMap[r.id] || repoMap[r.name];
-            if (liveCrit) {
-              r.businessCriticality = liveCrit;
-              r.criticality_tier = liveCrit;
-            }
-          });
-          CryptoEngine.saveData(data);
+            // Sync into scans & data.repositories
+            scans.forEach(s => {
+              const liveCrit = repoMap[s.repoId] || repoMap[s.repoName] || repoMap[s.name];
+              if (liveCrit) {
+                s.businessCriticality = liveCrit;
+                s.criticality_tier = liveCrit;
+              }
+            });
+            (data.repositories || []).forEach(r => {
+              const liveCrit = repoMap[r.id] || repoMap[r.name];
+              if (liveCrit) {
+                r.businessCriticality = liveCrit;
+                r.criticality_tier = liveCrit;
+              }
+            });
+            // Update storage directly to avoid re-triggering cryptoscan_data_updated event loop
+            localStorage.setItem(CryptoEngine.STORAGE_KEY, JSON.stringify(data));
+          }
+        } catch (err) {
+          console.warn('Could not fetch live repos:', err);
         }
-      } catch (err) {
-        console.warn('Could not fetch live repos:', err);
-      }
 
       if (scans.length === 0 && data.repositories && data.repositories.length > 0) {
         scans = data.repositories.map(r => ({
@@ -864,7 +869,10 @@
       renderTable();
       renderChart();
       renderActivity();
+    } finally {
+      isInitializing = false;
     }
+  }
 
     function setMetric(id, val, hasData) {
       const el = document.getElementById(id);

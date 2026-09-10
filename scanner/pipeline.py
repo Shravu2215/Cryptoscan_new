@@ -6,7 +6,7 @@ import zipfile
 import os
 import shutil
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, Optional
 
 # Make sure we can import from scanner
 _scanner_dir = os.path.dirname(os.path.abspath(__file__))
@@ -158,6 +158,26 @@ def _build_repo_surface_map(all_files, target_dir) -> Dict[str, Any]:
             except Exception:
                 pass
 
+        # 1b. Dockerfile EXPOSE port exposures
+        if fn == "dockerfile" or fn.startswith("dockerfile") or fn.endswith(".dockerfile"):
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                    df_content = fh.read()
+                expose_matches = re.findall(r'^\s*EXPOSE\s+([0-9\s/tcpudp]+)', df_content, re.MULTILINE | re.IGNORECASE)
+                if expose_matches:
+                    if rel_dir:
+                        exposed_dirs.add(rel_dir)
+                        dir_stem = os.path.basename(rel_dir).lower()
+                        if dir_stem:
+                            exposed_service_names.add(dir_stem)
+                            exposed_service_names.add(dir_stem.replace("_", "-"))
+                            exposed_service_names.add(dir_stem.replace("-", "_"))
+                    label_svcs = re.findall(r'LABEL\s+service\s*=\s*["\']?([^"\'\s]+)', df_content, re.IGNORECASE)
+                    for lsvc in label_svcs:
+                        exposed_service_names.add(lsvc.lower())
+            except Exception:
+                pass
+
         # 2. Kubernetes Service / Ingress — content-based, no path filter
         # Parse ANY yaml/yml that contains K8s resources regardless of where it lives.
         if fn.endswith(".yaml") or fn.endswith(".yml"):
@@ -241,26 +261,78 @@ def _build_repo_surface_map(all_files, target_dir) -> Dict[str, Any]:
             except Exception:
                 pass
 
+        # 4. Reverse-proxy & web server configs (Nginx, Apache, HAProxy, Caddy, Envoy, Traefik)
+        is_proxy_or_web = (
+            fn in {"caddyfile", "haproxy.cfg", "haproxy.conf", "nginx.conf", "httpd.conf", "apache2.conf"}
+            or fn.endswith(".caddy") or fn.startswith("caddyfile")
+            or fn.startswith("nginx") or "haproxy" in fn or "envoy" in fn or "traefik" in fn
+            or "sites-enabled" in rel or "sites-available" in rel
+            or (fn.endswith(".conf") and any(k in rel for k in ("nginx", "apache", "httpd", "proxy", "web", "server")))
+        )
+        if is_proxy_or_web:
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                    cfg_content = fh.read()
+
+                has_listener = False
+                if re.search(r'\b(?:listen|bind|Listen)\s+([^\s;]+)', cfg_content, re.IGNORECASE):
+                    has_listener = True
+                elif re.search(r'<(?:VirtualHost|Location)', cfg_content, re.IGNORECASE):
+                    has_listener = True
+                elif re.search(r'\b(?:reverse_proxy|frontend|entryPoints|routers|listeners)\b', cfg_content, re.IGNORECASE):
+                    has_listener = True
+
+                if has_listener:
+                    if rel_dir:
+                        exposed_dirs.add(rel_dir)
+                    # Extract server names / domains
+                    server_names = re.findall(r'server_name\s+([^;]+);', cfg_content, re.IGNORECASE)
+                    for sn_line in server_names:
+                        for s_item in sn_line.strip().split():
+                            s_clean = s_item.strip("\"'").lower()
+                            if s_clean and s_clean not in {"_", "localhost", "127.0.0.1"}:
+                                base_s = s_clean.split(".")[0]
+                                exposed_service_names.add(base_s)
+                    # Extract proxy_pass / upstream backends
+                    upstreams = re.findall(r'proxy_pass\s+https?://([a-zA-Z0-9_\-]+)', cfg_content, re.IGNORECASE)
+                    upstreams += re.findall(r'reverse_proxy\s+([a-zA-Z0-9_\-]+)', cfg_content, re.IGNORECASE)
+                    upstreams += re.findall(r'server\s+([a-zA-Z0-9_\-]+)\s+[0-9.:]+', cfg_content, re.IGNORECASE)
+                    for u in upstreams:
+                        u_lower = u.lower()
+                        if u_lower not in {"localhost", "127.0.0.1"}:
+                            exposed_service_names.add(u_lower)
+                            exposed_service_names.add(u_lower.replace("-", "_"))
+                            exposed_service_names.add(u_lower.replace("_", "-"))
+            except Exception:
+                pass
+
     return {"exposed_dirs": exposed_dirs, "exposed_service_names": exposed_service_names}
 
 
-def _is_file_exposed(rel_path: str, source: str, surface_map: Dict[str, Any]) -> str:
+EXPOSURE_KEYWORDS = ["external", "public", "internet-facing", "edge", "dmz", "webhook", "gateway"]
+
+
+def _classify_file_exposure(rel_path: str, source: str, surface_map: Dict[str, Any]) -> Tuple[str, List[str], str]:
     """
     Ranked strategies to determine if a finding's file is externally reachable.
 
-    Strategy 1 (strongest): Explicit service name match.
+    Strategy 1 (strongest): Explicit service name match from infra signals.
       If any path component (directory or filename stem) matches a service identifier
-      extracted from infra config (K8s metadata.name, Ingress backend, Terraform resource),
-      classify as External.
+      extracted from infra config (K8s metadata.name, Ingress backend, Terraform resource,
+      Docker/proxy service).
 
     Strategy 2: Directory prefix match.
       If any path prefix is in the set of directories confirmed exposed by infra signals.
 
-    Default: Internal — no infra evidence means not External.
+    Strategy 3: Substring keyword fallback on path components and filename.
+      When neither strategy 1 nor strategy 2 matches, check path components and filename for
+      keywords: external, public, internet-facing, edge, dmz, webhook, gateway.
+      Does NOT match generic names like 'api' or 'routes' alone.
+
+    Default: Internal — no infra evidence and no exposure keywords.
     """
     norm_path = rel_path.replace("\\", "/")
     parts = [p.lower() for p in norm_path.split("/")]
-    # Include stem of the filename (e.g. "public_gateway" from "public_gateway.js")
     stems = set(parts)
     for part in parts:
         stem = part.rsplit(".", 1)[0] if "." in part else part
@@ -270,16 +342,28 @@ def _is_file_exposed(rel_path: str, source: str, surface_map: Dict[str, Any]) ->
 
     # Strategy 1: explicit service name match from infra signals
     service_names = surface_map.get("exposed_service_names", set())
-    if service_names and stems & service_names:
-        return "external-facing"
+    matched_services = stems & service_names if service_names else set()
+    if matched_services:
+        matched_svc = sorted(matched_services)[0]
+        return "external-facing", [f"infra-service:{matched_svc}"], f"Matched exposed infrastructure service name '{matched_svc}'"
 
     # Strategy 2: directory prefix match
     for exp_dir in surface_map.get("exposed_dirs", set()):
         if exp_dir and (norm_path.startswith(exp_dir + "/") or norm_path == exp_dir or exp_dir in parts):
-            return "external-facing"
+            return "external-facing", [f"infra-dir:{exp_dir}"], f"Path resides within exposed infrastructure directory '{exp_dir}'"
 
-    # Default: internal (correct safe default — no infra evidence)
-    return "internal"
+    # Strategy 3: Substring keyword fallback on path components and filename
+    path_lower = norm_path.lower()
+    for kw in EXPOSURE_KEYWORDS:
+        if kw in path_lower:
+            return "external-facing", [f"keyword:{kw}"], f"Path matched external-facing keyword '{kw}'"
+
+    return "internal", [], "No external infrastructure signals or gateway keywords detected"
+
+
+def _is_file_exposed(rel_path: str, source: str, surface_map: Dict[str, Any]) -> str:
+    exposure, _, _ = _classify_file_exposure(rel_path, source, surface_map)
+    return exposure
 
 
 def _compute_systems_rollup(all_files, findings, target_dir) -> List[Dict[str, Any]]:
@@ -480,10 +564,14 @@ def scan_repo(repo_path, scan_id=None):
                 findings.extend(ent.analyze(path, source))
 
             new_findings = findings[old_len:]
-            file_exposure = _is_file_exposed(rel_path, source, surface_map)
+            file_exposure, exp_signals, exp_rationale = _classify_file_exposure(rel_path, source, surface_map)
             for f in new_findings:
                 if getattr(f, "exposure", "internal") == "internal":
                     f.exposure = file_exposure
+                    if exp_signals and not getattr(f, "exposure_signals", None):
+                        f.exposure_signals = exp_signals
+                    if exp_rationale and not getattr(f, "exposure_rationale", None):
+                        f.exposure_rationale = exp_rationale
 
             file_manifest.append({"file": rel_path, "status": "SCANNED"})
             files_scanned += 1
@@ -520,6 +608,9 @@ def scan_repo(repo_path, scan_id=None):
             "confidence": f.confidence.value,
             "detection_method": f.detection_method,
             "exposure": getattr(f, 'exposure', 'internal'),
+            "exposure_signals": getattr(f, 'exposure_signals', []) or [],
+            "exposure_rationale": getattr(f, 'exposure_rationale', '') or '',
+            "mode": getattr(f, 'mode', None),
             "dataSensitivity": _detect_data_sensitivity(f),
             "suppressed": f.suppressed,
             "suppression_reason": f.suppression_reason,

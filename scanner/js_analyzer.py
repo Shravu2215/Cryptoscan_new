@@ -446,10 +446,10 @@ class JSAnalyzer:
         if algo != "AES":
             # Non-AES ciphers via OpenSSL name string, e.g. 'des-ede3-cbc'
             if algo in ("DES", "DES-EDE3", "DES3", "RC4", "ARC4", "3DES", "RC2", "BF", "BLOWFISH"):
-                profile = rules.symmetric_profile(algo, "")
+                profile = rules.symmetric_profile(algo, mode or "")
                 out.append(self._mk(file_path, line, col, f"{algo.lower()}-deprecated-cipher",
                                       f"{algo} deprecated-cipher", "symmetric-cipher", profile, snippet,
-                                      specificity=3))
+                                      specificity=3, mode=mode))
             return out
 
         profile = rules.symmetric_profile("AES", mode or "", bits)
@@ -463,17 +463,17 @@ class JSAnalyzer:
             hp = dict(rules.HARDCODED_KEY)
             out.append(self._mk(file_path, line, col, "aes-hardcoded-key",
                                   f"AES-{bits}-{mode or '?'} hardcoded-key", "hardcoded-secret", hp, snippet,
-                                  specificity=4))
+                                  specificity=4, mode=mode))
 
         if iv_node is not None and iv_static and mode in ("CBC", "CTR", "CFB", "OFB", "GCM"):
             ivp = dict(rules.STATIC_IV)
             out.append(self._mk(file_path, line, col, "aes-static-iv-reuse",
                                   f"AES-{bits}-{mode} static-iv-reuse", "symmetric-cipher", ivp, snippet,
-                                  specificity=4))
+                                  specificity=4, mode=mode))
 
         if mode == "ECB":
             out.append(self._mk(file_path, line, col, "aes-ecb-mode", f"AES-{bits}-ECB", "symmetric-cipher",
-                                  profile, snippet, specificity=3))
+                                  profile, snippet, specificity=3, mode="ECB"))
         elif mode in ("CBC", "CTR", "CFB", "OFB"):
             missing_aead = dict(profile)
             if red_flags:
@@ -484,13 +484,13 @@ class JSAnalyzer:
                 )
             out.append(self._mk(file_path, line, col, "aes-missing-aead",
                                   f"AES-{bits}-{mode} missing-aead", "symmetric-cipher", missing_aead, snippet,
-                                  specificity=2, generic=(not red_flags)))
+                                  specificity=2, generic=(not red_flags), mode=mode))
         elif mode in ("GCM", "CCM"):
             out.append(self._mk(file_path, line, col, "aes-aead-mode", f"AES-{bits}-{mode}",
-                                  "symmetric-cipher", profile, snippet, specificity=1, generic=True))
+                                  "symmetric-cipher", profile, snippet, specificity=1, generic=True, mode=mode))
         else:
             out.append(self._mk(file_path, line, col, "aes-encryption", f"AES {direction}",
-                                  "symmetric-cipher", profile, snippet, specificity=1, generic=True))
+                                  "symmetric-cipher", profile, snippet, specificity=1, generic=True, mode=mode))
         return out
 
     def _check_rng_context(self, node, file_path, line, col, snippet, func_name=None) -> List[Finding]:
@@ -567,13 +567,14 @@ class JSAnalyzer:
 
     @staticmethod
     def _mk(file_path, line, col, rule_id, rule_name, category, profile, snippet, specificity=1,
-            generic=False, tags=None) -> Finding:
+            generic=False, tags=None, mode=None) -> Finding:
         return Finding(
             file=file_path, line=line, column=col, language="javascript", rule_id=rule_id,
             rule_name=rule_name, category=category, algorithm=profile["algorithm"],
             severity=profile["severity"], quantum_risk=profile["quantum_risk"],
             message=f"{rule_name} at line {line}.", recommendation=profile["recommendation"],
             code_snippet=snippet, specificity=specificity, generic=generic, tags=tags or [],
+            mode=mode,
         )
 
 

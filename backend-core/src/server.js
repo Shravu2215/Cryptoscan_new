@@ -21,6 +21,10 @@ app.set('trust proxy', 1); // behind nginx/load balancer in production
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors(corsOptions()));
 app.use(express.json());
+const path = require('path');
+// Serve static frontend files first (pages, CSS, JS, images are not subject to API rate limits)
+app.use(express.static(path.join(__dirname, '../../frontend')));
+
 app.use(cookieParser());
 app.use(apiLimiter);
 app.use(auditMiddleware);
@@ -52,9 +56,6 @@ app.use('/auth', authLimiter, authRoutes);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/repos', repoRoutes);
 app.use('/scan', scanRoutes);
-
-const path = require('path');
-app.use(express.static(path.join(__dirname, '../../frontend')));
 
 // 404 handler
 app.use((req, res) => {

@@ -344,9 +344,10 @@ const CryptoEngine = {
 
     // 2. CONFIG / DEPLOYMENT SIGNALS
     let matchedConfigSignal = null;
-    if (text.includes('dockerfile') || text.includes('docker-compose') || text.includes('ingress') || text.includes('nginx.conf') || text.includes('k8s') || text.includes('service.yaml')) {
-      if (text.includes('expose 80') || text.includes('expose 443') || text.includes('expose 8080') || text.includes('loadbalancer') || text.includes('nodeport') || text.includes('ingress') || text.includes('listen 80') || text.includes('listen 443')) {
-        matchedConfigSignal = 'Public Deployment Config (EXPOSE 80/443 / LoadBalancer / Ingress)';
+    const isDeployConfig = text.includes('dockerfile') || text.includes('docker-compose') || text.includes('compose.y') || text.includes('ingress') || text.includes('nginx') || text.includes('k8s') || text.includes('service.yaml') || text.includes('haproxy') || text.includes('caddy') || text.includes('traefik') || text.includes('envoy') || text.includes('apache');
+    if (isDeployConfig) {
+      if (/expose\s+[0-9]+/i.test(text) || text.includes('loadbalancer') || text.includes('nodeport') || text.includes('ingress') || /listen\s+[0-9]+/i.test(text) || /bind\s+[0-9.:]+/i.test(text) || text.includes('reverse_proxy') || text.includes('proxy_pass')) {
+        matchedConfigSignal = 'Public Deployment / Server Config (EXPOSE / LoadBalancer / Ingress / Proxy)';
         maxSignalScore = Math.max(maxSignalScore, 5.0);
         confidence = 'High';
       } else if (text.includes('clusterip') || text.includes('internal-only') || text.includes('private-net')) {
@@ -393,17 +394,18 @@ const CryptoEngine = {
     }
 
     // 5. FOLDER / NAMING CONVENTIONS (Fallback / Heuristic adjustment)
-    const extFolderPatterns = ['/api/', '/public/', '/routes/', '/controllers/', '/endpoints/', '/web/', '/handlers/', '/v1/', '/v2/'];
+    // Exposure keywords matching backend pipeline specification (do not match /api/ or /routes/ alone)
+    const extKeywords = ['external', 'public', 'internet-facing', 'edge', 'dmz', 'webhook', 'gateway'];
     const intFolderPatterns = ['/internal/', '/test/', '/tests/', '/spec/', '/dev/', '/scripts/', '/tools/', '/migrations/', '/admin-cli/', '/jobs/', '/cron/', '/batch/'];
 
-    const matchedExtPath = extFolderPatterns.find(p => file.includes(p));
+    const matchedExtKeyword = extKeywords.find(k => file.includes(k) || (finding.rule_id || '').toLowerCase().includes(k));
     const matchedIntPath = intFolderPatterns.find(p => file.includes(p));
 
-    if (matchedExtPath) {
-      triggeredSignals.push(`Signal 5: Public Directory Keyword (${matchedExtPath})`);
+    if (matchedExtKeyword) {
+      triggeredSignals.push(`Signal 5: External-facing Keyword (${matchedExtKeyword})`);
       if (maxSignalScore === 0) {
-        maxSignalScore = 3.5;
-        confidence = 'Low';
+        maxSignalScore = 4.0;
+        confidence = 'Medium';
       }
     } else if (matchedIntPath) {
       triggeredSignals.push(`Signal 5: Internal Directory Keyword (${matchedIntPath})`);
@@ -414,39 +416,21 @@ const CryptoEngine = {
     }
 
     // FINAL DECISION LOGIC & VERDICT
-    // When no explicit signals fire, use file-path heuristics to decide
-    // Internal vs External — we never emit 'Unknown' to the user.
-    const extFilePatterns = ['/api/', '/public/', '/routes/', '/controllers/', '/endpoints/', '/web/', '/handlers/', '/v1/', '/v2/', 'controller', 'route', 'endpoint', 'webhook', 'servlet', 'gateway', 'graphql', 'rest'];
-    const intFilePatterns = ['/internal/', '/test/', '/tests/', '/spec/', '/dev/', '/scripts/', '/tools/', '/migrations/', '/admin/', '/jobs/', '/cron/', '/batch/', '/util/', '/helpers/', '/config/', '/lib/', '/core/'];
-
     let finalLabel;
     let finalScore;
 
     if (triggeredSignals.length === 0) {
-      // No strong signals — use file path to decide
-      const hasExtPath = extFilePatterns.some(p => file.includes(p));
-      const hasIntPath = intFilePatterns.some(p => file.includes(p));
-
-      if (hasExtPath && !hasIntPath) {
-        finalLabel = 'External';
-        finalScore = 3.5;
-        triggeredSignals.push('Heuristic: File path matches public-facing pattern');
-      } else {
-        // Default: hardcoded keys / certs in source are company-internal
-        finalLabel = 'Internal';
-        finalScore = 1.5;
-        triggeredSignals.push('Heuristic: No public route/endpoint signals — defaulting to Internal');
-      }
+      // Default: internal — no infra evidence or exposure keywords means Internal
+      finalLabel = 'Internal';
+      finalScore = 1.5;
+      triggeredSignals.push('Heuristic: No public route/infra signals — defaulting to Internal');
       confidence = 'Low';
     } else if (maxSignalScore >= 4.0) {
       finalLabel = 'External';
       finalScore = maxSignalScore;
-    } else if (maxSignalScore >= 2.0 && maxSignalScore < 4.0) {
-      finalLabel = 'Internal';
-      finalScore = maxSignalScore;
     } else {
       finalLabel = 'Internal';
-      finalScore = 1.5;
+      finalScore = maxSignalScore;
     }
 
     return {
@@ -491,13 +475,15 @@ const CryptoEngine = {
     }
 
     // 4. Regulatory Impact (0.20) — compliance frameworks & security standards
-    let reg = 2.0;
+    let reg = 1.0;
     if (text.includes('gdpr') || text.includes('pci') || text.includes('hipaa') || text.includes('rbi') || text.includes('compliance') || text.includes('billing') || text.includes('financial') || text.includes('sox') || text.includes('fips') || text.includes('iso27001')) {
       reg = 5.0;
     } else if (text.includes('auth') || text.includes('cert') || text.includes('tls') || text.includes('ssl') || text.includes('kms') || text.includes('audit')) {
-      reg = 4.0;
-    } else {
+      reg = 3.5;
+    } else if (text.includes('security') || text.includes('crypto') || text.includes('cipher')) {
       reg = 2.0;
+    } else {
+      reg = 1.0;
     }
 
     // Preserve user override of subfactors if manually edited
@@ -511,6 +497,7 @@ const CryptoEngine = {
     const rawScore = (sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20);
     const score = Math.round(rawScore * 10) / 10;
 
+    // Calibrated thresholds: all 4 bands are cleanly reachable
     let label = 'Low';
     if (score >= 4.0) label = 'Critical';
     else if (score >= 3.0) label = 'High';
@@ -614,24 +601,30 @@ const CryptoEngine = {
   },
 
   extractMode: function(finding) {
+    if (finding.mode && finding.mode !== '-' && finding.mode !== '—') {
+      return finding.mode;
+    }
+    const cat = (finding.category || '').toLowerCase();
     const algo = (finding.algorithm || '').toUpperCase();
+    const isCipher = cat.includes('cipher') || cat.includes('symmetric') || algo.includes('AES') || algo.includes('DES') || algo.includes('BLOWFISH') || algo.includes('CHACHA');
+    if (!isCipher) {
+      return '-';
+    }
+
     const title = (finding.title || '').toUpperCase();
     const snippet = (finding.snippet || finding.code || '').toUpperCase();
     const ruleId = (finding.ruleId || finding.rule_id || '').toUpperCase();
-
     const textToSearch = algo + ' ' + title + ' ' + snippet + ' ' + ruleId;
 
-    const modes = ['GCM', 'CBC', 'ECB', 'CTR', 'CFB', 'OFB', 'CCM', 'OCB', 'POLY1305', 'CHACHA20'];
+    if (textToSearch.includes('CHACHA20') && textToSearch.includes('POLY1305')) {
+      return 'Poly1305';
+    }
 
+    const modes = ['GCM', 'CBC', 'ECB', 'CTR', 'CFB', 'OFB', 'CCM', 'OCB', 'POLY1305'];
     for (const m of modes) {
-      // Avoid matching sub-strings inadvertently by using boundaries or checking direct hits
-      if (textToSearch.includes(m)) {
-        if (m === 'CHACHA20' || m === 'POLY1305') {
-          if (textToSearch.includes('CHACHA20') && textToSearch.includes('POLY1305')) {
-            return 'ChaCha20-Poly1305';
-          }
-        }
-        return m;
+      const regex = new RegExp(`\\b${m}\\b`, 'i');
+      if (regex.test(textToSearch)) {
+        return m.toUpperCase();
       }
     }
     
