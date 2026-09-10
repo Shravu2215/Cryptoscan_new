@@ -2258,8 +2258,16 @@
             const sev = getSeverity(f);
             const qRisk = isQuantum(f) ? 'Quantum-Broken' : (f.quantum_risk || 'Safe');
             const mode = f.mode || '-';
+            let isExt = false;
             const expRaw = (f.exposure || 'internal').toLowerCase();
-            const exposure = (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) ? 'External' : 'Internal';
+            if (expRaw === 'internal' || (f.exposure_label && f.exposure_label.toLowerCase() === 'internal')) {
+              isExt = false;
+            } else if (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) {
+              isExt = true;
+            } else if (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) {
+              isExt = CryptoEngine.classifyExposure(f).exposure_label === 'External';
+            }
+            const exposure = isExt ? 'External' : 'Internal';
             const criticality = getBusinessCriticality(f);
 
             return {
@@ -2313,8 +2321,16 @@
           const sev = getSeverity(f);
           const qRisk = isQuantum(f) ? 'Quantum-Broken' : (f.quantum_risk || 'Safe');
           const mode = f.mode || '-';
+          let isExt = false;
           const expRaw = (f.exposure || 'internal').toLowerCase();
-          const exposure = (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) ? 'External' : 'Internal';
+          if (expRaw === 'internal' || (f.exposure_label && f.exposure_label.toLowerCase() === 'internal')) {
+            isExt = false;
+          } else if (expRaw === 'external-facing' || expRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) {
+            isExt = true;
+          } else if (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) {
+            isExt = CryptoEngine.classifyExposure(f).exposure_label === 'External';
+          }
+          const exposure = isExt ? 'External' : 'Internal';
           const criticality = getBusinessCriticality(f);
           const rawCall = f.raw_call || f.code_snippet || f.snippet || '';
           const rec = f.recommendation || f.remediation || '';
@@ -2352,9 +2368,11 @@
       }
 
       function openDrawer(f) {
+        if (!f) return;
         currentDrawerFinding = f;
-        const sev = getSeverity(f);
 
+        const sev = getSeverity(f);
+        document.getElementById('drw-title').textContent = f.title || f.name || 'Cryptographic Finding Details';
         document.getElementById('drw-algo').textContent = f.algorithm || f.title.split(' ')[0] || 'Unknown';
         document.getElementById('drw-fileline').textContent = `${f.file || 'unknown'}:${f.line || '?'}`;
 
@@ -2492,9 +2510,9 @@
 
         const score = Math.round(((sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20)) * 10) / 10;
         let label = 'Low';
-        if (score >= 4.0) label = 'Critical';
-        else if (score >= 3.0) label = 'High';
-        else if (score >= 2.0) label = 'Medium';
+        if (score >= 3.8) label = 'Critical';
+        else if (score >= 2.8) label = 'High';
+        else if (score >= 1.8) label = 'Medium';
 
         const badgeEl = document.getElementById('drw-crit-score-badge');
         if (badgeEl) {
