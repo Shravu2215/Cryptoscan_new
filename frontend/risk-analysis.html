@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Risk & Migration — CryptoScan</title>
+  <title>Risk Analysis — CryptoScan</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet">
@@ -1043,288 +1043,6 @@
       line-height: 1.6;
     }
 
-    /* Improved Recommendation Cards */
-    .rec-list {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .rec-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-    }
-
-    .rec-card:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-    }
-
-    .rec-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--border-color);
-    }
-
-    .rec-card.p1::before {
-      background: linear-gradient(180deg, #ef4444, #dc2626);
-    }
-
-    .rec-card.p2::before {
-      background: linear-gradient(180deg, #f59e0b, #d97706);
-    }
-
-    .rec-card.p3::before {
-      background: linear-gradient(180deg, #eab308, #ca8a04);
-    }
-
-    .rec-hd {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
-    }
-
-    .rec-algo {
-      font-size: 19px;
-      font-weight: 700;
-      color: var(--text-h);
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: -0.02em;
-    }
-
-    .rec-purpose {
-      font-size: 13px;
-      color: var(--text-m);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .rec-priority-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    .rec-priority-badge.p1 {
-      background: rgba(239, 68, 68, 0.12);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.25);
-    }
-
-    .rec-priority-badge.p2 {
-      background: rgba(245, 158, 11, 0.12);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.25);
-    }
-
-    .rec-priority-badge.p3 {
-      background: rgba(234, 179, 8, 0.12);
-      color: #fde047;
-      border: 1px solid rgba(234, 179, 8, 0.25);
-    }
-
-    .rec-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .rg-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
-
-    .rg-lbl {
-      font-size: 11px;
-      color: var(--text-s);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
-    }
-
-    .rg-val {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-h);
-    }
-
-    .rec-replace {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
-      padding: 14px 18px;
-      border-radius: 12px;
-      border: 1px solid rgba(16, 185, 129, 0.25);
-    }
-
-    .replace-icon-wrap {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(16, 185, 129, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--green);
-      flex-shrink: 0;
-    }
-
-    .replace-lbl {
-      font-size: 11px;
-      color: var(--text-m);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .replace-val {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--green);
-      font-family: 'JetBrains Mono', monospace;
-      margin-top: 2px;
-    }
-
-    .rec-ft {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 20px;
-    }
-
-    .view-details-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 18px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 13px;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      color: var(--text-h);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .view-details-btn:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    /* Migration Order Timeline */
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      padding: 16px 0;
-    }
-
-    .tl-item {
-      display: flex;
-      gap: 16px;
-      position: relative;
-      padding-bottom: 24px;
-    }
-
-    .tl-item:last-child {
-      padding-bottom: 0;
-    }
-
-    .tl-item::before {
-      content: '';
-      position: absolute;
-      left: 15px;
-      top: 32px;
-      bottom: 0;
-      width: 2px;
-      background: var(--border-color);
-    }
-
-    .tl-item:last-child::before {
-      display: none;
-    }
-
-    .tl-num {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--bg-main);
-      border: 2px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-m);
-      z-index: 1;
-      flex-shrink: 0;
-    }
-
-    .tl-item.p1 .tl-num {
-      border-color: var(--red);
-      color: var(--red);
-      background: var(--red-bg);
-    }
-
-    .tl-content {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--r-sm);
-      padding: 16px;
-      flex: 1;
-    }
-
-    .tl-hd {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .tl-algo {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-h);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .tl-dep {
-      font-size: 11px;
-      color: var(--text-s);
-      margin-top: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--bg-card);
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border-color);
-    }
-
     /* Drawers */
     .drawer-overlay {
       position: fixed;
@@ -1456,134 +1174,6 @@
       line-height: 1.5;
     }
 
-    /* Mosca Risk Categorization Panel */
-    .mosca-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--r-lg);
-      padding: 24px;
-      margin-bottom: 0;
-    }
-
-    .mosca-hd {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .mosca-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .mosca-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(245, 158, 11, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .mosca-icon svg {
-      width: 22px;
-      height: 22px;
-      color: var(--amber);
-    }
-
-    .mosca-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-h);
-    }
-
-    .mosca-sub {
-      font-size: 12px;
-      color: var(--text-m);
-      margin-top: 2px;
-    }
-
-    .mosca-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .mosca-card {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--r-md);
-      padding: 18px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mosca-card:hover {
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .mosca-card.active {
-      border-color: var(--card-accent, #38bdf8) !important;
-      box-shadow: 0 0 0 1px var(--card-accent, #38bdf8), 0 8px 24px rgba(0, 0, 0, 0.35);
-      background: var(--card-active-bg, rgba(56, 189, 248, 0.05)) !important;
-    }
-
-    .mosca-card-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 3px 8px;
-      border-radius: 12px;
-      align-self: flex-start;
-      margin-bottom: 12px;
-    }
-
-    .mosca-card-count {
-      font-size: 32px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .mosca-card-ttl {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-h);
-      margin-bottom: 6px;
-    }
-
-    .mosca-card-desc {
-      font-size: 12px;
-      color: var(--text-m);
-      line-height: 1.5;
-      flex: 1;
-    }
-
-    .mosca-card-sub {
-      font-size: 11px;
-      color: var(--text-s);
-      margin-top: 12px;
-      padding-top: 8px;
-      border-top: 1px solid var(--border-color);
-    }
-
     .prop-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1656,7 +1246,7 @@
             </div>
           </div>
 
-          <!-- Active Migration View -->
+          <!-- Active Risk Analysis View -->
           <div id="view-active" style="display:none; flex-direction:column; gap:24px;">
 
             <div class="risk-hero" id="hero-card">
@@ -1684,7 +1274,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                       style="width:24px;height:24px;">
                       <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
+                      <polyline points="12 6 12 16 14" />
                     </svg>
                   </div>
                   <div>
@@ -1974,123 +1564,18 @@
               </div>
             </div>
 
-            <!-- Mosca Risk Categorization Section -->
-            <div class="mosca-panel" id="mosca-panel" style="display:none;">
-              <div class="mosca-hd">
-                <div class="mosca-title-wrap">
-                  <div class="mosca-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="mosca-title">Mosca Risk Categorization</div>
-                    <div class="mosca-sub">Structured quantum risk categorization using Mosca's Inequality (X + Y vs Z
-                      threat horizon). Click a category to filter recommendations below.</div>
-                  </div>
-                </div>
-                <div id="mosca-filter-indicator" style="display:none; align-items:center; gap:8px;">
-                  <span style="font-size:12px; color:var(--text-m);">Filtered by: <strong id="mosca-active-filter-name"
-                      style="color:var(--text-h);">-</strong></span>
-                  <button class="btn-sec" style="padding:4px 10px; font-size:11px;" onclick="clearMoscaFilter()">Clear
-                    Filter</button>
-                </div>
-              </div>
-              <div class="mosca-grid">
-                <!-- Card 1: Vulnerable Now -->
-                <div class="mosca-card" id="mcard-now" onclick="setMoscaCategoryFilter('VULNERABLE_NOW')"
-                  style="--card-accent: var(--red); --card-active-bg: rgba(239, 68, 68, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3);">
-                    Inequality Met • X + Y &gt; Z
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-now" style="color:var(--red);">0</div>
-                  <div class="mosca-card-ttl">Vulnerable Now</div>
-                  <div class="mosca-card-desc">Migration time + data lifetime exceeds the quantum threat horizon.
-                    Cryptographic data will remain exposed after CRQC arrival.</div>
-                  <div class="mosca-card-sub" id="mc-sub-now">0 components affected</div>
-                </div>
-
-                <!-- Card 2: Vulnerable Within Threat Horizon -->
-                <div class="mosca-card" id="mcard-horizon" onclick="setMoscaCategoryFilter('WITHIN_HORIZON')"
-                  style="--card-accent: var(--amber); --card-active-bg: rgba(245, 158, 11, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3);">
-                    Buffer ≤ 3.0 yrs • Z - (X + Y) ≤ 3y
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-horizon" style="color:var(--amber);">0</div>
-                  <div class="mosca-card-ttl">Vulnerable Within Threat Horizon</div>
-                  <div class="mosca-card-desc">Inequality not yet breached, but transition margin is under 3.0 years.
-                    Immediate migration planning required before buffer collapses.</div>
-                  <div class="mosca-card-sub" id="mc-sub-horizon">0 components affected</div>
-                </div>
-
-                <!-- Card 3: Safe Under Current Timeline -->
-                <div class="mosca-card" id="mcard-safe" onclick="setMoscaCategoryFilter('SAFE_TIMELINE')"
-                  style="--card-accent: var(--green); --card-active-bg: rgba(16, 185, 129, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3);">
-                    Runway &gt; 3.0 yrs • Comfortable Margin
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-safe" style="color:var(--green);">0</div>
-                  <div class="mosca-card-ttl">Safe Under Current Timeline</div>
-                  <div class="mosca-card-desc">Sufficient migration buffer exists before CRQC threat. Component can be
-                    upgraded in planned software maintenance cycles.</div>
-                  <div class="mosca-card-sub" id="mc-sub-safe">0 components affected</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <!-- Migration Recommendations List -->
-              <div class="col col-2">
-                <div class="gc-hd" style="margin-bottom:8px;">
-                  <div class="gc-ttl" style="font-size:18px;">Migration Recommendations</div>
-                  <div class="gc-sub">Cryptographic components requiring replacement</div>
-                </div>
-                <div class="rec-list" id="recommendations-list">
-                  <!-- Dynamic Content -->
-                </div>
-              </div>
-
-              <!-- Sidebar Order -->
-              <div class="col col-1">
-                <div class="gcard">
-                  <div class="gc-hd" style="margin-bottom:8px;">
-                    <div class="gc-ttl">Recommended Migration Order</div>
-                  </div>
-                  <div class="timeline" id="migration-timeline">
-                    <!-- Dynamic Content -->
-                  </div>
-                </div>
-
-                <div class="gcard">
-                  <div class="gc-hd">
-                    <div class="gc-ttl">Migration Priority</div>
-                  </div>
-                  <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div
-                      style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
-                      <span style="font-weight:600; color:var(--red);">Priority 1 — Immediate</span>
-                      <span id="p1-count">0</span>
-                    </div>
-                    <div
-                      style="display:flex; justify-content:space-between; font-size:13px; padding:12px; border-bottom:1px solid var(--border-color);">
-                      <span style="font-weight:600; color:var(--amber);">Priority 2 — High</span>
-                      <span id="p2-count">0</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:13px; padding:12px;">
-                      <span style="font-weight:600; color:var(--yellow);">Priority 3 — Planned</span>
-                      <span id="p3-count">0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </main>
+    </div>
+
+    <!-- Hidden containers for elements expected by script functions -->
+    <div style="display:none;" aria-hidden="true">
+      <div id="recommendations-list"></div>
+      <div id="migration-timeline"></div>
+      <span id="p1-count">0</span>
+      <span id="p2-count">0</span>
+      <span id="p3-count">0</span>
     </div>
 
     <!-- Detail Drawer -->
@@ -2463,7 +1948,7 @@
           const loc = f.file ? `${f.file}${f.line ? ':' + f.line : ''}` : (f.repoName || '');
 
           return `
-      <tr style="transition: background 0.15s ease;">
+      <tr onclick="onPriorityRowClick('${f.algorithm || name}')" style="transition: background 0.15s ease; cursor: pointer;">
         <td style="padding: 12px 16px;">
           <div style="font-weight: 600; color: var(--text-h); font-size: 13px;">${name}</div>
           <div style="font-size: 11px; color: var(--text-m); font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${loc}</div>
@@ -2498,6 +1983,33 @@
       </tr>
     `;
         }).join('');
+      }
+
+      function onPriorityRowClick(algo) {
+        if (!algo) return;
+        const candidate = migrationCandidates.find(c =>
+          c.algorithm.toLowerCase() === algo.toLowerCase() ||
+          c.algorithm.toLowerCase().includes(algo.toLowerCase())
+        );
+        if (candidate) {
+          openDrawerObj(candidate);
+        } else if (allFindings.length > 0) {
+          const finding = allFindings.find(f => (f.algorithm || f.title || '').toLowerCase().includes(algo.toLowerCase()));
+          if (finding) {
+            const fallback = {
+              algorithm: finding.algorithm || algo,
+              purpose: finding.usage || 'Data Protection',
+              severity: getSeverity(finding),
+              quantumVulnerable: isQuantum(finding),
+              fileCount: 1,
+              priority: 1,
+              replacement: determineReplacement(finding.algorithm),
+              rationale: finding.remediation || 'Component requires migration.',
+              rawFinding: finding
+            };
+            openDrawerObj(fallback);
+          }
+        }
       }
 
       function getSeverity(f) {
@@ -2789,12 +2301,16 @@
         const heroRisk = document.getElementById('hero-risk');
         let overall = 'LOW';
 
-        if (hasCrit || hasQuant) { overall = 'CRITICAL'; hero.className = 'risk-hero risk-crit'; heroRisk.className = 'risk-hero-val crit'; }
-        else if (hasHigh) { overall = 'HIGH'; hero.className = 'risk-hero risk-high'; heroRisk.className = 'risk-hero-val high'; }
-        else { overall = 'MEDIUM'; heroRisk.className = 'risk-hero-val high'; } // fallback styling
+        if (hero && heroRisk) {
+          if (hasCrit || hasQuant) { overall = 'CRITICAL'; hero.className = 'risk-hero risk-crit'; heroRisk.className = 'risk-hero-val crit'; }
+          else if (hasHigh) { overall = 'HIGH'; hero.className = 'risk-hero risk-high'; heroRisk.className = 'risk-hero-val high'; }
+          else { overall = 'MEDIUM'; heroRisk.className = 'risk-hero-val high'; } // fallback styling
 
-        heroRisk.textContent = overall;
-        document.getElementById('hero-count').textContent = migrationCandidates.length;
+          heroRisk.textContent = overall;
+        }
+
+        const heroCountEl = document.getElementById('hero-count');
+        if (heroCountEl) heroCountEl.textContent = migrationCandidates.length;
 
         const data = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getData() : {};
         const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
@@ -2806,31 +2322,31 @@
         const lowCount = allFindings.filter(f => getSeverity(f) === 'LOW' || getSeverity(f) === 'INFORMATIONAL').length;
         const quantCount = allFindings.filter(f => isQuantum(f)).length;
 
-        // Summary Stats matching Dashboard, CBOM & Findings exactly
-        document.getElementById('stat-risk').textContent = componentsAtRisk;
+        // Summary Stats
+        if (document.getElementById('stat-risk')) document.getElementById('stat-risk').textContent = componentsAtRisk;
         if (document.getElementById('stat-total')) document.getElementById('stat-total').textContent = allFindings.length;
-        document.getElementById('stat-crit').textContent = critCount;
-        document.getElementById('stat-high').textContent = highCount;
-        document.getElementById('stat-quant').textContent = quantCount;
-        document.getElementById('stat-candidates').textContent = migrationCandidates.length;
+        if (document.getElementById('stat-crit')) document.getElementById('stat-crit').textContent = critCount;
+        if (document.getElementById('stat-high')) document.getElementById('stat-high').textContent = highCount;
+        if (document.getElementById('stat-quant')) document.getElementById('stat-quant').textContent = quantCount;
+        if (document.getElementById('stat-candidates')) document.getElementById('stat-candidates').textContent = migrationCandidates.length;
 
-        // Distribution Chart — proportional over all findings (identical to Dashboard & Findings)
+        // Distribution Chart
         const tot = allFindings.length || 1;
-        document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
-        document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
-        document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
-        document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
+        if (document.getElementById('rb-crit')) document.getElementById('rb-crit').style.width = (critCount / tot) * 100 + '%';
+        if (document.getElementById('rb-high')) document.getElementById('rb-high').style.width = (highCount / tot) * 100 + '%';
+        if (document.getElementById('rb-med')) document.getElementById('rb-med').style.width = (medCount / tot) * 100 + '%';
+        if (document.getElementById('rb-low')) document.getElementById('rb-low').style.width = (lowCount / tot) * 100 + '%';
 
         // Quantum Exposure
         const qVuln = quantCount;
         const qSafe = allFindings.length - qVuln;
-        document.getElementById('qe-vuln').textContent = qVuln;
-        document.getElementById('qe-safe').textContent = qSafe;
+        if (document.getElementById('qe-vuln')) document.getElementById('qe-vuln').textContent = qVuln;
+        if (document.getElementById('qe-safe')) document.getElementById('qe-safe').textContent = qSafe;
 
         // Priority Counts
-        document.getElementById('p1-count').textContent = migrationCandidates.filter(c => c.priority === 1).length;
-        document.getElementById('p2-count').textContent = migrationCandidates.filter(c => c.priority === 2).length;
-        document.getElementById('p3-count').textContent = migrationCandidates.filter(c => c.priority === 3).length;
+        if (document.getElementById('p1-count')) document.getElementById('p1-count').textContent = migrationCandidates.filter(c => c.priority === 1).length;
+        if (document.getElementById('p2-count')) document.getElementById('p2-count').textContent = migrationCandidates.filter(c => c.priority === 2).length;
+        if (document.getElementById('p3-count')) document.getElementById('p3-count').textContent = migrationCandidates.filter(c => c.priority === 3).length;
       }
 
       function computeHndlAndAgility() {
@@ -2864,11 +2380,13 @@
         const scoreMin = Math.max(0, hndlPct - 20);
         const scoreMax = Math.min(100, hndlPct + 15);
 
-        document.getElementById('hndl-overall').textContent = hndlLabel;
-        document.getElementById('hndl-overall').style.color = hndlColor;
-        document.getElementById('hndl-assets').textContent = vulnerableAssets;
-        document.getElementById('hndl-data-pts').textContent = dataPoints;
-        document.getElementById('hndl-range').textContent = `${scoreMin} – ${scoreMax}`;
+        if (document.getElementById('hndl-overall')) {
+          document.getElementById('hndl-overall').textContent = hndlLabel;
+          document.getElementById('hndl-overall').style.color = hndlColor;
+        }
+        if (document.getElementById('hndl-assets')) document.getElementById('hndl-assets').textContent = vulnerableAssets;
+        if (document.getElementById('hndl-data-pts')) document.getElementById('hndl-data-pts').textContent = dataPoints;
+        if (document.getElementById('hndl-range')) document.getElementById('hndl-range').textContent = `${scoreMin} – ${scoreMax}`;
         hndlPanel.style.display = 'block';
 
         // Crypto-Agility: based on category/rule patterns
@@ -2890,25 +2408,28 @@
           else needsUpdateCount++;
         });
 
-        document.getElementById('agile-count').textContent = agileCount;
-        document.getElementById('hardcoded-count').textContent = hardcodedCount;
-        document.getElementById('needs-update-count').textContent = needsUpdateCount;
+        if (document.getElementById('agile-count')) document.getElementById('agile-count').textContent = agileCount;
+        if (document.getElementById('hardcoded-count')) document.getElementById('hardcoded-count').textContent = hardcodedCount;
+        if (document.getElementById('needs-update-count')) document.getElementById('needs-update-count').textContent = needsUpdateCount;
 
         // Overall agility score 0–100
         const agilityScore = allFindings.length > 0 ? Math.round((agileCount / allFindings.length) * 100) : 0;
         const agilityLabel = agilityScore >= 80 ? 'High' : agilityScore >= 50 ? 'Medium' : 'Low';
         const agilityColor = agilityScore >= 80 ? '#10b981' : agilityScore >= 50 ? '#f59e0b' : '#ef4444';
         const agilityBg = agilityScore >= 80 ? 'rgba(16,185,129,0.12)' : agilityScore >= 50 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)';
-        document.getElementById('agility-score-wrap').innerHTML = `
+        if (document.getElementById('agility-score-wrap')) {
+          document.getElementById('agility-score-wrap').innerHTML = `
     <span class="agility-score-badge" style="background:${agilityBg}; color:${agilityColor};">
       Agility Score: ${agilityScore}/100 — ${agilityLabel}
     </span>
   `;
+        }
         agilityPanel.style.display = 'block';
       }
 
       function renderRecommendations() {
         const container = document.getElementById('recommendations-list');
+        if (!container) return;
         let candidatesToRender = migrationCandidates;
         if (activeMoscaFilter) {
           candidatesToRender = migrationCandidates.filter(c => {
@@ -2953,7 +2474,7 @@
           </div>
           <div class="rec-priority-badge p${c.priority}">${priorityLabel}</div>
         </div>
-        
+
         <div class="rec-grid">
           <div class="rg-card">
             <div class="rg-lbl">Current Risk</div>
@@ -2980,7 +2501,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="rec-replace">
           <div class="replace-icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
@@ -2990,7 +2511,7 @@
             <div class="replace-val">${c.replacement || 'None specified'}</div>
           </div>
         </div>
-        
+
         <div class="rec-ft">
           <button class="btn-sec view-details-btn" data-idx="${idx}">
             View Details & Remediation
@@ -3016,6 +2537,7 @@
 
       function renderTimeline() {
         const container = document.getElementById('migration-timeline');
+        if (!container) return;
         let candidatesToRender = migrationCandidates;
         if (activeMoscaFilter) {
           candidatesToRender = migrationCandidates.filter(c => {
