@@ -214,18 +214,61 @@ const CryptoEngine = {
 
   // ─── PART 1 & 2: TYPE, LIFETIME, CRITICALITY, MIGRATION (Y) & MOSCA (X+Y vs Z) ENGINES ───
   classifyType: function(finding) {
+    const rawType = (finding.type || '').toLowerCase().replace(/[-\s]/g, '_');
+    if (rawType === 'hardware_module' || rawType === 'hardware') return 'hardware_module';
+    if (rawType === 'cloud_service' || rawType === 'cloud') return 'cloud_service';
+    if (rawType === 'certificate' || rawType === 'cert') return 'certificate';
+    if (rawType === 'protocol') return 'protocol';
+    if (rawType === 'library') return 'library';
+    if (rawType === 'key') return 'key';
+    if (rawType === 'algorithm' || rawType === 'algo') return 'algorithm';
+
     const title = (finding.title || finding.name || '').toLowerCase();
     const cat = (finding.category || '').toLowerCase();
     const lib = (finding.library || '').toLowerCase();
     const algo = (finding.algorithm || '').toLowerCase();
     const file = (finding.file || finding.filePath || '').toLowerCase();
     const usage = (finding.usage || finding.description || '').toLowerCase();
+    const snippet = (finding.snippet || finding.code || '').toLowerCase();
+    const tags = Array.isArray(finding.tags) ? finding.tags.map(t => String(t).toLowerCase()) : [];
+
+    // Hardware Module check FIRST before cloud_service
+    if (
+      cat.includes('hardware') ||
+      cat.includes('hsm') ||
+      cat.includes('pkcs11') ||
+      cat.includes('tpm') ||
+      tags.includes('hardware-module') ||
+      tags.includes('hsm') ||
+      tags.includes('pkcs11') ||
+      tags.includes('tpm2') ||
+      tags.includes('hardware-custody') ||
+      usage.includes('hsm') ||
+      usage.includes('pkcs11') ||
+      usage.includes('tpm') ||
+      usage.includes('smart card') ||
+      usage.includes('hardware token') ||
+      usage.includes('nitrokey') ||
+      usage.includes('yubikey') ||
+      algo.includes('hsm') ||
+      algo.includes('pkcs11') ||
+      algo.includes('tpm') ||
+      lib.includes('pkcs11') ||
+      lib.includes('tpm') ||
+      lib.includes('pyscard') ||
+      lib.includes('yubikey') ||
+      snippet.includes('pkcs11') ||
+      snippet.includes('tpm2') ||
+      snippet.includes('softhsm') ||
+      snippet.includes('yubikey') ||
+      snippet.includes('pyscard') ||
+      snippet.includes('libcryptoki')
+    ) {
+      return 'hardware_module';
+    }
 
     if (file.includes('boto3') || file.includes('kms') || cat.includes('cloud') || usage.includes('kms') || usage.includes('vault') || usage.includes('key vault') || usage.includes('aws') || usage.includes('azure')) {
       return 'cloud_service';
-    }
-    if (usage.includes('hsm') || usage.includes('pkcs11') || cat.includes('hardware') || usage.includes('tpm') || usage.includes('smart card') || algo.includes('hsm')) {
-      return 'hardware_module';
     }
     if (file.endsWith('.pem') || file.endsWith('.crt') || file.endsWith('.cer') || file.endsWith('.der') || file.endsWith('.p12') || file.endsWith('.pfx') || cat.includes('cert') || title.includes('cert') || title.includes('x509')) {
       return 'certificate';
@@ -295,13 +338,36 @@ const CryptoEngine = {
     const title = (finding.title || finding.algorithm || '').toLowerCase();
     const text = (file + ' ' + repo + ' ' + title + ' ' + snippet).toLowerCase();
 
+    // 0. Respect backend scan classification if explicit
     const rawExp = (finding.exposure || '').toLowerCase();
+    if (rawExp === 'internal' || (finding.exposure_label && finding.exposure_label.toLowerCase() === 'internal')) {
+      return {
+        exposure_label: 'Internal',
+        exposure_score: 1.0,
+        exposure_confidence: finding.exposure_confidence || 'High',
+        triggered_signals: (finding.exposure_signals && finding.exposure_signals.length > 0) ? finding.exposure_signals : ['Scanner verified internal exposure']
+      };
+    }
     if (rawExp === 'external-facing' || rawExp === 'external' || (finding.exposure_label && finding.exposure_label.toLowerCase() === 'external')) {
       return {
         exposure_label: 'External',
         exposure_score: 5.0,
         exposure_confidence: finding.exposure_confidence || 'High',
         triggered_signals: (finding.exposure_signals && finding.exposure_signals.length > 0) ? finding.exposure_signals : ['Scanner verified external exposure']
+      };
+    }
+
+    // Protection for internal file types: database files, env, test files, scripts
+    const isInternalFileType = file.endsWith('.db') || file.endsWith('.sqlite') || file.endsWith('.sqlite3') ||
+      file.includes('/tests/') || file.includes('/test/') || file.includes('/fixtures/') || file.includes('/mocks/') ||
+      file.includes('/scripts/') || file.includes('/tools/') || file.includes('/migrations/') || file.includes('/internal/');
+    const hasExplicitExternalKeyword = file.includes('edge') || file.includes('gateway') || file.includes('dmz') || file.includes('webhook');
+    if (isInternalFileType && !hasExplicitExternalKeyword) {
+      return {
+        exposure_label: 'Internal',
+        exposure_score: 1.0,
+        exposure_confidence: 'High',
+        triggered_signals: ['Internal file type / internal directory context']
       };
     }
 
@@ -317,7 +383,7 @@ const CryptoEngine = {
       { pattern: /@app\.route\b/i, name: 'Python Flask Route (@app.route)' },
       { pattern: /@api_view\b/i, name: 'Django REST Framework (@api_view)' },
       { pattern: /urlpatterns\s*=/i, name: 'Django URL Routing (urlpatterns)' },
-      { pattern: /path\s*\(|re_path\s*\(/i, name: 'Django Path Mapping' },
+      { pattern: /\bre_path\s*\(/i, name: 'Django Path Mapping' },
       { pattern: /@restcontroller\b/i, name: 'Spring Boot Controller (@RestController)' },
       { pattern: /@(requestmapping|getmapping|postmapping|putmapping|deletemapping)\b/i, name: 'Spring Mapping Annotation' },
       { pattern: /\[http(get|post|put|delete|patch)\]/i, name: '.NET Controller Route ([HttpGet/Post])' },
@@ -352,7 +418,7 @@ const CryptoEngine = {
         confidence = 'High';
       } else if (text.includes('clusterip') || text.includes('internal-only') || text.includes('private-net')) {
         matchedConfigSignal = 'Internal-only Deployment Manifest (ClusterIP / Private Network)';
-        maxSignalScore = Math.max(maxSignalScore, 1.5);
+        maxSignalScore = Math.max(maxSignalScore, 1.0);
         confidence = 'High';
       }
     }
@@ -388,14 +454,13 @@ const CryptoEngine = {
       if (confidence !== 'High') confidence = 'Medium';
     } else if (text.includes('127.0.0.1') || text.includes('localhost') || text.includes('unix:')) {
       triggeredSignals.push('Signal 4: Loopback Interface Binding (127.0.0.1 / localhost)');
-      if (maxSignalScore === 0) maxSignalScore = 1.5;
+      if (maxSignalScore === 0) maxSignalScore = 1.0;
       else maxSignalScore = Math.max(1.0, maxSignalScore - 1.0);
       if (confidence !== 'High') confidence = 'Medium';
     }
 
     // 5. FOLDER / NAMING CONVENTIONS (Fallback / Heuristic adjustment)
-    // Exposure keywords matching backend pipeline specification (do not match /api/ or /routes/ alone)
-    const extKeywords = ['external', 'public', 'internet-facing', 'edge', 'dmz', 'webhook', 'gateway'];
+    const extKeywords = ['external', 'internet-facing', 'edge', 'dmz', 'webhook', 'gateway'];
     const intFolderPatterns = ['/internal/', '/test/', '/tests/', '/spec/', '/dev/', '/scripts/', '/tools/', '/migrations/', '/admin-cli/', '/jobs/', '/cron/', '/batch/'];
 
     const matchedExtKeyword = extKeywords.find(k => file.includes(k) || (finding.rule_id || '').toLowerCase().includes(k));
@@ -410,19 +475,18 @@ const CryptoEngine = {
     } else if (matchedIntPath) {
       triggeredSignals.push(`Signal 5: Internal Directory Keyword (${matchedIntPath})`);
       if (maxSignalScore === 0) {
-        maxSignalScore = 1.5;
+        maxSignalScore = 1.0;
         confidence = 'Low';
       }
     }
 
-    // FINAL DECISION LOGIC & VERDICT
+    // FINAL DECISION LOGIC & VERDICT (Strictly Default to Internal)
     let finalLabel;
     let finalScore;
 
     if (triggeredSignals.length === 0) {
-      // Default: internal — no infra evidence or exposure keywords means Internal
       finalLabel = 'Internal';
-      finalScore = 1.5;
+      finalScore = 1.0;
       triggeredSignals.push('Heuristic: No public route/infra signals — defaulting to Internal');
       confidence = 'Low';
     } else if (maxSignalScore >= 4.0) {
@@ -430,7 +494,7 @@ const CryptoEngine = {
       finalScore = maxSignalScore;
     } else {
       finalLabel = 'Internal';
-      finalScore = maxSignalScore;
+      finalScore = Math.max(1.0, maxSignalScore);
     }
 
     return {
@@ -447,26 +511,27 @@ const CryptoEngine = {
     const text = (file + ' ' + repo + ' ' + (finding.title || '') + ' ' + (finding.snippet || '') + ' ' + (finding.library || '')).toLowerCase();
 
     // 1. Data Sensitivity (0.30) — keyword density & classification
-    let sens = 2.0;
-    const sensKeywords = ['payment', 'auth', 'pii', 'health', 'secret', 'token', 'password', 'key', 'cred', 'credential', 'card', 'ssn', 'bank', 'account', 'crypto', 'cipher', 'wallet'];
+    // Exclude generic 'crypto' and 'cipher' which are present in all crypto findings
+    let sens = 1.0;
+    const sensKeywords = ['payment', 'auth', 'pii', 'health', 'secret', 'token', 'password', 'key', 'cred', 'credential', 'card', 'ssn', 'bank', 'account', 'wallet'];
     const sensMatches = sensKeywords.filter(k => text.includes(k)).length;
     if (sensMatches >= 3 || text.includes('payment') || text.includes('card') || text.includes('pii') || text.includes('wallet')) {
       sens = 5.0;
     } else if (sensMatches >= 2 || text.includes('auth') || text.includes('secret') || text.includes('token') || text.includes('password')) {
       sens = 4.0;
     } else if (sensMatches >= 1 || text.includes('user') || text.includes('db') || text.includes('session')) {
-      sens = 3.0;
+      sens = 2.5;
     } else {
       sens = 1.0;
     }
 
-    // 2. Exposure (0.25) — Generic Multi-Signal Classifier
+    // 2. Exposure (0.25) — Generic Multi-Signal Classifier (default internal = 1.0)
     const expResult = this.classifyExposure(finding, repoContext);
     let exp = expResult.exposure_score;
 
     // 3. System Role (0.25) — production vs staging vs dev
-    let sys = 3.0;
-    if (text.includes('prod') || text.includes('production') || text.includes('main') || text.includes('master') || text.includes('release') || text.includes('core/') || text.includes('sys/')) {
+    let sys = 2.0;
+    if (/\bproduction\b|\bprod\b/.test(file) || /\bproduction\b|\bprod\b/.test(repo) || file.includes('/prod/') || file.includes('/core/') || file.includes('/sys/')) {
       sys = 5.0;
     } else if (text.includes('staging') || text.includes('stage') || text.includes('qa') || text.includes('beta')) {
       sys = 3.0;
@@ -479,9 +544,7 @@ const CryptoEngine = {
     if (text.includes('gdpr') || text.includes('pci') || text.includes('hipaa') || text.includes('rbi') || text.includes('compliance') || text.includes('billing') || text.includes('financial') || text.includes('sox') || text.includes('fips') || text.includes('iso27001')) {
       reg = 5.0;
     } else if (text.includes('auth') || text.includes('cert') || text.includes('tls') || text.includes('ssl') || text.includes('kms') || text.includes('audit')) {
-      reg = 3.5;
-    } else if (text.includes('security') || text.includes('crypto') || text.includes('cipher')) {
-      reg = 2.0;
+      reg = 3.0;
     } else {
       reg = 1.0;
     }
@@ -497,11 +560,11 @@ const CryptoEngine = {
     const rawScore = (sens * 0.30) + (exp * 0.25) + (sys * 0.25) + (reg * 0.20);
     const score = Math.round(rawScore * 10) / 10;
 
-    // Calibrated thresholds: all 4 bands are cleanly reachable
+    // Calibrated thresholds: all 4 bands (Critical, High, Medium, Low) are naturally reachable
     let label = 'Low';
-    if (score >= 4.0) label = 'Critical';
-    else if (score >= 3.0) label = 'High';
-    else if (score >= 2.0) label = 'Medium';
+    if (score >= 3.8) label = 'Critical';
+    else if (score >= 2.8) label = 'High';
+    else if (score >= 1.8) label = 'Medium';
 
     return {
       criticality_score: score,

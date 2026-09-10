@@ -142,19 +142,30 @@ def _build_repo_surface_map(all_files, target_dir) -> Dict[str, Any]:
             try:
                 with open(path, "r", encoding="utf-8", errors="ignore") as fh:
                     content = fh.read()
-                if re.search(r'(?:ports|expose)\s*:\s*\n(?:\s*-\s*["\']?[0-9]+[:0-9]*["\']?\s*\n)+', content, re.IGNORECASE) or \
-                   re.search(r'["\']?(?:80|443|8080|8443|3000|5000)[:/]', content):
-                    build_dirs = re.findall(r'build\s*:\s*(?:\./|context\s*:\s*(?:\./)?)([a-zA-Z0-9_\-\./]+)', content)
-                    for bdir in build_dirs:
-                        clean_bdir = bdir.strip("./\\ ").replace("\\", "/")
-                        if clean_bdir:
-                            exposed_dirs.add(clean_bdir)
-                    if rel_dir:
-                        exposed_dirs.add(rel_dir)
-                    # Extract docker-compose service names with port mappings
-                    svc_names = re.findall(r'^([a-zA-Z0-9_\-]+):\s*$', content, re.MULTILINE)
-                    for svc in svc_names:
-                        exposed_service_names.add(svc.lower())
+                # Parse per-service blocks under services: to only extract services with published ports
+                service_chunks = re.split(r'\n  ([a-zA-Z0-9_\-]+):\s*\n', content)
+                if len(service_chunks) > 1:
+                    for i in range(1, len(service_chunks), 2):
+                        s_name = service_chunks[i].strip().lower()
+                        s_body = service_chunks[i+1]
+                        has_published_ports = bool(
+                            re.search(r'\bports\s*:\s*\n(?:\s*-\s*["\']?[0-9]+[:0-9]*["\']?\s*\n)+', s_body, re.IGNORECASE)
+                            or re.search(r'\bports\s*:\s*\[[^]]*\]', s_body, re.IGNORECASE)
+                            or re.search(r'["\']?(?:80|443|8080|8443|3000|5000)[:/]', s_body)
+                        )
+                        if has_published_ports:
+                            exposed_service_names.add(s_name)
+                            exposed_service_names.add(s_name.replace("-", "_"))
+                            exposed_service_names.add(s_name.replace("_", "-"))
+                            build_dirs = re.findall(r'build\s*:\s*(?:\./|context\s*:\s*(?:\./)?)([a-zA-Z0-9_\-\./]+)', s_body)
+                            for bdir in build_dirs:
+                                clean_bdir = bdir.strip("./\\ ").replace("\\", "/")
+                                if clean_bdir and clean_bdir != ".":
+                                    exposed_dirs.add(clean_bdir)
+                else:
+                    if re.search(r'(?:ports|expose)\s*:', content, re.IGNORECASE):
+                        if rel_dir:
+                            exposed_dirs.add(rel_dir)
             except Exception:
                 pass
 
@@ -313,26 +324,21 @@ EXPOSURE_KEYWORDS = ["external", "public", "internet-facing", "edge", "dmz", "we
 
 
 def _classify_file_exposure(rel_path: str, source: str, surface_map: Dict[str, Any]) -> Tuple[str, List[str], str]:
-    """
-    Ranked strategies to determine if a finding's file is externally reachable.
-
-    Strategy 1 (strongest): Explicit service name match from infra signals.
-      If any path component (directory or filename stem) matches a service identifier
-      extracted from infra config (K8s metadata.name, Ingress backend, Terraform resource,
-      Docker/proxy service).
-
-    Strategy 2: Directory prefix match.
-      If any path prefix is in the set of directories confirmed exposed by infra signals.
-
-    Strategy 3: Substring keyword fallback on path components and filename.
-      When neither strategy 1 nor strategy 2 matches, check path components and filename for
-      keywords: external, public, internet-facing, edge, dmz, webhook, gateway.
-      Does NOT match generic names like 'api' or 'routes' alone.
-
-    Default: Internal — no infra evidence and no exposure keywords.
-    """
     norm_path = rel_path.replace("\\", "/")
     parts = [p.lower() for p in norm_path.split("/")]
+    fn = os.path.basename(norm_path).lower()
+
+    # Rule 0: Internal file types & locations are Internal by default unless explicitly an edge/gateway/webhook file
+    is_explicit_external_name = any(kw in fn for kw in ("external", "gateway", "edge", "webhook", "dmz"))
+    is_private_internal_artifact = (
+        fn.endswith((".db", ".sqlite", ".sqlite3", ".sql", ".prisma", ".lock", ".log"))
+        or fn in {".env", ".env.example", ".env.local", ".env.production", ".env.test"}
+        or fn.startswith(".env.")
+        or any(part in {"tests", "test", "fixtures", "mock", "mocks", "prisma", "migrations", "scripts", "tools", "internal"} for part in parts)
+    )
+    if is_private_internal_artifact and not is_explicit_external_name:
+        return "internal", [], "Internal component / private data store (database, environment config, test, or migration artifact)"
+
     stems = set(parts)
     for part in parts:
         stem = part.rsplit(".", 1)[0] if "." in part else part
@@ -355,7 +361,12 @@ def _classify_file_exposure(rel_path: str, source: str, surface_map: Dict[str, A
     # Strategy 3: Substring keyword fallback on path components and filename
     path_lower = norm_path.lower()
     for kw in EXPOSURE_KEYWORDS:
-        if kw in path_lower:
+        if kw == "public":
+            # For 'public', avoid matching public_key.pem, public.key, get_public_key, etc.
+            if "/public/" in path_lower or path_lower.startswith("public/") or "-public" in path_lower or "_public" in path_lower or "public-" in path_lower or "public_" in path_lower:
+                if not any(pk in path_lower for pk in ("public_key", "publickey", "public-key", "public.key", "public.pem")):
+                    return "external-facing", [f"keyword:{kw}"], f"Path matched external-facing keyword '{kw}'"
+        elif kw in path_lower:
             return "external-facing", [f"keyword:{kw}"], f"Path matched external-facing keyword '{kw}'"
 
     return "internal", [], "No external infrastructure signals or gateway keywords detected"

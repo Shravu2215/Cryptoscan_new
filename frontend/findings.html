@@ -1334,18 +1334,13 @@
                   </select>
                   <select id="filter-lifetime" class="filter-sel" onchange="handleFilterChange()">
                     <option value="ALL">All Lifetimes</option>
-                    <option value="1">&le; 1 Year (Ephemeral)</option>
-                    <option value="2">2 Years (Certificates)</option>
-                    <option value="5">5 Years (Standard)</option>
-                    <option value="10">10 Years (Signing / Key Pair)</option>
-                    <option value="20">20+ Years (Archival / At-Rest)</option>
                   </select>
                   <select id="filter-criticality" class="filter-sel" onchange="handleFilterChange()">
                     <option value="ALL">All Business Criticality</option>
-                    <option value="Critical">Critical (Score &ge; 4.0)</option>
-                    <option value="High">High (Score &ge; 3.0)</option>
-                    <option value="Medium">Medium (Score &ge; 2.0)</option>
-                    <option value="Low">Low (Score &lt; 2.0)</option>
+                    <option value="Critical">Critical (Score &ge; 3.8)</option>
+                    <option value="High">High (Score &ge; 2.8)</option>
+                    <option value="Medium">Medium (Score &ge; 1.8)</option>
+                    <option value="Low">Low (Score &lt; 1.8)</option>
                   </select>
                   <select id="filter-exposure" class="filter-sel" onchange="handleFilterChange()">
                     <option value="ALL">All Exposure</option>
@@ -1739,6 +1734,7 @@
         if (exportJsonBtn) exportJsonBtn.style.display = 'inline-flex';
 
         populateAlgorithmFilter();
+        populateLifetimeFilter();
         updateSummaryStats();
         updateRiskChart();
         updateTopRisks();
@@ -1781,6 +1777,34 @@
         });
       }
 
+      function populateLifetimeFilter() {
+        const sel = document.getElementById('filter-lifetime');
+        if (!sel) return;
+        const currentVal = sel.value;
+        const lifetimeSet = new Set();
+        allFindings.forEach(f => {
+          const lt = getArtefactLifetime(f);
+          if (lt !== undefined && lt !== null && !isNaN(lt)) {
+            lifetimeSet.add(Number(lt));
+          }
+        });
+
+        sel.innerHTML = '<option value="ALL">All Lifetimes</option>';
+        const sortedLifetimes = Array.from(lifetimeSet).sort((a, b) => a - b);
+        sortedLifetimes.forEach(lt => {
+          const opt = document.createElement('option');
+          opt.value = String(lt);
+          opt.textContent = `${lt} ${lt === 1 ? 'Year' : 'Years'}`;
+          sel.appendChild(opt);
+        });
+
+        if (currentVal && (currentVal === 'ALL' || lifetimeSet.has(Number(currentVal)))) {
+          sel.value = currentVal;
+        } else {
+          sel.value = 'ALL';
+        }
+      }
+
       function updateSummaryStats() {
         document.getElementById('stat-total').textContent = allFindings.length;
         document.getElementById('stat-crit').textContent = allFindings.filter(f => getSeverity(f) === 'CRITICAL').length;
@@ -1806,73 +1830,43 @@
       }
 
       function getArtefactType(f) {
-        if (!f) return 'Cryptographic Asset';
-        if (f.type && f.type !== 'Asset') return f.type;
-
-        const algo = (f.algorithm || f.title || '').toUpperCase();
-        const usage = ((f.usage || '') + ' ' + (f.category || '') + ' ' + (f.description || '')).toUpperCase();
-
-        if (algo.includes('RSA') || algo.includes('ECDSA') || algo.includes('ECDH') || algo.includes('ECC') || algo.includes('CURVE25519') || algo.includes('ED25519') || algo.includes('DSA') || algo.includes('ASYMMETRIC') || usage.includes('ASYMMETRIC') || usage.includes('PUBLIC KEY') || usage.includes('KEY PAIR')) {
-          return 'Asymmetric Key';
+        if (!f) return 'algorithm';
+        if (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyType) {
+          return CryptoEngine.classifyType(f);
         }
-        if (algo.includes('AES') || algo.includes('DES') || algo.includes('BLOWFISH') || algo.includes('RC4') || algo.includes('CHACHA') || algo.includes('SYMMETRIC') || usage.includes('SYMMETRIC') || usage.includes('BLOCK CIPHER') || usage.includes('STREAM CIPHER')) {
-          return 'Symmetric Cipher';
-        }
-        if (algo.includes('SHA') || algo.includes('MD5') || algo.includes('HASH') || algo.includes('DIGEST') || usage.includes('HASH') || usage.includes('DIGEST')) {
-          return 'Cryptographic Hash';
-        }
-        if (algo.includes('PBKDF') || algo.includes('BCRYPT') || algo.includes('ARGON') || algo.includes('SCRYPT') || algo.includes('KDF') || usage.includes('PASSWORD') || usage.includes('DERIVATION')) {
-          return 'Key Derivation';
-        }
-        if (algo.includes('HMAC') || algo.includes('MAC') || usage.includes('AUTHENTICATION CODE')) {
-          return 'MAC / HMAC';
-        }
-        if (algo.includes('SECRET') || algo.includes('KEY MATERIAL') || algo.includes('PRIVATE KEY') || usage.includes('SECRET') || usage.includes('CREDENTIAL')) {
-          return 'Secret Material';
-        }
-        if (algo.includes('TLS') || algo.includes('SSL') || usage.includes('TRANSPORT') || usage.includes('CERTIFICATE')) {
-          return 'Protocol / TLS';
-        }
-        if (algo.includes('PRNG') || algo.includes('RANDOM') || usage.includes('RANDOM')) {
-          return 'PRNG / Entropy';
-        }
-        return 'Cryptographic Asset';
+        return (f.type && f.type !== 'Asset') ? f.type : 'algorithm';
       }
 
       function getArtefactLifetime(f) {
-        if (!f) return 'Medium-term';
-        if (f.lifetime) return f.lifetime;
-        const sens = ((f.dataSensitivity || '') + ' ' + (f.category || '') + ' ' + (f.usage || '') + ' ' + (f.title || '')).toUpperCase();
-        const file = (f.file || f.filePath || '').toLowerCase();
-
-        // Permanent / Sovereign / Root / Master keys / Health records
-        if (sens.includes('HEALTH') || sens.includes('MEDICAL') || sens.includes('ROOT') || file.includes('ca-') || file.includes('master')) {
-          return 'Permanent';
+        if (!f) return 5;
+        if (f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '') {
+          return Number(f.user_confirmed_lifetime);
         }
-        // Long-term: PII, Financial / Payment records, customer data, biometric credentials
-        if (sens.includes('PII') || sens.includes('FINANCIAL') || sens.includes('PAYMENT') || sens.includes('CREDENTIAL') || file.includes('auth') || file.includes('user')) {
-          return 'Long-term';
+        if (f.dataLifetimeYears !== undefined && f.dataLifetimeYears !== null && f.dataLifetimeYears !== '') {
+          return Number(f.dataLifetimeYears);
         }
-        // Short-term: Ephemeral tokens, session keys, transient TLS sessions, caches, nonces
-        if (sens.includes('SESSION') || sens.includes('EPHEMERAL') || sens.includes('NONCE') || sens.includes('TOKEN') || file.includes('session') || file.includes('cache') || file.includes('temp')) {
-          return 'Short-term';
+        if (f.effective_lifetime !== undefined && f.effective_lifetime !== null && f.effective_lifetime !== '') {
+          return Number(f.effective_lifetime);
         }
-        if (f.dataLifetimeYears) {
-          if (f.dataLifetimeYears > 20) return 'Permanent';
-          if (f.dataLifetimeYears >= 10) return 'Long-term';
-          if (f.dataLifetimeYears <= 1) return 'Short-term';
-          return 'Medium-term';
+        if (f.suggested_lifetime !== undefined && f.suggested_lifetime !== null && f.suggested_lifetime !== '') {
+          return Number(f.suggested_lifetime);
         }
-        return 'Medium-term';
+        if (typeof CryptoEngine !== 'undefined' && CryptoEngine.estimateLifetime) {
+          const est = CryptoEngine.estimateLifetime(f);
+          if (est && est.effective_lifetime !== undefined) {
+            return Number(est.effective_lifetime);
+          }
+        }
+        return 5;
       }
 
       function getBusinessCriticality(f) {
         if (!f) return 'Medium';
-        if (f.criticality_label) return f.criticality_label;
-        if (typeof CryptoEngine !== 'undefined') {
-          return CryptoEngine.computeCriticality(f).criticality_label;
+        if (typeof CryptoEngine !== 'undefined' && CryptoEngine.computeCriticality) {
+          const critObj = CryptoEngine.computeCriticality(f);
+          return f.criticality_label || critObj.criticality_label || 'Medium';
         }
-        return 'Medium';
+        return f.criticality_label || 'Medium';
       }
 
       function computeFindingRisk(f) {
@@ -1915,10 +1909,18 @@
       }
 
       function getLifetimeBadgeClass(lt) {
-        if (!lt) return 'badge-ast';
-        if (lt.includes('Permanent')) return 'badge-quant';
-        if (lt.includes('Long-term')) return 'badge-high';
-        if (lt.includes('Short-term')) return 'badge-safe';
+        const num = Number(lt);
+        if (!isNaN(num)) {
+          if (num <= 2) return 'badge-safe';
+          if (num <= 5) return 'badge-med';
+          if (num <= 10) return 'badge-high';
+          return 'badge-crit';
+        }
+        if (typeof lt === 'string') {
+          if (lt.includes('Permanent')) return 'badge-crit';
+          if (lt.includes('Long-term')) return 'badge-high';
+          if (lt.includes('Short-term')) return 'badge-safe';
+        }
         return 'badge-ast';
       }
 
@@ -2036,25 +2038,31 @@
           const matchRisk = risk === 'ALL' || getSeverity(f) === risk;
 
           const fExpRaw = (f.exposure || 'internal').toLowerCase();
-          const isExtFinding = fExpRaw === 'external-facing' || fExpRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external');
+          let isExtFinding = false;
+          if (fExpRaw === 'internal' || (f.exposure_label && f.exposure_label.toLowerCase() === 'internal')) {
+            isExtFinding = false;
+          } else if (fExpRaw === 'external-facing' || fExpRaw === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) {
+            isExtFinding = true;
+          } else if (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) {
+            isExtFinding = CryptoEngine.classifyExposure(f).exposure_label === 'External';
+          }
           const fExpLabel = isExtFinding ? 'External' : 'Internal';
           const matchExposure = exposure === 'ALL' ||
             (exposure === 'external-facing' && isExtFinding) ||
             (exposure === 'internal' && !isExtFinding) ||
-            fExpLabel.toLowerCase() === exposure.toLowerCase() ||
-            fExpRaw === exposure.toLowerCase();
+            fExpLabel.toLowerCase() === exposure.toLowerCase();
 
           const fAlgo = f.algorithm || f.title.split(' ')[0] || 'Unknown';
           const matchAlgo = algo === 'ALL' || fAlgo === algo;
 
           const fType = getArtefactType(f);
-          const matchType = type === 'ALL' || fType === type;
+          const matchType = type === 'ALL' || fType.toLowerCase() === type.toLowerCase();
 
           const fLifetime = getArtefactLifetime(f);
-          const matchLifetime = lifetime === 'ALL' || fLifetime === lifetime;
+          const matchLifetime = lifetime === 'ALL' || String(fLifetime) === String(lifetime);
 
           const fCrit = getBusinessCriticality(f);
-          const matchCriticality = criticality === 'ALL' || fCrit === criticality;
+          const matchCriticality = criticality === 'ALL' || fCrit.toLowerCase() === criticality.toLowerCase();
 
           return matchSearch && matchRisk && matchType && matchLifetime && matchCriticality && matchExposure && matchAlgo;
         });
@@ -2087,11 +2095,11 @@
         }
         if (type && type !== 'ALL') {
           active = true;
-          container.innerHTML += `<div class="filter-chip"><span>Type:</span> ${type} <button onclick="document.getElementById('filter-type').value='ALL';handleFilterChange()">×</button></div>`;
+          container.innerHTML += `<div class="filter-chip"><span>Type:</span> ${type.replace(/_/g, ' ')} <button onclick="document.getElementById('filter-type').value='ALL';handleFilterChange()">×</button></div>`;
         }
         if (lifetime && lifetime !== 'ALL') {
           active = true;
-          container.innerHTML += `<div class="filter-chip"><span>Lifetime:</span> ${lifetime} <button onclick="document.getElementById('filter-lifetime').value='ALL';handleFilterChange()">×</button></div>`;
+          container.innerHTML += `<div class="filter-chip"><span>Lifetime:</span> ${lifetime} ${lifetime === '1' ? 'Year' : 'Years'} <button onclick="document.getElementById('filter-lifetime').value='ALL';handleFilterChange()">×</button></div>`;
         }
         if (criticality && criticality !== 'ALL') {
           active = true;
@@ -2164,32 +2172,37 @@
           const detLabel = getDetLabel(detMethod);
           const expObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) ? CryptoEngine.classifyExposure(f) : { exposure_label: 'Internal', exposure_confidence: 'Low', triggered_signals: [] };
           const rawExpStr = (f.exposure || '').toLowerCase();
-          const isExtRow = rawExpStr === 'external-facing' || rawExpStr === 'external' || f.exposure_label === 'External' || expObj.exposure_label === 'External';
-          const expLabelRaw = isExtRow ? 'External' : (f.exposure_label && f.exposure_label !== 'Unknown' ? f.exposure_label : expObj.exposure_label);
+          let isExtRow = false;
+          if (rawExpStr === 'internal' || (f.exposure_label && f.exposure_label.toLowerCase() === 'internal')) {
+            isExtRow = false;
+          } else if (rawExpStr === 'external-facing' || rawExpStr === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) {
+            isExtRow = true;
+          } else if (expObj.exposure_label === 'External') {
+            isExtRow = true;
+          }
+          const expLabelRaw = isExtRow ? 'External' : 'Internal';
           const expConfRaw = f.exposure_confidence || expObj.exposure_confidence;
           const expSignals = (f.exposure_signals && f.exposure_signals.length > 0) ? f.exposure_signals.join(' | ') : (expObj.triggered_signals || []).join(' | ');
-          const expClass = isExtRow || expLabelRaw === 'External' ? 'badge-external' : (expLabelRaw === 'Internal' ? 'badge-internal' : 'badge-low');
+          const expClass = isExtRow ? 'badge-external' : 'badge-internal';
           const expDisplayText = expLabelRaw;
 
-          const type = f.type || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.classifyType(f) : 'algorithm');
+          const type = getArtefactType(f);
           const lifetimeObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.estimateLifetime)
             ? CryptoEngine.estimateLifetime(f)
             : { suggested_lifetime: 5, effective_lifetime: 5, rationale: 'Standard 5y protection baseline' };
-          const lifetime = Number((f.user_confirmed_lifetime !== undefined && f.user_confirmed_lifetime !== null && f.user_confirmed_lifetime !== '')
-            ? f.user_confirmed_lifetime
-            : (f.suggested_lifetime || lifetimeObj.effective_lifetime || 5));
+          const lifetime = getArtefactLifetime(f);
           const lifetimeBadgeClass = lifetime <= 2 ? 'badge-safe' : (lifetime <= 5 ? 'badge-med' : (lifetime <= 10 ? 'badge-high' : 'badge-crit'));
 
-          const critObj = (typeof CryptoEngine !== 'undefined') ? CryptoEngine.computeCriticality(f) : { criticality_score: 3.0, criticality_label: 'Medium' };
-          const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? Number(f.criticality_score).toFixed(2) : Number(critObj.criticality_score).toFixed(2);
-          const bizCrit = f.criticality_label || critObj.criticality_label;
+          const critObj = (typeof CryptoEngine !== 'undefined' && CryptoEngine.computeCriticality) ? CryptoEngine.computeCriticality(f) : { criticality_score: 2.0, criticality_label: 'Medium' };
+          const critScore = (f.criticality_score !== undefined && f.criticality_score !== null) ? Number(f.criticality_score).toFixed(1) : Number(critObj.criticality_score).toFixed(1);
+          const bizCrit = getBusinessCriticality(f);
           const critBadgeClass = bizCrit === 'Critical' ? 'badge-crit' : bizCrit === 'High' ? 'badge-high' : bizCrit === 'Medium' ? 'badge-med' : 'badge-low';
 
           return `
       <tr class="finding-row" style="cursor:pointer;" data-index="${i}">
         <td><span class="badge ${getBadgeClass(sev)}">${sev}</span></td>
         <td><span style="font-weight:600;color:var(--text-h)" class="code-font">${algo}</span></td>
-        <td><span class="badge badge-ast" style="font-size:11px; text-transform:uppercase;">${type}</span></td>
+        <td><span class="badge badge-ast" style="font-size:11px; text-transform:uppercase;">${type.replace(/_/g, ' ')}</span></td>
         <td><span class="badge ${expClass}" title="Triggered Exposure Signals: ${expSignals}">${expDisplayText}</span></td>
         <td><span class="badge ${detClass}">${detLabel}</span></td>
         <td>${mode}</td>
@@ -2198,7 +2211,7 @@
         <td>${purpose}</td>
         <td>
           <span class="badge ${lifetimeBadgeClass}" style="font-family:'JetBrains Mono',monospace; font-weight:700; cursor:help;" title="${lifetimeObj.rationale || 'System-Calculated Protection Lifetime'}">
-            ${lifetime} yrs
+            ${lifetime} ${lifetime === 1 ? 'yr' : 'yrs'}
           </span>
         </td>
         <td>
@@ -2353,11 +2366,18 @@
         const type = getArtefactType(f);
         const drwTypeEl = document.getElementById('drw-type');
         if (drwTypeEl) {
-          drwTypeEl.innerHTML = `<span class="badge badge-ast">${type}</span>`;
+          drwTypeEl.innerHTML = `<span class="badge badge-ast">${type.replace(/_/g, ' ')}</span>`;
         }
 
         const rawDrwExp = (f.exposure || '').toLowerCase();
-        const isDrwExt = rawDrwExp === 'external-facing' || rawDrwExp === 'external' || f.exposure_label === 'External';
+        let isDrwExt = false;
+        if (rawDrwExp === 'internal' || (f.exposure_label && f.exposure_label.toLowerCase() === 'internal')) {
+          isDrwExt = false;
+        } else if (rawDrwExp === 'external-facing' || rawDrwExp === 'external' || (f.exposure_label && f.exposure_label.toLowerCase() === 'external')) {
+          isDrwExt = true;
+        } else if (typeof CryptoEngine !== 'undefined' && CryptoEngine.classifyExposure) {
+          isDrwExt = CryptoEngine.classifyExposure(f).exposure_label === 'External';
+        }
         const expClass = isDrwExt ? 'badge-external' : 'badge-internal';
         const expLabel = isDrwExt ? 'External-Facing' : 'Internal';
         document.getElementById('drw-exposure').innerHTML = `<span class="badge ${expClass}">${expLabel}</span>`;
@@ -2370,7 +2390,7 @@
         const bizCrit = getBusinessCriticality(f);
         const ltEl = document.getElementById('drw-lifetime');
         if (ltEl) {
-          ltEl.innerHTML = `<span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime}</span>`;
+          ltEl.innerHTML = `<span class="badge ${getLifetimeBadgeClass(lifetime)}">${lifetime} ${lifetime === 1 ? 'Year' : 'Years'}</span>`;
         }
         const critEl = document.getElementById('drw-criticality');
         if (critEl) {

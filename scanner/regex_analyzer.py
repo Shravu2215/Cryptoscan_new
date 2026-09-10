@@ -414,11 +414,12 @@ def _analyze_ini_conf(file_path: str, source: str) -> List[Finding]:
 # ---------------------------------------------------------------------------
 
 _KMS_HSM_PATTERNS = [
-    (re.compile(r'\b(?:boto3\.client\([\'"]kms[\'"]\)|boto3\.Session\(\)\.client\([\'"]kms[\'"]\)|aws_kms_key|aws_kms_alias)\b', re.IGNORECASE), "AWS KMS", "AWS Key Management Service (KMS) integration detected."),
-    (re.compile(r'\b(?:KeyClient|SecretClient|azure_key_vault|vault\.azure\.net)\b', re.IGNORECASE), "Azure Key Vault", "Azure Key Vault HSM/KMS integration detected."),
-    (re.compile(r'\b(?:KeyManagementServiceClient|google_kms_crypto_key|cloudkms\.googleapis\.com)\b', re.IGNORECASE), "GCP Cloud KMS", "Google Cloud KMS integration detected."),
-    (re.compile(r'\b(?:PyKCS11|pkcs11|libsofthsm2\.so|libCryptoki|C_Initialize|C_OpenSession)\b', re.IGNORECASE), "PKCS#11 HSM", "Hardware Security Module (HSM) PKCS#11 interface detected."),
-    (re.compile(r'\b(?:tpm2-tools|tss2|tpm2_createprimary|tpm2_evictcontrol)\b', re.IGNORECASE), "TPM 2.0", "Trusted Platform Module (TPM 2.0) hardware interface detected."),
+    (re.compile(r'\b(?:boto3\.client\([\'"]kms[\'"]\)|boto3\.Session\(\)\.client\([\'"]kms[\'"]\)|aws_kms_key|aws_kms_alias)\b', re.IGNORECASE), "AWS KMS", "AWS Key Management Service (KMS) integration detected.", "Cloud KMS", "kms-hsm-aws-kms", ["kms", "hsm", "hardware-custody", "aws"]),
+    (re.compile(r'\b(?:KeyClient|SecretClient|azure_key_vault|vault\.azure\.net)\b', re.IGNORECASE), "Azure Key Vault", "Azure Key Vault HSM/KMS integration detected.", "Cloud KMS", "kms-hsm-azure-key-vault", ["kms", "hsm", "hardware-custody", "azure"]),
+    (re.compile(r'\b(?:KeyManagementServiceClient|google_kms_crypto_key|cloudkms\.googleapis\.com)\b', re.IGNORECASE), "GCP Cloud KMS", "Google Cloud KMS integration detected.", "Cloud KMS", "kms-hsm-gcp-cloud-kms", ["kms", "hsm", "hardware-custody", "gcp"]),
+    (re.compile(r'\b(?:PyKCS11|pkcs11|pkcs11js|libsofthsm2\.so|libCryptoki|C_Initialize|C_OpenSession|node-webcrypto-p11)\b', re.IGNORECASE), "PKCS#11 HSM", "Hardware Security Module (HSM) PKCS#11 interface detected.", "Hardware Module", "hardware-module-pkcs11", ["hsm", "hardware-module", "pkcs11", "hardware-custody"]),
+    (re.compile(r'\b(?:tpm2-tools|tss2|tpm2_createprimary|tpm2_evictcontrol|tpm2_pytss|/dev/tpm0|/dev/tpmrm0)\b', re.IGNORECASE), "TPM 2.0", "Trusted Platform Module (TPM 2.0) hardware interface detected.", "Hardware Module", "hardware-module-tpm2", ["tpm", "hardware-module", "trusted-platform-module", "hardware-custody"]),
+    (re.compile(r'\b(?:pyscard|smartcard|yubikey|nitrokey|libopensc|opensc-pkcs11)\b', re.IGNORECASE), "Hardware Token", "Hardware cryptographic token / smart card interface detected.", "Hardware Module", "hardware-module-token", ["hardware-module", "smart-card", "token", "hardware-custody"]),
 ]
 
 # ---------------------------------------------------------------------------
@@ -547,16 +548,21 @@ def _analyze_kms_hsm(file_path: str, source: str) -> List[Finding]:
         if not stripped or stripped.startswith("#") or stripped.startswith("//"):
             continue
 
-        for pattern, name, desc in _KMS_HSM_PATTERNS:
+        for item in _KMS_HSM_PATTERNS:
+            pattern, name, desc = item[0], item[1], item[2]
+            category = item[3] if len(item) > 3 else "Cloud KMS / HSM"
+            rule_id = item[4] if len(item) > 4 else f"kms-hsm-{name.lower().replace(' ', '-')}"
+            tags = item[5] if len(item) > 5 else ["kms", "hsm", "hardware-custody"]
+
             if pattern.search(raw_line):
                 findings.append(Finding(
                     file=file_path,
                     line=_validate_line_bounds(line_no, total_lines),
                     column=0,
                     language="config",
-                    rule_id=f"kms-hsm-{name.lower().replace(' ', '-')}",
+                    rule_id=rule_id,
                     rule_name=f"{name} Hardware/Cloud Custody",
-                    category="Cloud KMS / HSM",
+                    category=category,
                     algorithm=name,
                     severity=Severity.INFO,
                     quantum_risk=QuantumRisk.SAFE,
@@ -564,7 +570,7 @@ def _analyze_kms_hsm(file_path: str, source: str) -> List[Finding]:
                     recommendation="Hardware-backed / Cloud KMS key custody verified. Ensure key rotation policies and PQC migration readiness are enabled on KMS keys.",
                     code_snippet=stripped[:100],
                     confidence=Confidence.CONFIRMED,
-                    tags=["kms", "hsm", "hardware-custody"],
+                    tags=tags,
                 ))
                 break
 

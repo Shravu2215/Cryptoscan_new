@@ -147,7 +147,7 @@ def dedup(findings: List[Finding]) -> List[Finding]:
     out: List[Finding] = []
     for site, group in by_site.items():
         has_specific = any(not g.generic for g in group)
-        has_kms = any(g.category == "Cloud KMS / HSM" for g in group)
+        has_kms = any(g.category in {"Cloud KMS / HSM", "Cloud KMS", "Hardware Module"} for g in group)
         max_spec_by_cat = {}
         for g in group:
             max_spec_by_cat[g.category] = max(max_spec_by_cat.get(g.category, 0), g.specificity)
@@ -157,8 +157,8 @@ def dedup(findings: List[Finding]) -> List[Finding]:
                 continue
             if g.generic and g.specificity < max_spec_by_cat.get(g.category, 0):
                 continue
-            # Drop hardcoded-secret if we found a KMS reference on the same line
-            if has_kms and g.category in {"hardcoded-secret", "secret"} and g.category != "Cloud KMS / HSM":
+            # Drop hardcoded-secret if we found a KMS/HSM reference on the same line
+            if has_kms and g.category in {"hardcoded-secret", "secret"} and g.category not in {"Cloud KMS / HSM", "Cloud KMS", "Hardware Module"}:
                 continue
             out.append(g)
 

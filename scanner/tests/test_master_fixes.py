@@ -183,3 +183,66 @@ c = Cipher(algorithms.AES(b"0" * 32), modes.CBC(b"0" * 16))
         assert f["exposure"] == "external-facing"
         assert len(f["exposure_signals"]) > 0
         assert "webhook" in f["exposure_rationale"].lower()
+
+
+# ===========================================================================
+# Hardware Module and Exposure Isolation Tests
+# ===========================================================================
+
+def test_hardware_module_detection_pkcs11_tpm():
+    from scanner.regex_analyzer import RegexAnalyzer
+    ra = RegexAnalyzer()
+
+    # PKCS#11 test
+    pkcs11_code = "import PyKCS11\npkcs11 = PyKCS11.PyKCS11Lib()\npkcs11.load('/usr/lib/softhsm/libsofthsm2.so')"
+    findings = ra.analyze("hsm_service.py", pkcs11_code)
+    hw_f = next((f for f in findings if f.category == "Hardware Module"), None)
+    assert hw_f is not None, f"Expected Hardware Module finding, got: {[f.category for f in findings]}"
+    assert "hardware-module" in hw_f.tags or "pkcs11" in hw_f.tags
+    assert "pkcs11" in hw_f.rule_id
+
+    # TPM 2.0 test
+    tpm_code = "import tpm2_pytss\ntss = tpm2_pytss.ESYS_CONTEXT()\n# /dev/tpmrm0 access"
+    findings_tpm = ra.analyze("tpm_boot.py", tpm_code)
+    tpm_f = next((f for f in findings_tpm if f.category == "Hardware Module"), None)
+    assert tpm_f is not None, f"Expected Hardware Module finding for TPM, got: {[f.category for f in findings_tpm]}"
+    assert "tpm2" in tpm_f.tags or "tpm" in tpm_f.rule_id
+
+
+def test_docker_compose_only_exposes_services_with_ports():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        compose_path = os.path.join(tmpdir, "docker-compose.yml")
+        with open(compose_path, "w", encoding="utf-8") as fh:
+            fh.write("""
+version: '3.8'
+services:
+  web:
+    image: myweb:latest
+    ports:
+      - "80:80"
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+  redis:
+    image: redis:alpine
+""")
+        all_files = [compose_path]
+        sm = _build_repo_surface_map(all_files, tmpdir)
+        # 'web' has published ports, so it should be exposed
+        assert "web" in sm["exposed_service_names"]
+        # 'postgres' and 'redis' DO NOT have published ports, so they should NOT be exposed
+        assert "postgres" not in sm["exposed_service_names"]
+        assert "redis" not in sm["exposed_service_names"]
+
+
+def test_internal_database_files_default_to_internal():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sm = _build_repo_surface_map([], tmpdir)
+        # Internal database file
+        exp = _is_file_exposed("data/app.db", "", sm)
+        assert exp == "internal"
+        # Test fixture / test file
+        exp_test = _is_file_exposed("tests/test_crypto.py", "", sm)
+        assert exp_test == "internal"
+
