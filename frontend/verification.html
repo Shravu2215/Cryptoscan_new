@@ -269,8 +269,9 @@
 
     /* Hero Card */
     .verify-hero {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(216, 180, 254, 0.6);
       border-radius: var(--r-lg);
       padding: 32px;
       display: flex;
@@ -279,21 +280,25 @@
       text-align: center;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 8px 32px -4px rgba(124, 58, 237, 0.08);
     }
 
     .verify-hero.status-verified {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 15, 17, 0.95));
-      border-color: rgba(16, 185, 129, 0.3);
+      background: linear-gradient(135deg, rgba(209, 250, 229, 0.95), rgba(243, 232, 255, 0.85));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 8px 32px -4px rgba(16, 185, 129, 0.15);
     }
 
     .verify-hero.status-failed {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(15, 15, 17, 0.95));
-      border-color: rgba(239, 68, 68, 0.3);
+      background: linear-gradient(135deg, rgba(254, 226, 226, 0.95), rgba(243, 232, 255, 0.85));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 8px 32px -4px rgba(239, 68, 68, 0.15);
     }
 
     .verify-hero.status-incomplete {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 15, 17, 0.95));
-      border-color: rgba(245, 158, 11, 0.3);
+      background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(243, 232, 255, 0.85));
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      box-shadow: 0 8px 32px -4px rgba(245, 158, 11, 0.15);
     }
 
     .vh-icon {
@@ -312,41 +317,43 @@
     }
 
     .vh-icon.verified {
-      background: var(--green-bg);
-      color: var(--green);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(209, 250, 229, 0.9);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.4);
     }
 
     .vh-icon.failed {
-      background: var(--red-bg);
-      color: var(--red);
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(254, 226, 226, 0.9);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.4);
     }
 
     .vh-icon.incomplete {
-      background: var(--amber-bg);
-      color: var(--amber);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      background: rgba(254, 243, 199, 0.9);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
     .vh-icon.unverified {
-      background: var(--border-color);
-      color: var(--text-m);
+      background: rgba(243, 232, 255, 0.9);
+      color: #7c3aed;
+      border: 1px solid rgba(167, 139, 250, 0.4);
     }
 
     .vh-title {
       font-size: 22px;
       font-weight: 700;
-      color: var(--text-h);
+      color: #1e1b4b;
       letter-spacing: -0.02em;
     }
 
     .vh-desc {
-      font-size: 13px;
-      color: var(--text-m);
+      font-size: 14px;
+      color: #374151;
       max-width: 600px;
       margin-top: 8px;
       line-height: 1.5;
+      font-weight: 500;
     }
 
     /* Pipeline Progress */
@@ -1381,16 +1388,16 @@
       if (isSuccess) {
         if (badge && text) {
           badge.style.display = 'inline-flex';
-          badge.style.color = 'var(--green)';
-          badge.style.background = 'var(--green-bg)';
-          badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+          badge.style.color = '#047857';
+          badge.style.background = 'rgba(209, 250, 229, 0.95)';
+          badge.style.border = '1px solid rgba(16, 185, 129, 0.4)';
           text.textContent = `Verified in ${durationFormatted}`;
         }
         if (topbarBadge && topbarText) {
           topbarBadge.style.display = 'inline-flex';
-          topbarBadge.style.color = 'var(--green)';
-          topbarBadge.style.background = 'var(--green-bg)';
-          topbarBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          topbarBadge.style.color = '#047857';
+          topbarBadge.style.background = 'rgba(209, 250, 229, 0.95)';
+          topbarBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
           topbarText.textContent = `Verified in ${durationFormatted}`;
         }
       } else {
