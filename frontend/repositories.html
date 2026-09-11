@@ -514,6 +514,35 @@
       display: none !important;
     }
 
+    .btn-resolve {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #059669;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-resolve:hover {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: rgba(16, 185, 129, 0.6);
+      color: #047857;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-resolve:active {
+      transform: translateY(0);
+    }
+
+
     /* Profile Avatar */
     .profile-avatar-wrap {
       position: relative;
@@ -800,6 +829,38 @@
         </div>
       </div>
 
+      <!-- Resolved History Section -->
+      <div id="resolved-history-section" style="display:none; margin-top:8px;">
+        <div class="card" style="padding:0; overflow:hidden;">
+          <div style="padding:16px 24px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="card-hd" style="margin:0; display:flex; align-items:center; gap:10px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Resolved History
+              </div>
+              <div style="font-size:12px; color:var(--text-m); margin-top:3px;">Repositories where fixes have been applied — removed from active dashboard monitoring</div>
+            </div>
+            <div style="font-size:11px; font-weight:700; padding:4px 12px; border-radius:12px; background:rgba(16,185,129,0.1); color:#059669; border:1px solid rgba(16,185,129,0.3); text-transform:uppercase; letter-spacing:0.5px;">Resolved</div>
+          </div>
+          <div class="tbl-wrap" style="border:none; border-radius:0;">
+            <table id="resolved-table">
+              <thead>
+                <tr>
+                  <th>Repository</th>
+                  <th>Language</th>
+                  <th>Resolved On</th>
+                  <th>Findings</th>
+                  <th>Risk (at resolution)</th>
+                  <th>Verification</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="resolved-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -877,6 +938,7 @@
       renderTable();
       renderChart();
       renderActivity();
+      renderResolvedHistory();
     } finally {
       isInitializing = false;
     }
@@ -966,6 +1028,9 @@
         const findings = s.findings || [];
         const risk = getHighestRisk(findings).label.toUpperCase().replace(' ', ''); // NORISK vs CRITICAL
         const matchSearch = repoName.toLowerCase().includes(searchQ);
+
+        // Hide resolved scans from the main table
+        if (s.resolved === true) return false;
 
         let riskMatch = true;
         if (riskF !== 'ALL') {
@@ -1081,7 +1146,13 @@
             </a>
           </td>
           <td>
-            <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'">View</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'">View</button>
+              <button class="btn-resolve" onclick="resolveRepo('${s.scanId || s.repoId || repoName}')" title="Mark as resolved — hides from dashboard, moves to history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                Resolve
+              </button>
+            </div>
           </td>
         `;
           tbody.appendChild(row);
@@ -1257,6 +1328,117 @@
         </div>
       </div>
     `;
+      });
+    }
+
+    function resolveRepo(identifier) {
+      if (!confirm('Mark this repository as resolved? It will be hidden from the dashboard and moved to Resolved History.')) return;
+
+      if (typeof CryptoEngine === 'undefined') return;
+      const data = CryptoEngine.getData();
+      const cleanId = String(identifier || '').replace(/\.zip$/i, '').toLowerCase();
+      const resolvedAt = new Date().toISOString();
+
+      let found = false;
+      (data.scans || []).forEach(s => {
+        const scName = (s.repoName || s.name || '').replace(/\.zip$/i, '').toLowerCase();
+        const scId = String(s.scanId || s.repoId || s.id || '').toLowerCase();
+        if (s.scanId === identifier || s.repoId === identifier || scName === cleanId || scId === cleanId) {
+          s.resolved = true;
+          s.resolvedAt = resolvedAt;
+          found = true;
+        }
+      });
+
+      if (!found && data.activeScan) {
+        const aName = (data.activeScan.repoName || data.activeScan.name || '').replace(/\.zip$/i, '').toLowerCase();
+        const aId = String(data.activeScan.scanId || data.activeScan.repoId || '').toLowerCase();
+        if (aName === cleanId || aId === cleanId) {
+          data.activeScan.resolved = true;
+          data.activeScan.resolvedAt = resolvedAt;
+        }
+      }
+
+      CryptoEngine.saveData(data);
+      // Also update local scans array
+      scans = data.scans || [];
+      renderTable();
+      renderResolvedHistory();
+      updateMetrics();
+      window.dispatchEvent(new Event('cryptoscan_data_updated'));
+    }
+
+    function unresolveRepo(identifier) {
+      if (typeof CryptoEngine === 'undefined') return;
+      const data = CryptoEngine.getData();
+      const cleanId = String(identifier || '').replace(/\.zip$/i, '').toLowerCase();
+
+      (data.scans || []).forEach(s => {
+        const scName = (s.repoName || s.name || '').replace(/\.zip$/i, '').toLowerCase();
+        const scId = String(s.scanId || s.repoId || s.id || '').toLowerCase();
+        if (s.scanId === identifier || s.repoId === identifier || scName === cleanId || scId === cleanId) {
+          s.resolved = false;
+          delete s.resolvedAt;
+        }
+      });
+
+      CryptoEngine.saveData(data);
+      scans = data.scans || [];
+      renderTable();
+      renderResolvedHistory();
+      updateMetrics();
+      window.dispatchEvent(new Event('cryptoscan_data_updated'));
+    }
+
+    function renderResolvedHistory() {
+      const section = document.getElementById('resolved-history-section');
+      const tbody = document.getElementById('resolved-body');
+      if (!section || !tbody) return;
+
+      const resolvedScans = (scans || []).filter(s => s.resolved === true);
+
+      if (resolvedScans.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      tbody.innerHTML = '';
+
+      resolvedScans.forEach(s => {
+        const repoName = s.repoName || s.name || 'Scanned Repository';
+        const findings = s.findings || [];
+        const risk = getHighestRisk(findings);
+        const resolvedDate = s.resolvedAt ? new Date(s.resolvedAt).toLocaleString() : 'Unknown';
+        const isVerified = s.verified || s.isVerified || !!(s.verificationResult && s.verificationResult.verified && !s.verificationResult.localOnly);
+        const verifyBadge = isVerified
+          ? '<span class="badge badge-safe">VERIFIED</span>'
+          : '<span class="badge badge-low">NOT VERIFIED</span>';
+        const identifier = s.scanId || s.repoId || repoName;
+
+        const row = document.createElement('tr');
+        row.style.opacity = '0.75';
+        row.innerHTML = `
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span style="font-weight:500;color:var(--text-m); text-decoration:line-through;">${repoName}</span>
+            </div>
+          </td>
+          <td><span style="color:var(--text-s);">${s.language || 'Python'}</span></td>
+          <td>
+            <span style="font-size:12px; color:#059669; font-weight:600; font-family:'JetBrains Mono',monospace;">${resolvedDate}</span>
+          </td>
+          <td style="color:var(--text-m);">${findings.length}</td>
+          <td><span class="badge ${risk.class}" style="opacity:0.6;">${risk.label}</span></td>
+          <td>${verifyBadge}</td>
+          <td>
+            <button class="btn-sec" style="padding:4px 8px;font-size:11px; color:#10b981; border-color:rgba(16,185,129,0.3);" onclick="unresolveRepo('${identifier}')" title="Reopen — move back to active monitoring">
+              ↩ Reopen
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
     }
 

@@ -1077,7 +1077,9 @@
       const hasData = (data.repositories && data.repositories.length > 0) || (data.scans && data.scans.length > 0);
 
       // Aggregate ALL scans — dashboard should reflect the full portfolio, not just the latest scan
-      const allScans = (data.scans && data.scans.length > 0) ? data.scans : (data.activeScan ? [data.activeScan] : []);
+      // Filter out resolved scans — they've been fixed and should not appear on the active dashboard
+      const allScans = ((data.scans && data.scans.length > 0) ? data.scans : (data.activeScan ? [data.activeScan] : []))
+        .filter(s => s.resolved !== true);
       const currentScan = allScans[0] || {}; // most recent for header/meta display
       const allFindings = allScans.flatMap(s => s.findings || []);
       const totalFindings = allFindings.length || data.totalFindings || 0;
