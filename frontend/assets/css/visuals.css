@@ -16,10 +16,10 @@
   pointer-events: none;
   z-index: -1;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 10%, rgba(34, 211, 238, 0.03), transparent 70%);
+  background: radial-gradient(circle at 50% 10%, rgba(124, 58, 237, 0.04), transparent 70%);
 }
 
-/* Cyber Grid */
+/* Cyber Grid - Light Futuristic */
 .cyber-grid {
   position: absolute;
   top: 0;
@@ -27,13 +27,13 @@
   width: 200%;
   height: 200%;
   background-image: 
-    linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(2, 132, 199, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   transform-origin: center top;
   transform: perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px);
   animation: gridMove 20s linear infinite;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 @keyframes gridMove {
@@ -41,17 +41,17 @@
   100% { transform: perspective(1000px) rotateX(60deg) translateY(60px) translateZ(-200px); }
 }
 
-/* Glow Orbs */
+/* Glow Orbs - Soft Lavender & Subtle Cyan */
 .glow-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.25;
+  opacity: 0.35;
   animation: floatOrb 15s ease-in-out infinite alternate;
 }
 
 .glow-orb.cyan {
-  background: radial-gradient(circle, var(--accent-cyan) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, transparent 70%);
   width: 700px;
   height: 700px;
   top: -150px;
@@ -59,7 +59,7 @@
 }
 
 .glow-orb.violet {
-  background: radial-gradient(circle, var(--accent-violet) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
   width: 600px;
   height: 600px;
   bottom: -150px;
@@ -68,7 +68,7 @@
 }
 
 .glow-orb.magenta {
-  background: radial-gradient(circle, var(--accent-magenta) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(219, 39, 119, 0.2) 0%, transparent 70%);
   width: 500px;
   height: 500px;
   top: 40%;
