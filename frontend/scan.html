@@ -908,18 +908,20 @@
                 <div class="config-row">
                   <div class="cr-left">
                     <div class="cr-title">Advanced Detection Layers</div>
-                    <div class="cr-sub">Enable multi-layer detection (AST, Regex, Secret, SCA, Config).</div>
-                    <div style="display:flex; gap:12px; margin-top:8px; font-size:12px; color:var(--text-b);">
+                    <div class="cr-sub">Enable multi-layer detection (AST, Pattern/Regex, Entropy &amp; Secrets, SCA, Certificate, Binary).</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; font-size:12px; color:var(--text-b);">
                       <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
-                        AST Analysis</div>
+                        AST Layer</div>
                       <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
-                        Regex</div>
+                        Pattern / Regex Layer</div>
                       <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
-                        Secrets</div>
+                        Entropy &amp; Secrets Layer</div>
                       <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
-                        Dependency/SCA</div>
+                        SCA Layer</div>
                       <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
-                        Config/TLS</div>
+                        Certificate Analysis</div>
+                      <div style="display:flex; align-items:center; gap:4px;"><span style="color:var(--green)">✓</span>
+                        Binary Analysis</div>
                     </div>
                   </div>
                   <div class="toggle" style="align-self:flex-start;"></div>
@@ -947,31 +949,27 @@
               <div class="pipeline">
                 <div class="pipe-step active" id="pipe-1">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">Repository Loaded</div>
+                  <div class="pipe-label">AST Layer</div>
                 </div>
                 <div class="pipe-step" id="pipe-2">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">Files Analyzed</div>
+                  <div class="pipe-label">Pattern / Regex Layer</div>
                 </div>
                 <div class="pipe-step" id="pipe-3">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">Cryptographic Detection</div>
+                  <div class="pipe-label">Entropy &amp; Secrets Layer</div>
                 </div>
                 <div class="pipe-step" id="pipe-4">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">CBOM Generation</div>
+                  <div class="pipe-label">SCA Layer</div>
                 </div>
                 <div class="pipe-step" id="pipe-5">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">Risk Assessment</div>
+                  <div class="pipe-label">Certificate Analysis</div>
                 </div>
                 <div class="pipe-step" id="pipe-6">
                   <div class="pipe-icon"></div>
-                  <div class="pipe-label">PQC/Migration Analysis</div>
-                </div>
-                <div class="pipe-step" id="pipe-7">
-                  <div class="pipe-icon"></div>
-                  <div class="pipe-label">Integrity Verification</div>
+                  <div class="pipe-label">Binary Analysis</div>
                 </div>
               </div>
             </div>
