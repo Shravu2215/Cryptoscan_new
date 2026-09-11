@@ -90,9 +90,14 @@
       background: var(--bg-main);
       color: var(--text-b);
       display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
-      overflow-y: auto;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Main scrollable area override for this page */
+    .app-main {
+      overflow-y: auto !important;
+      height: 100vh !important;
     }
 
     /* Sidebar */
