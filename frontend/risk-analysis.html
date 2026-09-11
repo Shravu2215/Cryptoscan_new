@@ -920,24 +920,26 @@
       justify-content: center;
       padding: 36px 24px;
       text-align: center;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, #0F0F11 50%, rgba(139, 92, 246, 0.1) 100%);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(254, 242, 242, 0.8) 0%, rgba(255, 255, 255, 0.75) 50%, rgba(243, 232, 255, 0.8) 100%);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       border: 1px solid rgba(239, 68, 68, 0.25);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: 0 16px 40px -4px rgba(239, 68, 68, 0.12), 0 4px 12px rgba(0, 0, 0, 0.02);
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .risk-hero.risk-crit {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, #0F0F11 60%, rgba(153, 27, 27, 0.25) 100%);
+      background: linear-gradient(135deg, rgba(254, 242, 242, 0.9) 0%, rgba(255, 241, 242, 0.85) 60%, rgba(243, 232, 255, 0.9) 100%);
       border-color: rgba(239, 68, 68, 0.4);
-      box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(239, 68, 68, 0.25);
+      box-shadow: 0 20px 48px -4px rgba(239, 68, 68, 0.18), 0 0 24px rgba(239, 68, 68, 0.12);
     }
 
     .risk-hero.risk-high {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, #0F0F11 60%, rgba(180, 83, 9, 0.25) 100%);
+      background: linear-gradient(135deg, rgba(255, 251, 235, 0.9) 0%, rgba(254, 243, 199, 0.85) 60%, rgba(243, 232, 255, 0.9) 100%);
       border-color: rgba(245, 158, 11, 0.4);
-      box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(245, 158, 11, 0.25);
+      box-shadow: 0 20px 48px -4px rgba(245, 158, 11, 0.18), 0 0 24px rgba(245, 158, 11, 0.12);
     }
 
     .risk-hero-badge {
@@ -1265,7 +1267,7 @@
 
             <!-- GLOBAL Z & MIGRATION LOOKUP (Y) SETTINGS PANEL -->
             <div class="gcard" id="settings-card"
-              style="border: 1px solid rgba(139, 92, 246, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));">
+              style="border: 1px solid rgba(216, 180, 254, 0.6); background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px);">
               <div
                 style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
