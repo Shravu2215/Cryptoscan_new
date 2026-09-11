@@ -918,7 +918,7 @@
               }
             });
             // Update storage directly to avoid re-triggering cryptoscan_data_updated event loop
-            localStorage.setItem(CryptoEngine.STORAGE_KEY, JSON.stringify(data));
+            localStorage.setItem(CryptoEngine.getStorageKey(), JSON.stringify(data));
           }
         } catch (err) {
           console.warn('Could not fetch live repos:', err);
@@ -1469,7 +1469,7 @@
     window.addEventListener('load', init);
     window.addEventListener('cryptoscan_data_updated', init);
     window.addEventListener('storage', (e) => {
-      if (typeof CryptoEngine !== 'undefined' && e.key === CryptoEngine.STORAGE_KEY) {
+      if (typeof CryptoEngine !== 'undefined' && e.key === CryptoEngine.getStorageKey()) {
         init();
       }
     });

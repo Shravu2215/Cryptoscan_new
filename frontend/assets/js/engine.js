@@ -3,9 +3,29 @@
  */
 
 const CryptoEngine = {
-  STORAGE_KEY: 'CRYPTOSCAN_PLATFORM_DATA',
+  STORAGE_KEY: 'CRYPTOSCAN_PLATFORM_DATA', // base key — actual key is namespaced per user
   DB_NAME: 'CryptoScanDB',
   STORE_NAME: 'uploads',
+
+  // Resolve the storage key for the currently logged-in user.
+  // Each user gets their own isolated data namespace so scan data
+  // is NEVER shared across different accounts.
+  getStorageKey: function() {
+    try {
+      const userRaw = localStorage.getItem('cs_user');
+      if (userRaw) {
+        const user = JSON.parse(userRaw);
+        const identifier = (user.email || user.id || user.username || '').toLowerCase().trim();
+        if (identifier) {
+          // Sanitize so it's safe as a localStorage key
+          const safe = identifier.replace(/[^a-z0-9@._-]/g, '_');
+          return this.STORAGE_KEY + '__' + safe;
+        }
+      }
+    } catch(e) {}
+    // Fallback: not logged in — return a session-scoped key that won't persist usefully
+    return this.STORAGE_KEY + '__guest';
+  },
 
   // Open IndexedDB to store actual File / ArrayBuffer across page navigations
   openDB: function() {
@@ -65,7 +85,7 @@ const CryptoEngine = {
 
   getData: function() {
     try {
-      const raw = localStorage.getItem(this.STORAGE_KEY);
+      const raw = localStorage.getItem(this.getStorageKey());
       if (!raw) return this.getInitialState();
       return JSON.parse(raw);
     } catch(e) {
@@ -74,14 +94,15 @@ const CryptoEngine = {
   },
 
   saveData: function(data) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(data));
     window.dispatchEvent(new Event('cryptoscan_data_updated'));
   },
 
   clearAllData: function() {
-    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.getStorageKey());
     window.dispatchEvent(new Event('cryptoscan_data_updated'));
   },
+
 
   RULES: [
     {
