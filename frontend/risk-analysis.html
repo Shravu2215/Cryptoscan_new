@@ -654,92 +654,6 @@
       font-weight: 600;
     }
 
-    .badge-safe {
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--green);
-      border-color: rgba(16, 185, 129, 0.25);
-      font-weight: 600;
-    }
-
-    /* Mosca Risk Categorization Panel */
-    .mosca-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--r-lg);
-      padding: 24px;
-      margin-bottom: 0;
-    }
-    .mosca-hd {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .mosca-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .mosca-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(245, 158, 11, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .mosca-icon svg { width: 22px; height: 22px; color: var(--amber); }
-    .mosca-title { font-size: 16px; font-weight: 700; color: var(--text-h); }
-    .mosca-sub { font-size: 12px; color: var(--text-m); margin-top: 2px; }
-    .mosca-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    .mosca-card {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--r-md);
-      padding: 18px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-    }
-    .mosca-card:hover {
-      border-color: rgba(255,255,255,0.25);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }
-    .mosca-card.active {
-      border-color: var(--card-accent, #38bdf8) !important;
-      box-shadow: 0 0 0 1px var(--card-accent, #38bdf8), 0 8px 24px rgba(0,0,0,0.35);
-      background: var(--card-active-bg, rgba(56,189,248,0.05)) !important;
-    }
-    .mosca-card-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 3px 8px;
-      border-radius: 12px;
-      align-self: flex-start;
-      margin-bottom: 12px;
-    }
-    .mosca-card-count { font-size: 32px; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-bottom: 8px; }
-    .mosca-card-ttl { font-size: 14px; font-weight: 700; color: var(--text-h); margin-bottom: 6px; }
-    .mosca-card-desc { font-size: 12px; color: var(--text-m); line-height: 1.5; flex: 1; }
-    .mosca-card-sub { font-size: 11px; color: var(--text-s); margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border-color); }
-
     .badge-internal {
       background: rgba(100, 116, 139, 0.12);
       color: #64748b;
@@ -1433,68 +1347,6 @@
               </div>
             </div>
 
-            <!-- Mosca Risk Categorization Section -->
-            <div class="mosca-panel" id="mosca-panel" style="display:block;">
-              <div class="mosca-hd">
-                <div class="mosca-title-wrap">
-                  <div class="mosca-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="mosca-title">Mosca Risk Categorization</div>
-                    <div class="mosca-sub">Structured quantum risk categorization using Mosca's Inequality (X + Y vs Z threat horizon). Click a category to filter below.</div>
-                  </div>
-                </div>
-                <div id="mosca-filter-indicator" style="display:none; align-items:center; gap:8px;">
-                  <span style="font-size:12px; color:var(--text-m);">Filtered by: <strong id="mosca-active-filter-name" style="color:var(--text-h);">-</strong></span>
-                  <button class="btn-sec" style="padding:4px 10px; font-size:11px;" onclick="clearMoscaFilter()">Clear Filter</button>
-                </div>
-              </div>
-              <div class="mosca-grid">
-                <!-- Card 1: Vulnerable Now -->
-                <div class="mosca-card" id="mcard-now" onclick="setMoscaCategoryFilter('VULNERABLE_NOW')"
-                  style="--card-accent: var(--red); --card-active-bg: rgba(239, 68, 68, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3);">
-                    Inequality Met • X + Y &gt; Z
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-now" style="color:var(--red);">0</div>
-                  <div class="mosca-card-ttl">Vulnerable Now</div>
-                  <div class="mosca-card-desc">Migration time + data lifetime exceeds the quantum threat horizon. Cryptographic data will remain exposed after CRQC arrival.</div>
-                  <div class="mosca-card-sub" id="mc-sub-now">0 components affected</div>
-                </div>
-
-                <!-- Card 2: Vulnerable Within Threat Horizon -->
-                <div class="mosca-card" id="mcard-horizon" onclick="setMoscaCategoryFilter('WITHIN_HORIZON')"
-                  style="--card-accent: var(--amber); --card-active-bg: rgba(245, 158, 11, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3);">
-                    Buffer &le; 3.0 yrs • Z - (X + Y) &le; 3y
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-horizon" style="color:var(--amber);">0</div>
-                  <div class="mosca-card-ttl">Vulnerable Within Threat Horizon</div>
-                  <div class="mosca-card-desc">Inequality not yet breached, but transition margin is under 3.0 years. Immediate migration planning required before buffer collapses.</div>
-                  <div class="mosca-card-sub" id="mc-sub-horizon">0 components affected</div>
-                </div>
-
-                <!-- Card 3: Safe Under Current Timeline -->
-                <div class="mosca-card" id="mcard-safe" onclick="setMoscaCategoryFilter('SAFE_TIMELINE')"
-                  style="--card-accent: var(--green); --card-active-bg: rgba(16, 185, 129, 0.08);">
-                  <div class="mosca-card-badge"
-                    style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3);">
-                    Runway &gt; 3.0 yrs • Comfortable Margin
-                  </div>
-                  <div class="mosca-card-count" id="mc-count-safe" style="color:var(--green);">0</div>
-                  <div class="mosca-card-ttl">Safe Under Current Timeline</div>
-                  <div class="mosca-card-desc">Sufficient migration buffer exists before CRQC threat. Component can be upgraded in planned software maintenance cycles.</div>
-                  <div class="mosca-card-sub" id="mc-sub-safe">0 components affected</div>
-                </div>
-              </div>
-            </div>
-
             <!-- 2D RISK MATRIX / HEATMAP SECTION -->
             <div class="gcard" id="matrix-section">
               <div class="gc-hd"
@@ -1896,55 +1748,6 @@
         return 'badge-low';
       }
 
-      function setMoscaCategoryFilter(catKey) {
-        if (activeMoscaFilter === catKey) {
-          activeMoscaFilter = null;
-        } else {
-          activeMoscaFilter = catKey;
-        }
-
-        const filterLabels = {
-          'VULNERABLE_NOW': 'Vulnerable Now',
-          'WITHIN_HORIZON': 'Vulnerable Within Threat Horizon',
-          'SAFE_TIMELINE': 'Safe Under Current Timeline'
-        };
-
-        const indicator = document.getElementById('mosca-filter-indicator');
-        const nameEl = document.getElementById('mosca-active-filter-name');
-        if (indicator && nameEl) {
-          if (activeMoscaFilter) {
-            nameEl.textContent = filterLabels[activeMoscaFilter] || activeMoscaFilter;
-            indicator.style.display = 'flex';
-          } else {
-            indicator.style.display = 'none';
-          }
-        }
-
-        ['mcard-now', 'mcard-horizon', 'mcard-safe'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.remove('active');
-        });
-
-        if (activeMoscaFilter === 'VULNERABLE_NOW') document.getElementById('mcard-now')?.classList.add('active');
-        if (activeMoscaFilter === 'WITHIN_HORIZON') document.getElementById('mcard-horizon')?.classList.add('active');
-        if (activeMoscaFilter === 'SAFE_TIMELINE') document.getElementById('mcard-safe')?.classList.add('active');
-
-        renderRecommendations();
-        renderTimeline();
-      }
-
-      function clearMoscaFilter() {
-        activeMoscaFilter = null;
-        const indicator = document.getElementById('mosca-filter-indicator');
-        if (indicator) indicator.style.display = 'none';
-        ['mcard-now', 'mcard-horizon', 'mcard-safe'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.remove('active');
-        });
-        renderRecommendations();
-        renderTimeline();
-      }
-
       function syncGlobalZUI() {
         const z = typeof CryptoEngine !== 'undefined' ? CryptoEngine.getGlobalZ() : 12;
         const slider = document.getElementById('global-z-slider');
@@ -2303,7 +2106,7 @@
         if (margin < 0) {
           cat = 'VULNERABLE_NOW';
           catLabel = 'Vulnerable Now (X + Y > Z)';
-        } else if (margin <= 3.0) {
+        } else if (margin <= 2) {
           cat = 'WITHIN_HORIZON';
           catLabel = 'Vulnerable Within Horizon';
         }
@@ -2320,39 +2123,20 @@
       }
 
       function updateMoscaCategorizationPanel() {
+        const pV = document.getElementById('mosca-vulnerable-count');
+        const pH = document.getElementById('mosca-horizon-count');
+        const pS = document.getElementById('mosca-safe-count');
+        if (!pV && !pH && !pS) return;
         let v = 0, h = 0, s = 0;
-        // Use allFindings for Mosca categorization so green/yellow cards are populated
-        const findingsToCount = (allFindings && allFindings.length > 0) ? allFindings : migrationCandidates.map(c => c.rawFinding).filter(Boolean);
-        const algoSeen = new Set();
-        findingsToCount.forEach(f => {
-          if (!f) return;
-          const algoKey = f.algorithm || f.title || 'Unknown';
-          if (algoSeen.has(algoKey)) return;
-          algoSeen.add(algoKey);
-          // Compute Mosca category from enriched risk
-          const risk = f.risk || {};
-          const x = risk.X !== undefined ? risk.X : 5;
-          const y = risk.Y !== undefined ? risk.Y : 1.5;
-          const z = risk.Z !== undefined ? risk.Z : 12;
-          const margin = risk.urgency_margin !== undefined ? risk.urgency_margin : (z - (x + y));
-          if (margin < 0) v++;
-          else if (margin <= 3.0) h++;
+        migrationCandidates.forEach(c => {
+          const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+          if (m.category === 'VULNERABLE_NOW') v++;
+          else if (m.category === 'WITHIN_HORIZON') h++;
           else s++;
         });
-
-        const mcNow = document.getElementById('mc-count-now');
-        const mcHor = document.getElementById('mc-count-horizon');
-        const mcSafe = document.getElementById('mc-count-safe');
-        const msNow = document.getElementById('mc-sub-now');
-        const msHor = document.getElementById('mc-sub-horizon');
-        const msSafe = document.getElementById('mc-sub-safe');
-
-        if (mcNow) mcNow.textContent = v;
-        if (mcHor) mcHor.textContent = h;
-        if (mcSafe) mcSafe.textContent = s;
-        if (msNow) msNow.textContent = `${v} component${v === 1 ? '' : 's'} affected`;
-        if (msHor) msHor.textContent = `${h} component${h === 1 ? '' : 's'} affected`;
-        if (msSafe) msSafe.textContent = `${s} component${s === 1 ? '' : 's'} affected`;
+        if (pV) pV.textContent = v;
+        if (pH) pH.textContent = h;
+        if (pS) pS.textContent = s;
       }
 
       function getRecommendedMode(algo, replacement, purpose) {
@@ -2425,8 +2209,8 @@
           };
         }));
 
-        // All findings go into Mosca Categorization; only non-safe findings go into migration candidates
-        const atRisk = allFindings;
+        // Identify at-risk components
+        const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
 
         if (atRisk.length === 0) {
           if (safeEl) safeEl.style.display = 'block';

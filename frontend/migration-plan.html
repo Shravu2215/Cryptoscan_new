@@ -1711,7 +1711,7 @@
         if (margin < 0) {
           cat = 'VULNERABLE_NOW';
           catLabel = 'Vulnerable Now (X + Y > Z)';
-        } else if (margin <= 3.0) {
+        } else if (margin <= 2) {
           cat = 'WITHIN_HORIZON';
           catLabel = 'Vulnerable Within Horizon';
         }
@@ -1728,28 +1728,18 @@
       }
 
       function updateMoscaCategorizationPanel() {
-        let v = 0, h = 0, s = 0;
-        // Use allFindings for Mosca categorization (1 entry per unique algo) so all 3 cards populate correctly
-        const findingsToCount = (allFindings && allFindings.length > 0) ? allFindings : migrationCandidates.map(c => c.rawFinding).filter(Boolean);
-        const algoSeen = new Set();
-        findingsToCount.forEach(f => {
-          if (!f) return;
-          const algoKey = f.algorithm || f.title || 'Unknown';
-          if (algoSeen.has(algoKey)) return;
-          algoSeen.add(algoKey);
-          const risk = f.risk || {};
-          const x = risk.X !== undefined ? risk.X : 5;
-          const y = risk.Y !== undefined ? risk.Y : 1.5;
-          const z = risk.Z !== undefined ? risk.Z : 12;
-          const margin = risk.urgency_margin !== undefined ? risk.urgency_margin : (z - (x + y));
-          if (margin < 0) v++;
-          else if (margin <= 3.0) h++;
-          else s++;
-        });
-
         const pV = document.getElementById('mosca-vulnerable-count');
         const pH = document.getElementById('mosca-horizon-count');
         const pS = document.getElementById('mosca-safe-count');
+
+        let v = 0, h = 0, s = 0;
+        migrationCandidates.forEach(c => {
+          const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+          if (m.category === 'VULNERABLE_NOW') v++;
+          else if (m.category === 'WITHIN_HORIZON') h++;
+          else s++;
+        });
+
         if (pV) pV.textContent = v;
         if (pH) pH.textContent = h;
         if (pS) pS.textContent = s;
@@ -1839,8 +1829,8 @@
           };
         }));
 
-        // Include all components for complete Mosca Risk Categorization (Vulnerable Now, Within Horizon, Safe Timeline)
-        const atRisk = allFindings;
+        // Identify at-risk components
+        const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
 
         if (atRisk.length === 0) {
           if (safeEl) safeEl.style.display = 'block';
