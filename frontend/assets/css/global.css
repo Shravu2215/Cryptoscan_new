@@ -5,22 +5,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Light Futuristic Palette Default — White & Soft Lavender Glass */
-  --bg-main: #F8F9FF;
-  --bg-sidebar: #FFFFFF;
-  --bg-surface: rgba(255, 255, 255, 0.85);
-  --bg-surface-hover: #F3E8FF;
-  --bg-surface-active: #E9D5FF;
-  --bg-card: rgba(255, 255, 255, 0.82);
-  --bg-card-hover: #FAF8FF;
+  /* Futuristic Light Lavender & Glassmorphism Palette */
+  --bg-main: #F2EFFC;
+  --bg-sidebar: rgba(255, 255, 255, 0.75);
+  --bg-surface: rgba(255, 255, 255, 0.72);
+  --bg-surface-hover: rgba(243, 232, 255, 0.85);
+  --bg-surface-active: rgba(233, 213, 255, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.68);
+  --bg-card-hover: rgba(255, 255, 255, 0.85);
 
-  /* Soft Lavender Borders */
-  --border-subtle: rgba(233, 213, 255, 0.7);
-  --border-color: #E9D5FF;
-  --border-light: #F3E8FF;
+  /* Glass Borders & Subtle Lavender Edges */
+  --border-subtle: rgba(216, 180, 254, 0.45);
+  --border-color: rgba(216, 180, 254, 0.65);
+  --border-light: rgba(243, 232, 255, 0.8);
   --border-active: #7C3AED;
 
-  /* Typography - Ultra High Contrast Deep Indigo/Slate */
+  /* Typography - Ultra Clear Deep Indigo */
   --text-primary: #1E1B4B;
   --text-secondary: #312E81;
   --text-muted: #6B7280;
@@ -29,30 +29,31 @@
   --text-m: #6B7280;
   --text-s: #9CA3AF;
 
-  /* Purple Highlight Brand Palette */
+  /* Purple & Violet Brand Accents */
   --accent-violet: #7C3AED;
   --accent-violet-dark: #6D28D9;
-  --accent-violet-bg: rgba(124, 58, 237, 0.08);
+  --accent-violet-bg: rgba(124, 58, 237, 0.1);
 
   --accent-cyan: #0284C7;
-  --accent-cyan-bg: rgba(2, 132, 199, 0.08);
+  --accent-cyan-bg: rgba(2, 132, 199, 0.1);
   --accent-magenta: #DB2777;
   --accent-pink: #F43F5E;
   --accent-blue: #2563EB;
 
   /* Gradients */
-  --grad-primary: linear-gradient(135deg, #7c3aed, #6d28d9);
-  --grad-sidebar: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  --grad-primary: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  --grad-sidebar: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(243, 232, 255, 0.6) 100%);
+  --grad-hero: radial-gradient(circle at 50% -20%, rgba(168, 85, 247, 0.18) 0%, rgba(242, 239, 252, 0) 70%);
 
   /* Status Colors */
   --status-success: #16A34A;
-  --status-success-bg: rgba(22, 163, 74, 0.1);
+  --status-success-bg: rgba(22, 163, 74, 0.12);
   --status-warning: #D97706;
-  --status-warning-bg: rgba(217, 119, 6, 0.1);
+  --status-warning-bg: rgba(217, 119, 6, 0.12);
   --status-danger: #DC2626;
-  --status-danger-bg: rgba(220, 38, 38, 0.1);
+  --status-danger-bg: rgba(220, 38, 38, 0.12);
   --status-info: #7C3AED;
-  --status-info-bg: rgba(124, 58, 237, 0.1);
+  --status-info-bg: rgba(124, 58, 237, 0.12);
 
   /* Spacing */
   --space-xs: 4px;
@@ -63,35 +64,37 @@
   --space-2xl: 48px;
 
   /* Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
 
-  /* Shadows / Glows */
-  --shadow-subtle: 0 10px 30px -5px rgba(124, 58, 237, 0.08);
-  --glow-accent: 0 0 20px rgba(124, 58, 237, 0.15);
-  --glow-primary: 0 0 20px rgba(124, 58, 237, 0.2);
+  /* Shadows & Soft Purple Glows */
+  --shadow-subtle: 0 12px 36px -4px rgba(124, 58, 237, 0.1), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --glow-accent: 0 0 25px rgba(124, 58, 237, 0.25);
+  --glow-primary: 0 0 30px rgba(139, 92, 246, 0.3);
+
+  /* Glassmorphism Blur */
+  --glass-blur: blur(16px);
 
   /* Layout Variables */
   --sidebar-width: 260px;
   --topbar-height: 72px;
-  --transition-fast: 0.2s ease;
+  --transition-fast: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Light Theme Mode Explicit Class */
 :root.light-mode,
 html.light-mode {
-  --bg-main: #F8F9FF;
-  --bg-sidebar: #FFFFFF;
-  --bg-surface: rgba(255, 255, 255, 0.85);
-  --bg-surface-hover: #F3E8FF;
-  --bg-surface-active: #E9D5FF;
-  --bg-card: rgba(255, 255, 255, 0.82);
-  --bg-card-hover: #FAF8FF;
+  --bg-main: #F2EFFC;
+  --bg-sidebar: rgba(255, 255, 255, 0.75);
+  --bg-surface: rgba(255, 255, 255, 0.72);
+  --bg-surface-hover: rgba(243, 232, 255, 0.85);
+  --bg-surface-active: rgba(233, 213, 255, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.68);
+  --bg-card-hover: rgba(255, 255, 255, 0.85);
 
-  --border-subtle: rgba(233, 213, 255, 0.7);
-  --border-color: #E9D5FF;
-  --border-light: #F3E8FF;
+  --border-subtle: rgba(216, 180, 254, 0.45);
+  --border-color: rgba(216, 180, 254, 0.65);
+  --border-light: rgba(243, 232, 255, 0.8);
   --border-active: #7C3AED;
 
   --text-primary: #1E1B4B;
@@ -102,7 +105,7 @@ html.light-mode {
   --text-m: #6B7280;
   --text-s: #9CA3AF;
 
-  --shadow-subtle: 0 10px 30px -5px rgba(124, 58, 237, 0.08);
+  --shadow-subtle: 0 12px 36px -4px rgba(124, 58, 237, 0.1), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 /* ==========================================================================
@@ -676,19 +679,28 @@ html.light-mode .sb-user-name,
   background: rgba(239, 68, 68, 0.25);
 }
 
-/* Cards */
-.card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+/* Glassmorphism Cards & Panels */
+.card,
+.panel,
+.glass-panel,
+.bg-card {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
   padding: var(--space-lg);
-  box-shadow: var(--shadow-subtle);
-  transition: all var(--transition-fast);
+  box-shadow: 0 10px 30px -4px rgba(124, 58, 237, 0.08), 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease !important;
 }
 
-.card:hover {
-  border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(139, 92, 246, 0.1);
+.card:hover,
+.panel:hover,
+.glass-panel:hover {
+  transform: translateY(-3px) !important;
+  background: var(--bg-card-hover) !important;
+  border-color: rgba(168, 85, 247, 0.5) !important;
+  box-shadow: 0 16px 40px -4px rgba(124, 58, 237, 0.18), 0 0 20px rgba(168, 85, 247, 0.15) !important;
 }
 
 /* Badges */
