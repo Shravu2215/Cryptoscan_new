@@ -139,13 +139,14 @@ a {
 }
 
 /* ==========================================================================
-   APPLICATION SHELL LAYOUT
+   APPLICATION SHELL LAYOUT (Glassmorphic Lavender Workspace)
    ========================================================================== */
 .app-layout {
   display: flex;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background: var(--bg-main);
 }
 
 .app-sidebar,
@@ -153,11 +154,15 @@ a {
 .sidebar {
   width: 240px;
   position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background-color: var(--bg-sidebar);
-  border-right: 1px solid var(--border-subtle);
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  height: calc(100vh - 24px);
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(216, 180, 254, 0.5) !important;
+  border-radius: 20px !important;
   display: flex;
   flex-direction: column;
   transition: transform var(--transition-fast), width var(--transition-fast);
@@ -165,6 +170,7 @@ a {
   padding: 0 !important;
   margin: 0 !important;
   box-sizing: border-box !important;
+  box-shadow: 0 16px 40px -8px rgba(124, 58, 237, 0.12), 0 4px 12px rgba(0, 0, 0, 0.02) !important;
 }
 
 .app-main {
@@ -173,14 +179,15 @@ a {
   flex-direction: column;
   min-width: 0;
   min-height: 100vh;
-  margin-left: 240px;
+  margin-left: 264px;
 }
 
 .app-topbar {
   height: var(--topbar-height);
-  background: var(--bg-sidebar);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(216, 180, 254, 0.4) !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -188,6 +195,9 @@ a {
   position: sticky;
   top: 0;
   z-index: 50;
+  margin: 12px 16px 0 0;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px -4px rgba(124, 58, 237, 0.06);
 }
 
 .app-page-container {
@@ -637,36 +647,43 @@ html.light-mode .sb-user-name,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
   color: #ffffff !important;
-  border: none !important;
-  border-radius: var(--radius-sm, 6px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: var(--radius-sm, 10px) !important;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   text-decoration: none !important;
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
+  box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.4), 0 0 16px rgba(168, 85, 247, 0.25) !important;
+  letter-spacing: 0.01em;
 }
 
 .btn-p:hover,
 .btn-primary:hover {
-  background: linear-gradient(135deg, #9333ea, #8b5cf6) !important;
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5) !important;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+  box-shadow: 0 12px 30px -4px rgba(124, 58, 237, 0.55), 0 0 24px rgba(168, 85, 247, 0.4) !important;
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-active);
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(216, 180, 254, 0.6) !important;
+  border-radius: var(--radius-sm, 10px) !important;
+  padding: 9px 18px;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06) !important;
 }
 
 .btn-secondary:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+  background: rgba(243, 232, 255, 0.85) !important;
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  color: #6b21a8 !important;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.15) !important;
+  transform: translateY(-1px);
 }
 
 .btn-danger {
