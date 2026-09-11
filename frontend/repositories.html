@@ -767,26 +767,34 @@
       <!-- Bottom row -->
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
         <div class="card">
-          <div class="card-hd">Repository Risk Overview</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div class="card-hd" style="margin-bottom:0;">Repository Risk Overview</div>
+            <div id="risk-overview-badge" style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(124, 58, 237, 0.1); color:#7c3aed; border:1px solid rgba(167, 139, 250, 0.3); text-transform:uppercase; letter-spacing:0.5px;">
+              Scan Risk Distribution
+            </div>
+          </div>
           <div id="risk-chart-empty" class="empty-state" style="padding:24px;">
             <div class="empty-msg" style="font-size:14px;">No repository risk data available</div>
           </div>
           <div id="risk-chart-cont" class="hide">
             <div id="risk-chart"
-              style="display: flex; gap: 4px; height: 32px; border-radius: 4px; overflow: hidden; margin-top: 8px;">
+              style="display: flex; gap: 6px; height: 16px; border-radius: 10px; overflow: hidden; margin-top: 8px; background: rgba(243, 232, 255, 0.5); padding: 3px; border: 1px solid rgba(216, 180, 254, 0.4);">
             </div>
             <div id="risk-legend"
-              style="display: flex; gap: 16px; margin-top: 16px; font-size: 12px; color: var(--text-m); font-weight: 500;">
+              style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; font-size: 12px; color: var(--text-m); font-weight: 500;">
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-hd">Recent Activity</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div class="card-hd" style="margin-bottom:0;">Recent Activity</div>
+            <div style="font-size:11px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.5px;">Live Feed</div>
+          </div>
           <div id="act-empty" class="empty-state hide" style="padding:24px;">
             <div class="empty-msg" style="font-size:14px;">No recent activity</div>
           </div>
-          <div id="act-feed" class="act-feed">
+          <div id="act-feed" class="act-feed" style="gap:10px;">
             <!-- Populated by JS -->
           </div>
         </div>
@@ -810,16 +818,10 @@
 
         // Live-fetch repositories from backend
         try {
-          const API_BASE = (window.Auth && window.Auth.API_BASE)
-            ? window.Auth.API_BASE
-            : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://localhost:3000'
-                : 'https://cryptoscan-new-backend.onrender.com');
-
-          const token = localStorage.getItem('cs_token') || localStorage.getItem('cs_auth_token') || '';
+          const token = localStorage.getItem('cs_token');
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
-          const res = await fetch(`${API_BASE}/repos`, {
+          const timeoutId = setTimeout(() => controller.abort(), 1000);
+          const res = await fetch('http://localhost:3000/repos', {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
             signal: controller.signal
           });
@@ -848,6 +850,7 @@
                 r.criticality_tier = liveCrit;
               }
             });
+            // Update storage directly to avoid re-triggering cryptoscan_data_updated event loop
             localStorage.setItem(CryptoEngine.STORAGE_KEY, JSON.stringify(data));
           }
         } catch (err) {
@@ -1078,10 +1081,7 @@
             </a>
           </td>
           <td>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button class="btn-sec" style="padding:4px 10px; font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'" title="View Findings">Findings</button>
-              <button class="btn-p" style="padding:4px 10px; font-size:12px;" onclick="window.location.href='cbom.html?repo=${encodeURIComponent(repoName)}'" title="View CBOM">CBOM</button>
-            </div>
+            <button class="btn-sec" style="padding:4px 8px;font-size:12px;" onclick="window.location.href='findings.html?repo=${encodeURIComponent(repoName)}'">View</button>
           </td>
         `;
           tbody.appendChild(row);
@@ -1188,11 +1188,25 @@
       const tot = scans.length;
       chart.innerHTML = ''; leg.innerHTML = '';
 
-      function addSeg(val, color, lbl) {
+      const gradientStyles = {
+        red: { bg: 'linear-gradient(135deg, #ef4444, #dc2626)', text: '#dc2626', pillBg: 'rgba(254, 226, 226, 0.75)', border: 'rgba(239, 68, 68, 0.3)' },
+        amber: { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ea580c', pillBg: 'rgba(255, 237, 213, 0.75)', border: 'rgba(249, 115, 22, 0.3)' },
+        yellow: { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#ca8a04', pillBg: 'rgba(254, 249, 195, 0.75)', border: 'rgba(234, 179, 8, 0.3)' },
+        gray: { bg: 'linear-gradient(135deg, #9ca3af, #6b7280)', text: '#4b5563', pillBg: 'rgba(243, 244, 246, 0.75)', border: 'rgba(156, 163, 175, 0.3)' },
+        green: { bg: 'linear-gradient(135deg, #10b981, #059669)', text: '#059669', pillBg: 'rgba(209, 250, 229, 0.75)', border: 'rgba(16, 185, 129, 0.3)' }
+      };
+
+      function addSeg(val, colorKey, lbl) {
         if (val === 0) return;
-        const pct = (val / tot) * 100;
-        chart.innerHTML += `<div style="width:${pct}%; background:var(--${color});" title="${lbl}: ${val}"></div>`;
-        leg.innerHTML += `<div style="display:flex;align-items:center;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--${color})"></div> ${lbl} (${val})</div>`;
+        const pct = Math.round((val / tot) * 100);
+        const style = gradientStyles[colorKey];
+        chart.innerHTML += `<div style="width:${pct}%; background:${style.bg}; height:100%; border-radius:6px; transition:width 0.5s ease;" title="${lbl}: ${val} (${pct}%)"></div>`;
+        leg.innerHTML += `
+          <div style="display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:12px; background:${style.pillBg}; border:1px solid ${style.border}; font-size:12px; font-weight:600; color:${style.text};">
+            <div style="width:8px; height:8px; border-radius:50%; background:${style.bg};"></div>
+            <span>${lbl}</span>
+            <span style="opacity:0.9; font-family:'JetBrains Mono', monospace; font-weight:700; margin-left:2px;">${val} (${pct}%)</span>
+          </div>`;
       }
 
       addSeg(c, 'red', 'Critical');
@@ -1226,11 +1240,13 @@
         }
 
         feed.innerHTML += `
-      <div class="act-item">
-        <div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-        <div class="act-details">
-          <div class="act-title">Scan completed for <span style="font-weight:600;">${repoName}</span></div>
-          <div class="act-time">${displayDate}</div>
+      <div style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.5); backdrop-filter:blur(12px); box-shadow:0 4px 16px -2px rgba(124,58,237,0.06); transition:all 0.2s ease;">
+        <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(209, 250, 229, 0.95), rgba(243, 232, 255, 0.85)); border:1px solid rgba(16, 185, 129, 0.4); color:#059669; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(16,185,129,0.15);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:var(--text-h); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Scan completed for <span style="color:#7c3aed; font-weight:700;">${repoName}</span></div>
+          <div style="font-size:11px; color:var(--text-m); margin-top:2px; font-family:'JetBrains Mono', monospace;">${displayDate}</div>
         </div>
       </div>
     `;
