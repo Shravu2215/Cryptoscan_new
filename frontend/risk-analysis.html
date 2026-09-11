@@ -10,9 +10,14 @@
     rel="stylesheet">
   <script>
     function initTheme() {
-      document.documentElement.classList.add('light-mode');
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('cs_theme', 'light');
+      var saved = localStorage.getItem('cs_theme');
+      if (saved === 'light') {
+        document.documentElement.classList.add('light-mode');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
+      }
     }
     initTheme();
   </script>

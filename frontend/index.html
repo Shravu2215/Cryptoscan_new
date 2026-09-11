@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html class="light-mode" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>NOVA / Portfolio — Creative Engineer & Tech Architect</title>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="assets/css/global.css"/>
-  <link rel="stylesheet" href="assets/css/visuals.css"/>
-  <style>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CryptoScan — Intelligent Information</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/css/global.css"/>
+<style>
     @layer base {
       html, body { margin: 0; padding: 0; scroll-behavior: smooth; }
-      body { overscroll-behavior: none; background-color: #faf8ff; color: #0f172a; }
+      body { overscroll-behavior: none; }
     }
     ::-webkit-scrollbar { display: none; }
 
@@ -21,17 +20,23 @@
     @keyframes ambient-drift {
       0%, 100% {
         transform: translate(-50%, 0) scale(1);
-        opacity: 0.75;
+        opacity: 0.85;
       }
       50% {
         transform: translate(-48%, 18px) scale(1.06);
-        opacity: 0.95;
+        opacity: 1;
       }
     }
 
-    @keyframes float-subtle {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(1.5deg); }
+    @keyframes ambient-pulse-slow {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+      50% {
+        transform: scale(1.12);
+        opacity: 0.95;
+      }
     }
 
     .ambient-glow-hero {
@@ -39,8 +44,9 @@
       will-change: transform, opacity;
     }
 
-    .float-hero-art {
-      animation: float-subtle 8s ease-in-out infinite;
+    .ambient-glow-pulse {
+      animation: ambient-pulse-slow 10s ease-in-out infinite;
+      will-change: transform, opacity;
     }
 
     /* Initial Reveal Base Styles */
@@ -70,6 +76,76 @@
       }
     }
 
+    /* Accordion transitions */
+    .faq-accordion-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-accordion-body.open {
+      grid-template-rows: 1fr;
+    }
+
+    .faq-accordion-inner {
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-accordion-body.open .faq-accordion-inner {
+      opacity: 1;
+    }
+
+    /* Reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .reveal-on-scroll,
+      .hero-load-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .ambient-glow-hero,
+      .ambient-glow-pulse {
+        animation: none !important;
+      }
+    }
+  
+    /* Landing-page interaction refinements */
+    .nav-link.is-active { color: #f3eff2 !important; }
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -7px;
+      height: 1px;
+      transform: scaleX(0);
+      transform-origin: center;
+      background: #ff6b2b;
+      transition: transform .25s ease;
+    }
+    .nav-link:hover::after,
+    .nav-link.is-active::after { transform: scaleX(1); }
+
+    .hero-visual-float {
+      animation: heroFloat 7s ease-in-out infinite;
+      will-change: transform;
+    }
+    @keyframes heroFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-visual-float { animation: none !important; }
+    }
+
     /* Mobile navigation */
     .mobile-nav { display: none; }
     .mobile-menu-button { display: none; }
@@ -81,10 +157,10 @@
         width: 40px;
         height: 40px;
         margin-right: 8px;
-        border: 1px solid rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(255,255,255,.08);
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.8);
-        color: #0f172a;
+        background: rgba(255,255,255,.03);
+        color: #f3eff2;
         cursor: pointer;
       }
       .mobile-nav {
@@ -95,11 +171,11 @@
         display: grid;
         gap: 4px;
         padding: 10px;
-        border: 1px solid rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(255,255,255,.08);
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(12,12,14,.96);
         backdrop-filter: blur(22px);
-        box-shadow: 0 24px 60px rgba(139, 92, 246, 0.12);
+        box-shadow: 0 24px 60px rgba(0,0,0,.5);
         opacity: 0;
         transform: translateY(-8px);
         pointer-events: none;
@@ -113,34 +189,53 @@
       .mobile-nav a {
         padding: 13px 14px;
         border-radius: 12px;
-        color: #475569;
+        color: #bfaaa2;
         text-decoration: none;
         font: 500 14px "Plus Jakarta Sans", sans-serif;
       }
-      .mobile-nav a:hover { color: #8b5cf6; background: rgba(139, 92, 246, 0.06); }
+      .mobile-nav a:hover { color: #f3eff2; background: rgba(255,255,255,.05); }
+      #main-header .h-20,
+      #main-header .h-16 { height: 68px; }
+      #main-header .max-w-7xl { padding-left: 16px; padding-right: 16px; }
     }
-
-    /* Editorial typography helper */
-    .hero-title-text {
-      font-size: clamp(2.5rem, 5.5vw, 5.25rem);
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-    }
-  </style>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script id="tailwind-config">
+</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
         extend: {
           colors: {
-            "surface": "#faf8ff",
-            "surface-card": "rgba(255, 255, 255, 0.85)",
-            "primary-purple": "#8b5cf6",
-            "violet-accent": "#7c3aed",
-            "sky-accent": "#38bdf8",
-            "text-dark": "#0f172a",
-            "text-muted": "#475569"
+            "surface-dim": "#0c0c0e",
+            "surface-container-high": "#222125",
+            "surface-container-lowest": "#08080a",
+            "outline-variant": "#4d3931",
+            "on-tertiary-fixed": "#001e2c",
+            "on-background": "#e5e1e4",
+            "on-secondary-fixed": "#2a1700",
+            "secondary-fixed": "#ffddb8",
+            "tertiary-fixed-dim": "#7bd0ff",
+            "surface-tint": "#ffb59a",
+            "secondary": "#ffb95f",
+            "on-surface": "#f3eff2",
+            "on-surface-variant": "#bfaaa2",
+            "secondary-container": "#ee9800",
+            "surface-container": "#18171a",
+            "primary-container": "#ff6b2b",
+            "on-primary-container": "#451200",
+            "primary": "#ffb59a",
+            "outline": "#8a736a",
+            "tertiary": "#7bd0ff",
+            "on-primary": "#451200",
+            "surface-container-low": "#121114",
+            "surface": "#0c0c0e",
+            "inverse-primary": "#ff6b2b",
+            "surface-variant": "#28272b",
+            "inverse-surface": "#f5f3f4",
+            "inverse-on-surface": "#1d1b1e",
+            "background": "#08080a",
+            "surface-container-highest": "#2d2c30",
+            "surface-bright": "#363539"
           },
           fontFamily: {
             "space-grotesk": ["Space Grotesk", "sans-serif"],
@@ -152,439 +247,394 @@
     };
   </script>
 </head>
-<body class="bg-[#faf8ff] font-jakarta text-[#0f172a] antialiased selection:bg-purple-200 selection:text-purple-900">
-
-  <!-- ========================================================================= -->
-  <!-- 1. NAVBAR -->
-  <!-- ========================================================================= -->
-  <header class="fixed top-0 left-0 right-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-purple-100/60 transition-all duration-300" id="main-header">
-    <div class="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between transition-all duration-300" id="nav-container">
-      
-      <!-- Brand Logo / Name on Left -->
-      <a class="flex items-center gap-3 group text-decoration-none" href="#">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-          <span class="font-space-grotesk font-extrabold text-white text-lg tracking-wider">N</span>
-        </div>
-        <span class="font-space-grotesk font-bold text-xl tracking-tight text-slate-900 group-hover:text-purple-600 transition-colors">NOVA GLASS</span>
-      </a>
-
-      <!-- Work / Expertise / About / Contact on Right -->
-      <nav class="hidden md:flex items-center gap-9">
-        <a class="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors" href="#work">Work</a>
-        <a class="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors" href="#expertise">Expertise</a>
-        <a class="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors" href="#about">About</a>
-        <a class="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors" href="#process">Process</a>
-        <a class="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors" href="dashboard.html">Scan Dashboard</a>
-      </nav>
-
-      <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
-        <a href="#work">Work</a>
-        <a href="#expertise">Expertise</a>
-        <a href="#about">About</a>
-        <a href="#process">Process</a>
-        <a href="dashboard.html">Scan Dashboard</a>
-        <a href="login.html">Login</a>
-      </div>
-
-      <!-- Purple "Let's Talk" CTA -->
-      <div class="flex items-center gap-3">
-        <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
-          <span class="material-symbols-outlined">menu</span>
-        </button>
-        <a class="relative inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white font-space-grotesk font-semibold text-xs tracking-wider uppercase shadow-[0_4px_20px_rgba(139,92,246,0.35)] hover:shadow-[0_6px_28px_rgba(139,92,246,0.5)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300" href="#contact">
-          Let's Talk
+<body class="bg-surface-container-lowest font-jakarta text-on-surface antialiased selection:bg-primary-container/30 selection:text-primary">
+<!-- ========================================================================= -->
+<!-- 1. NAVIGATION -->
+<!-- ========================================================================= -->
+<header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-lowest/80 backdrop-blur-2xl border-b border-white/[0.04] transition-all duration-300" id="main-header">
+<div class="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between transition-all duration-300" id="nav-container">
+<!-- Brand Logo Mark & Text -->
+<a class="flex items-center gap-3.5 group" href="#">
+<img alt="NEBULA Logo" class="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105 rounded-md" src="assets/images/nebula-logo.png"/>
+<span class="font-space-grotesk font-bold text-xl tracking-tight text-on-surface transition-colors duration-200 group-hover:text-primary">NEBULA</span>
+</a>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="nav-link text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#product">Product</a>
+<a class="nav-link text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#features">Features</a>
+<a class="nav-link text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#how-it-works">How It Works</a>
+<a class="nav-link text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#faq">FAQ</a>
+</nav>
+<div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+  <a href="#product">Product</a>
+  <a href="#features">Features</a>
+  <a href="#how-it-works">How It Works</a>
+  <a href="#faq">FAQ</a>
+</div>
+<!-- Mobile menu + Action Button -->
+<div class="flex items-center">
+<button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+  <span class="material-symbols-outlined">menu</span>
+</button>
+<a class="relative inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-primary-container text-white font-space-grotesk font-semibold text-xs tracking-wider uppercase shadow-[0_0_24px_rgba(255,107,43,0.35)] hover:shadow-[0_0_36px_rgba(255,107,43,0.6)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300" href="login.html">
+          Start Scanning
         </a>
-      </div>
-    </div>
-  </header>
-
-  <main class="w-full pt-20">
-
-    <!-- ========================================================================= -->
-    <!-- 2. HERO SECTION -->
-    <!-- ========================================================================= -->
-    <section class="relative w-full overflow-hidden pt-12 md:pt-20 pb-20 md:pb-32">
-      <!-- Ambient Glow Overlays (Light Violet & Cyan) -->
-      <div class="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-purple-200/40 via-violet-100/30 to-transparent blur-[120px] rounded-full ambient-glow-hero"></div>
-      <div class="pointer-events-none absolute top-1/4 right-5 w-80 h-80 bg-sky-200/30 blur-[100px] rounded-full"></div>
-
-      <div class="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-        
-        <!-- Left: Editorial Headline & CTAs -->
-        <div class="lg:col-span-7 flex flex-col text-left">
-          <!-- Status Tag -->
-          <div class="hero-load-reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50 border border-purple-200/60 backdrop-blur-md mb-8 w-fit" style="animation-delay: 0.1s;">
-            <span class="w-2 h-2 rounded-full bg-purple-600 animate-pulse shadow-[0_0_8px_#8b5cf6]"></span>
-            <span class="font-mono text-xs tracking-[0.18em] uppercase text-purple-700 font-semibold">AVAILABLE FOR SELECT PROJECTS</span>
-          </div>
-
-          <!-- Large Headline -->
-          <h1 class="hero-load-reveal font-space-grotesk font-extrabold text-slate-900 hero-title-text mb-8" style="animation-delay: 0.25s;">
-            I BUILD DIGITAL EXPERIENCES THAT <span class="bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent">MAKE PEOPLE STOP.</span>
-          </h1>
-
-          <!-- Short Supporting Text -->
-          <p class="hero-load-reveal font-jakarta text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed mb-10 font-normal" style="animation-delay: 0.4s;">
-            Architecting next-generation web applications, quantum-resilient security platforms, and high-impact digital systems for forward-thinking brands.
-          </p>
-
-          <!-- Primary & Secondary CTAs -->
-          <div class="hero-load-reveal flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-md" style="animation-delay: 0.55s;">
-            <a class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-purple-600 text-white font-space-grotesk font-semibold text-sm tracking-wide shadow-[0_10px_25px_rgba(139,92,246,0.3)] hover:bg-purple-700 hover:shadow-[0_14px_35px_rgba(139,92,246,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300" href="#work">
-              View My Work
-            </a>
-            <a class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-white border border-purple-200 text-slate-800 font-space-grotesk font-semibold text-sm hover:bg-purple-50/60 hover:border-purple-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-sm" href="#contact">
-              Let's Work Together
-            </a>
-          </div>
-        </div>
-
-        <!-- Right: Futuristic 3D / Abstract Visual -->
-        <div class="lg:col-span-5 flex justify-center items-center hero-load-reveal" style="animation-delay: 0.65s;">
-          <div class="relative w-full max-w-lg aspect-square rounded-3xl p-4 bg-gradient-to-br from-white/90 via-purple-50/50 to-white/80 border border-purple-100 shadow-[0_20px_50px_rgba(139,92,246,0.12)] backdrop-blur-xl float-hero-art">
-            <div class="relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-tr from-purple-100/60 via-violet-50 to-sky-50 flex items-center justify-center">
-              <img src="hero-image.png" alt="Futuristic 3D Abstract Glass Graphic" class="w-full h-full object-cover rounded-2xl shadow-inner mix-blend-multiply opacity-90"/>
-              <!-- Translucent Overlay Badges -->
-              <div class="absolute bottom-6 left-6 px-4 py-2.5 rounded-xl bg-white/85 backdrop-blur-md border border-purple-100 shadow-md flex items-center gap-3">
-                <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
-                <span class="font-mono text-xs font-semibold text-slate-800">Awwwards Inspired 2026</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 3. FEATURED WORK SECTION -->
-    <!-- ========================================================================= -->
-    <section class="w-full py-24 md:py-36 border-t border-purple-100/60 bg-white/40" id="work">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 reveal-on-scroll">
-          <div>
-            <p class="font-mono text-xs tracking-[0.2em] uppercase text-purple-600 font-semibold mb-3">SELECTED PORTFOLIO</p>
-            <h2 class="font-space-grotesk text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              Featured Work
-            </h2>
-          </div>
-          <p class="font-jakarta text-slate-600 max-w-md mt-4 md:mt-0 leading-relaxed">
-            High-precision engineering combined with immersive visual craft.
-          </p>
-        </div>
-
-        <!-- 3 Large Project Cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          <!-- Card 1 -->
-          <div class="reveal-on-scroll group bg-white/80 rounded-3xl p-6 border border-purple-100 shadow-[0_10px_30px_rgba(139,92,246,0.06)] hover:shadow-[0_20px_45px_rgba(139,92,246,0.15)] hover:border-purple-300 transition-all duration-300 flex flex-col justify-between hover:-translate-y-2">
-            <div>
-              <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-purple-50 mb-6 border border-purple-100 relative">
-                <img src="hero-image.png" alt="NEBULA Quantum Guard" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-                <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md font-mono text-xs font-semibold text-purple-700 shadow-sm">
-                  Cybersecurity / Quantum
-                </span>
-              </div>
-              <h3 class="font-space-grotesk text-2xl font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                NEBULA Quantum Guard
-              </h3>
-              <p class="font-jakarta text-sm text-slate-600 mb-6 leading-relaxed">
-                Post-quantum cryptography platform discovering CBOM assets and quantum-vulnerable algorithms across enterprise code repositories.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-purple-100/60 flex items-center justify-between font-mono text-xs text-purple-700 font-semibold">
-              <span>RESULT: 99.9% Migration Precision</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </div>
-          </div>
-
-          <!-- Card 2 -->
-          <div class="reveal-on-scroll group bg-white/80 rounded-3xl p-6 border border-purple-100 shadow-[0_10px_30px_rgba(139,92,246,0.06)] hover:shadow-[0_20px_45px_rgba(139,92,246,0.15)] hover:border-purple-300 transition-all duration-300 flex flex-col justify-between hover:-translate-y-2" style="transition-delay: 100ms;">
-            <div>
-              <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-violet-50 mb-6 border border-purple-100 relative">
-                <img src="hero-image.png" alt="Stellaris AI Engine" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-                <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md font-mono text-xs font-semibold text-purple-700 shadow-sm">
-                  AI & Neural Analytics
-                </span>
-              </div>
-              <h3 class="font-space-grotesk text-2xl font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                Stellaris AI Engine
-              </h3>
-              <p class="font-jakarta text-sm text-slate-600 mb-6 leading-relaxed">
-                Real-time predictive telemetry dashboard for complex multi-cloud deployments with generative AI recommendations.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-purple-100/60 flex items-center justify-between font-mono text-xs text-purple-700 font-semibold">
-              <span>RESULT: 4.2x Faster Threat Analysis</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </div>
-          </div>
-
-          <!-- Card 3 -->
-          <div class="reveal-on-scroll group bg-white/80 rounded-3xl p-6 border border-purple-100 shadow-[0_10px_30px_rgba(139,92,246,0.06)] hover:shadow-[0_20px_45px_rgba(139,92,246,0.15)] hover:border-purple-300 transition-all duration-300 flex flex-col justify-between hover:-translate-y-2" style="transition-delay: 200ms;">
-            <div>
-              <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-sky-50 mb-6 border border-purple-100 relative">
-                <img src="hero-image.png" alt="Zenith OS Design System" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-                <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md font-mono text-xs font-semibold text-purple-700 shadow-sm">
-                  UI/UX & Design Systems
-                </span>
-              </div>
-              <h3 class="font-space-grotesk text-2xl font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                Zenith OS Design System
-              </h3>
-              <p class="font-jakarta text-sm text-slate-600 mb-6 leading-relaxed">
-                Glassmorphic micro-interaction design system used by over 45 enterprise product engineering teams globally.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-purple-100/60 flex items-center justify-between font-mono text-xs text-purple-700 font-semibold">
-              <span>RESULT: 100% Visual Consistency</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 4. EXPERTISE SECTION -->
-    <!-- ========================================================================= -->
-    <section class="w-full py-24 md:py-36 bg-[#faf8ff]" id="expertise">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="text-center max-w-2xl mx-auto mb-20 reveal-on-scroll">
-          <p class="font-mono text-xs tracking-[0.2em] uppercase text-purple-600 font-semibold mb-3">CAPABILITIES</p>
-          <h2 class="font-space-grotesk text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Core Expertise
-          </h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          
-          <!-- UI/UX -->
-          <div class="reveal-on-scroll group bg-white/80 p-8 rounded-3xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-            <div class="w-12 h-12 rounded-2xl bg-purple-100/70 text-purple-600 flex items-center justify-center mb-6 font-bold group-hover:bg-purple-600 group-hover:text-white transition-colors">
-              <span class="material-symbols-outlined">palette</span>
-            </div>
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-2">UI/UX Design</h3>
-            <p class="font-jakarta text-xs text-slate-600 leading-relaxed">High-end glassmorphic interfaces & intuitive design systems.</p>
-          </div>
-
-          <!-- Development -->
-          <div class="reveal-on-scroll group bg-white/80 p-8 rounded-3xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style="transition-delay: 50ms;">
-            <div class="w-12 h-12 rounded-2xl bg-violet-100/70 text-violet-600 flex items-center justify-center mb-6 font-bold group-hover:bg-violet-600 group-hover:text-white transition-colors">
-              <span class="material-symbols-outlined">code</span>
-            </div>
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-2">Development</h3>
-            <p class="font-jakarta text-xs text-slate-600 leading-relaxed">Full-stack web architecture, React, Node, and WebGL animations.</p>
-          </div>
-
-          <!-- AI -->
-          <div class="reveal-on-scroll group bg-white/80 p-8 rounded-3xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style="transition-delay: 100ms;">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-100/70 text-indigo-600 flex items-center justify-center mb-6 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-              <span class="material-symbols-outlined">psychology</span>
-            </div>
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-2">AI Integration</h3>
-            <p class="font-jakarta text-xs text-slate-600 leading-relaxed">LLM agents, automated scanners, and predictive telemetry models.</p>
-          </div>
-
-          <!-- Creative Technology -->
-          <div class="reveal-on-scroll group bg-white/80 p-8 rounded-3xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style="transition-delay: 150ms;">
-            <div class="w-12 h-12 rounded-2xl bg-sky-100/70 text-sky-600 flex items-center justify-center mb-6 font-bold group-hover:bg-sky-600 group-hover:text-white transition-colors">
-              <span class="material-symbols-outlined">auto_awesome</span>
-            </div>
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-2">Creative Tech</h3>
-            <p class="font-jakarta text-xs text-slate-600 leading-relaxed">Subtle micro-interactions, 3D visual assets, and Awwwards animations.</p>
-          </div>
-
-          <!-- Branding -->
-          <div class="reveal-on-scroll group bg-white/80 p-8 rounded-3xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style="transition-delay: 200ms;">
-            <div class="w-12 h-12 rounded-2xl bg-fuchsia-100/70 text-fuchsia-600 flex items-center justify-center mb-6 font-bold group-hover:bg-fuchsia-600 group-hover:text-white transition-colors">
-              <span class="material-symbols-outlined">verified</span>
-            </div>
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-2">Branding</h3>
-            <p class="font-jakarta text-xs text-slate-600 leading-relaxed">Digital identity, luxury product framing, and high-impact storytelling.</p>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 5. METRICS SECTION -->
-    <!-- ========================================================================= -->
-    <section class="w-full py-20 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-700 text-white shadow-xl">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-        
-        <div class="reveal-on-scroll">
-          <div class="font-space-grotesk text-4xl sm:text-5xl font-extrabold mb-2">120+</div>
-          <div class="font-jakarta text-xs sm:text-sm text-purple-100 uppercase tracking-wider font-semibold">Completed Projects</div>
-        </div>
-
-        <div class="reveal-on-scroll" style="transition-delay: 100ms;">
-          <div class="font-space-grotesk text-4xl sm:text-5xl font-extrabold mb-2">8+</div>
-          <div class="font-jakarta text-xs sm:text-sm text-purple-100 uppercase tracking-wider font-semibold">Years Experience</div>
-        </div>
-
-        <div class="reveal-on-scroll" style="transition-delay: 200ms;">
-          <div class="font-space-grotesk text-4xl sm:text-5xl font-extrabold mb-2">45+</div>
-          <div class="font-jakarta text-xs sm:text-sm text-purple-100 uppercase tracking-wider font-semibold">Global Enterprise Clients</div>
-        </div>
-
-        <div class="reveal-on-scroll" style="transition-delay: 300ms;">
-          <div class="font-space-grotesk text-4xl sm:text-5xl font-extrabold mb-2">99.9%</div>
-          <div class="font-jakarta text-xs sm:text-sm text-purple-100 uppercase tracking-wider font-semibold">Quantum Resilience Standard</div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 6. PROCESS SECTION -->
-    <!-- ========================================================================= -->
-    <section class="w-full py-24 md:py-36 bg-white/60" id="process">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="text-center max-w-2xl mx-auto mb-20 reveal-on-scroll">
-          <p class="font-mono text-xs tracking-[0.2em] uppercase text-purple-600 font-semibold mb-3">METHODOLOGY</p>
-          <h2 class="font-space-grotesk text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-            The Work Process
-          </h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-          
-          <!-- Step 1 -->
-          <div class="reveal-on-scroll bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative">
-            <span class="font-mono text-xs text-purple-600 font-bold tracking-wider">01 / DISCOVER</span>
-            <h4 class="font-space-grotesk text-lg font-bold text-slate-900 mt-4 mb-2">Discover</h4>
-            <p class="font-jakarta text-xs text-slate-600">Deep-dive research into user requirements, security vulnerabilities, and goals.</p>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="reveal-on-scroll bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative" style="transition-delay: 50ms;">
-            <span class="font-mono text-xs text-purple-600 font-bold tracking-wider">02 / STRATEGY</span>
-            <h4 class="font-space-grotesk text-lg font-bold text-slate-900 mt-4 mb-2">Strategy</h4>
-            <p class="font-jakarta text-xs text-slate-600">Formulating system architecture, CBOM migration plans, and visual direction.</p>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="reveal-on-scroll bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative" style="transition-delay: 100ms;">
-            <span class="font-mono text-xs text-purple-600 font-bold tracking-wider">03 / DESIGN</span>
-            <h4 class="font-space-grotesk text-lg font-bold text-slate-900 mt-4 mb-2">Design</h4>
-            <p class="font-jakarta text-xs text-slate-600">Creating light glassmorphic wireframes, component libraries, and interactive prototypes.</p>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="reveal-on-scroll bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative" style="transition-delay: 150ms;">
-            <span class="font-mono text-xs text-purple-600 font-bold tracking-wider">04 / BUILD</span>
-            <h4 class="font-space-grotesk text-lg font-bold text-slate-900 mt-4 mb-2">Build</h4>
-            <p class="font-jakarta text-xs text-slate-600">Clean code execution with rigid unit tests, accessibility compliance, and performance optimization.</p>
-          </div>
-
-          <!-- Step 5 -->
-          <div class="reveal-on-scroll bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative" style="transition-delay: 200ms;">
-            <span class="font-mono text-xs text-purple-600 font-bold tracking-wider">05 / LAUNCH</span>
-            <h4 class="font-space-grotesk text-lg font-bold text-slate-900 mt-4 mb-2">Launch</h4>
-            <p class="font-jakarta text-xs text-slate-600">Seamless deployment, real-time monitoring, and continuous iterative refinement.</p>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 7. ABOUT SECTION -->
-    <!-- ========================================================================= -->
-    <section class="w-full py-24 md:py-36 bg-[#faf8ff]" id="about">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        
-        <div class="lg:col-span-6 reveal-on-scroll">
-          <p class="font-mono text-xs tracking-[0.2em] uppercase text-purple-600 font-semibold mb-3">ABOUT NOVA</p>
-          <h2 class="font-space-grotesk text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
-            Blending visual craft with technical rigor.
-          </h2>
-          <p class="font-jakarta text-base text-slate-600 leading-relaxed mb-6">
-            I am a senior product designer & tech architect dedicated to creating web applications that look extraordinary while delivering flawless speed, security, and scalability.
-          </p>
-          <p class="font-jakarta text-base text-slate-600 leading-relaxed mb-8">
-            From building quantum-safe cryptoscan engines to designing state-of-the-art developer dashboards, my goal is to craft digital products that stand out in crowded markets.
-          </p>
-          
-          <div class="flex items-center gap-6">
-            <a href="dashboard.html" class="inline-flex items-center gap-2 font-space-grotesk font-bold text-sm text-purple-600 hover:text-purple-700">
-              <span>Explore Cryptoscan Engine</span>
-              <span class="material-symbols-outlined text-base">arrow_forward</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="lg:col-span-6 reveal-on-scroll">
-          <div class="p-8 rounded-3xl bg-white border border-purple-100 shadow-md">
-            <h3 class="font-space-grotesk text-xl font-bold text-slate-900 mb-4">Technical Stack & Toolkit</h3>
-            <div class="flex flex-wrap gap-2.5">
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">JavaScript / TypeScript</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">Tailwind CSS</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">Glassmorphic UI</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">Post-Quantum Cryptography</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">Python Backend</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">REST & GraphQL APIs</span>
-              <span class="px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold">Figma & Design Systems</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ========================================================================= -->
-    <!-- 8. LARGE FINAL CTA SECTION -->
-    <!-- ========================================================================= -->
-    <section class="relative w-full bg-gradient-to-b from-white via-purple-50/50 to-purple-100/40 py-28 md:py-40 overflow-hidden border-t border-purple-100" id="contact">
-      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div class="w-[700px] h-[350px] bg-purple-300/30 blur-[130px] rounded-full"></div>
-      </div>
-      <div class="max-w-5xl mx-auto px-6 lg:px-12 relative z-10 text-center reveal-on-scroll">
-        <p class="font-mono text-xs tracking-[0.2em] uppercase text-purple-600 font-bold mb-4">START A PROJECT</p>
-        <h2 class="font-space-grotesk text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.08] mb-8">
-          LET'S BUILD SOMETHING <span class="bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent">IMPOSSIBLE TO IGNORE.</span>
-        </h2>
-        <p class="font-jakarta text-lg sm:text-xl text-slate-600 max-w-xl mx-auto mb-10 leading-relaxed font-normal">
-          Have a vision for a groundbreaking platform or cybersecurity engine? Let's turn it into reality.
+</div>
+</div>
+</header>
+<main class="w-full pt-20">
+<!-- ========================================================================= -->
+<!-- 2. HERO SECTION -->
+<!-- ========================================================================= -->
+<section class="relative w-full overflow-hidden pt-16 md:pt-24 pb-24 md:pb-36">
+<!-- Ambient Glow Overlays -->
+<div class="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-primary-container/15 via-secondary/10 to-transparent blur-[140px] rounded-full ambient-glow-hero"></div>
+<div class="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 flex flex-col items-center text-center">
+<!-- Eyebrow -->
+<div class="hero-load-reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-md mb-8 hover:border-primary/30 transition-colors duration-300 cursor-default" style="animation-delay: 0.1s;">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container shadow-[0_0_8px_#ff6b2b]"></span>
+<span class="font-mono text-xs tracking-[0.2em] uppercase text-primary font-medium">AI-POWERED INTELLIGENCE</span>
+</div>
+<!-- Heading -->
+<h1 class="hero-load-reveal font-space-grotesk text-4xl sm:text-6xl lg:text-7xl font-bold text-on-surface max-w-5xl tracking-tight leading-[1.08] mb-8" style="animation-delay: 0.25s;">
+          Scan smarter.<br/>
+<span class="bg-gradient-to-r from-on-surface via-primary to-secondary bg-clip-text text-transparent">Understand deeper.</span>
+</h1>
+<!-- Description -->
+<p class="hero-load-reveal font-jakarta text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed mb-10" style="animation-delay: 0.4s;">
+          CryptoScan brings complex information into one clear, intelligent experience.
         </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a class="inline-flex items-center justify-center px-10 py-4.5 rounded-full bg-purple-600 text-white font-space-grotesk font-semibold text-sm tracking-wide shadow-[0_10px_30px_rgba(139,92,246,0.35)] hover:bg-purple-700 hover:shadow-[0_15px_40px_rgba(139,92,246,0.5)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300" href="mailto:hello@novaglass.io">
-            Get In Touch
+<!-- CTA Buttons -->
+<div class="hero-load-reveal flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mb-20" style="animation-delay: 0.55s;">
+<a class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-primary-container text-white font-space-grotesk font-semibold text-sm tracking-wide shadow-[0_0_24px_rgba(255,107,43,0.4)] hover:shadow-[0_0_38px_rgba(255,107,43,0.65)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300" href="login.html">
+            Start Scanning
           </a>
-          <a class="inline-flex items-center justify-center px-8 py-4.5 rounded-full bg-white border border-purple-200 text-slate-800 font-space-grotesk font-semibold text-sm hover:bg-purple-50 hover:scale-[1.02] transition-all duration-300 shadow-sm" href="dashboard.html">
-            View Live Platform
+<a class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-white/[0.03] border border-white/[0.1] text-on-surface font-space-grotesk font-medium text-sm hover:bg-white/[0.08] hover:border-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300" href="#features">
+            Explore Platform
           </a>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ========================================================================= -->
-  <!-- 9. FOOTER -->
-  <!-- ========================================================================= -->
-  <footer class="w-full bg-white border-t border-purple-100 py-12">
-    <div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-purple-600 text-white font-space-grotesk font-bold flex items-center justify-center text-sm">N</div>
-        <span class="font-space-grotesk font-bold text-slate-900 tracking-tight">NOVA GLASS PORTFOLIO</span>
-      </div>
-      <div class="font-jakarta text-xs text-slate-500">
-        © 2026 NOVA GLASS. Premium Light Futuristic Portfolio. All rights reserved.
-      </div>
-      <div class="flex gap-6 font-mono text-xs font-semibold text-purple-700">
-        <a href="#work" class="hover:underline">Work</a>
-        <a href="#expertise" class="hover:underline">Expertise</a>
-        <a href="#about" class="hover:underline">About</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Interactive Scripts -->
-  <script>
+</div>
+<!-- Hero Visual: Cinematic Sleek Viewport with 3D Tilt container -->
+<div class="hero-load-reveal w-full max-w-5xl [perspective:1200px]" id="product" style="animation-delay: 0.7s;">
+<div class="relative rounded-2xl p-2 bg-gradient-to-b from-white/[0.12] via-white/[0.03] to-white/[0.01] shadow-[0_32px_96px_rgba(0,0,0,0.8)] transition-transform duration-300 ease-out will-change-transform hero-visual-float" id="hero-tilt-card">
+<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden bg-surface-container-low border border-white/[0.06] group"><img alt="Intelligent complex information visualization" class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]" src="hero-image.png"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent pointer-events-none"></div>
+<div class="absolute inset-0 ring-1 ring-inset ring-white/[0.08] rounded-xl pointer-events-none transition-opacity duration-300 group-hover:ring-primary/20"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 3. STATEMENT SECTION -->
+<!-- ========================================================================= -->
+<section class="relative w-full bg-surface-container-lowest py-32 md:py-44 overflow-hidden border-t border-white/[0.03]">
+<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+<div class="w-[600px] h-[300px] bg-primary-container/[0.06] rounded-full blur-[130px] ambient-glow-pulse"></div>
+</div>
+<div class="max-w-5xl mx-auto px-6 lg:px-12 relative z-10 text-center reveal-on-scroll">
+<h2 class="font-space-grotesk text-3xl sm:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight leading-[1.15] mb-8">
+          Stop searching. Start understanding.
+        </h2>
+<p class="font-jakarta text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed font-light">
+          One intelligent platform designed to turn complexity into clarity.
+        </p>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 4. FEATURES SECTION -->
+<!-- ========================================================================= -->
+<section class="w-full bg-surface-container-lowest pb-32 md:pb-44" id="features">
+<div class="max-w-7xl mx-auto px-6 lg:px-12">
+<!-- Eyebrow / Section Title -->
+<div class="text-center max-w-2xl mx-auto mb-20 reveal-on-scroll">
+<p class="font-mono text-xs tracking-[0.2em] uppercase text-primary mb-3">AI-POWERED CLARITY</p>
+<h2 class="font-space-grotesk text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
+            Everything you need. Nothing you don't.
+          </h2>
+</div>
+<!-- 4-Feature Showcase Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+<!-- Feature 01: Discover -->
+<div class="reveal-on-scroll group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-primary/40 p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(255,107,43,0.08)] flex flex-col justify-between overflow-hidden">
+<div class="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-primary-container/[0.06] blur-2xl rounded-full group-hover:bg-primary-container/[0.16] transition-all duration-500"></div>
+<div>
+<div class="font-mono text-xs text-primary font-medium tracking-wider mb-6">01</div>
+<h3 class="font-space-grotesk text-2xl sm:text-3xl font-semibold text-on-surface mb-3 transition-colors duration-200 group-hover:text-primary">
+                Discover
+              </h3>
+<p class="font-jakarta text-base text-on-surface-variant leading-relaxed">
+                Find the information that matters without digging through noise.
+              </p>
+</div>
+<div class="mt-12 h-0.5 w-12 bg-primary/40 group-hover:w-20 group-hover:bg-primary transition-all duration-300"></div>
+</div>
+<!-- Feature 02: Analyze -->
+<div class="reveal-on-scroll group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-secondary/40 p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(238,152,0,0.08)] flex flex-col justify-between overflow-hidden" style="transition-delay: 100ms;">
+<div class="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-secondary/[0.06] blur-2xl rounded-full group-hover:bg-secondary/[0.16] transition-all duration-500"></div>
+<div>
+<div class="font-mono text-xs text-secondary font-medium tracking-wider mb-6">02</div>
+<h3 class="font-space-grotesk text-2xl sm:text-3xl font-semibold text-on-surface mb-3 transition-colors duration-200 group-hover:text-secondary">
+                Analyze
+              </h3>
+<p class="font-jakarta text-base text-on-surface-variant leading-relaxed">
+                Understand complex information through a clear and focused experience.
+              </p>
+</div>
+<div class="mt-12 h-0.5 w-12 bg-secondary/40 group-hover:w-20 group-hover:bg-secondary transition-all duration-300"></div>
+</div>
+<!-- Feature 03: Connect -->
+<div class="reveal-on-scroll group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-primary/40 p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(255,107,43,0.08)] flex flex-col justify-between overflow-hidden">
+<div class="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-primary/[0.06] blur-2xl rounded-full group-hover:bg-primary/[0.16] transition-all duration-500"></div>
+<div>
+<div class="font-mono text-xs text-primary font-medium tracking-wider mb-6">03</div>
+<h3 class="font-space-grotesk text-2xl sm:text-3xl font-semibold text-on-surface mb-3 transition-colors duration-200 group-hover:text-primary">
+                Connect
+              </h3>
+<p class="font-jakarta text-base text-on-surface-variant leading-relaxed">
+                Bring related information together and see the bigger picture.
+              </p>
+</div>
+<div class="mt-12 h-0.5 w-12 bg-primary/40 group-hover:w-20 group-hover:bg-primary transition-all duration-300"></div>
+</div>
+<!-- Feature 04: Understand -->
+<div class="reveal-on-scroll group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-secondary/40 p-8 sm:p-10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(238,152,0,0.08)] flex flex-col justify-between overflow-hidden" style="transition-delay: 100ms;">
+<div class="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-secondary-container/[0.06] blur-2xl rounded-full group-hover:bg-secondary-container/[0.16] transition-all duration-500"></div>
+<div>
+<div class="font-mono text-xs text-secondary font-medium tracking-wider mb-6">04</div>
+<h3 class="font-space-grotesk text-2xl sm:text-3xl font-semibold text-on-surface mb-3 transition-colors duration-200 group-hover:text-secondary">
+                Understand
+              </h3>
+<p class="font-jakarta text-base text-on-surface-variant leading-relaxed">
+                Turn information into useful, meaningful insights.
+              </p>
+</div>
+<div class="mt-12 h-0.5 w-12 bg-secondary-container/40 group-hover:w-20 group-hover:bg-secondary-container transition-all duration-300"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 5. TRANSITION SECTION -->
+<!-- ========================================================================= -->
+<div class="w-full py-24 sm:py-32 bg-gradient-to-b from-surface-container-lowest via-surface-container-lowest/60 to-inverse-surface relative overflow-hidden flex items-center justify-center">
+<div class="max-w-4xl mx-auto px-6 text-center reveal-on-scroll">
+<p class="font-space-grotesk text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight text-on-surface/90">
+          Complex information. Made simple.
+        </p>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- 6. USE CASES SECTION (LIGHT CANVAS) -->
+<!-- ========================================================================= -->
+<section class="w-full bg-inverse-surface py-28 md:py-36 text-inverse-on-surface relative">
+<div class="max-w-7xl mx-auto px-6 lg:px-12">
+<div class="max-w-3xl mb-16 sm:mb-20 reveal-on-scroll">
+<p class="font-mono text-xs tracking-[0.2em] uppercase text-primary-container font-semibold mb-3">
+            BUILT FOR BETTER DECISIONS.
+          </p>
+<h2 class="font-space-grotesk text-3xl sm:text-5xl font-bold text-inverse-on-surface tracking-tight">
+            Built for better decisions.
+          </h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1: Explore -->
+<div class="reveal-on-scroll group bg-white rounded-2xl p-8 sm:p-10 shadow-[0_12px_32px_rgba(0,0,0,0.04)] border border-black/[0.04] flex flex-col justify-between hover:shadow-[0_24px_48px_rgba(255,107,43,0.12)] hover:border-primary-container/30 hover:-translate-y-2 transition-all duration-300">
+<div>
+<div class="w-10 h-10 rounded-xl bg-primary-container/10 flex items-center justify-center mb-8 transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-container/15">
+<span class="material-symbols-outlined text-primary-container text-[22px]">explore</span>
+</div>
+<h3 class="font-space-grotesk text-2xl font-bold text-inverse-on-surface mb-3 transition-colors duration-200 group-hover:text-primary-container">
+                Explore
+              </h3>
+<p class="font-jakarta text-base text-inverse-on-surface/75 leading-relaxed">
+                Discover important information quickly.
+              </p>
+</div>
+</div>
+<!-- Card 2: Analyze -->
+<div class="reveal-on-scroll group bg-white rounded-2xl p-8 sm:p-10 shadow-[0_12px_32px_rgba(0,0,0,0.04)] border border-black/[0.04] flex flex-col justify-between hover:shadow-[0_24px_48px_rgba(238,152,0,0.12)] hover:border-secondary-container/30 hover:-translate-y-2 transition-all duration-300" style="transition-delay: 100ms;">
+<div>
+<div class="w-10 h-10 rounded-xl bg-secondary-container/15 flex items-center justify-center mb-8 transition-transform duration-300 group-hover:scale-110 group-hover:bg-secondary-container/25">
+<span class="material-symbols-outlined text-secondary-container text-[22px]">insights</span>
+</div>
+<h3 class="font-space-grotesk text-2xl font-bold text-inverse-on-surface mb-3 transition-colors duration-200 group-hover:text-secondary-container">
+                Analyze
+              </h3>
+<p class="font-jakarta text-base text-inverse-on-surface/75 leading-relaxed">
+                Go deeper when the details matter.
+              </p>
+</div>
+</div>
+<!-- Card 3: Decide -->
+<div class="reveal-on-scroll group bg-white rounded-2xl p-8 sm:p-10 shadow-[0_12px_32px_rgba(0,0,0,0.04)] border border-black/[0.04] flex flex-col justify-between hover:shadow-[0_24px_48px_rgba(255,107,43,0.12)] hover:border-primary-container/30 hover:-translate-y-2 transition-all duration-300" style="transition-delay: 200ms;">
+<div>
+<div class="w-10 h-10 rounded-xl bg-primary-container/10 flex items-center justify-center mb-8 transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-container/15">
+<span class="material-symbols-outlined text-primary-container text-[22px]">done_all</span>
+</div>
+<h3 class="font-space-grotesk text-2xl font-bold text-inverse-on-surface mb-3 transition-colors duration-200 group-hover:text-primary-container">
+                Decide
+              </h3>
+<p class="font-jakarta text-base text-inverse-on-surface/75 leading-relaxed">
+                Move forward with greater clarity.
+              </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 7. HOW IT WORKS SECTION -->
+<!-- ========================================================================= -->
+<section class="w-full bg-surface-container-lowest py-32 md:py-44 text-on-surface relative border-t border-white/[0.04]" id="how-it-works">
+<div class="max-w-7xl mx-auto px-6 lg:px-12">
+<div class="text-center max-w-2xl mx-auto mb-20 reveal-on-scroll">
+<p class="font-mono text-xs tracking-[0.2em] uppercase text-primary mb-3">WORKFLOW</p>
+<h2 class="font-space-grotesk text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">
+            Discover. Analyze. Understand.
+          </h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+<!-- Step 1 -->
+<div class="reveal-on-scroll group rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-primary/40 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(255,107,43,0.08)] p-8 sm:p-10 flex flex-col transition-all duration-300">
+<span class="font-space-grotesk text-xl font-bold text-primary mb-6 transition-transform duration-300 group-hover:translate-x-1">01 — Discover</span>
+<p class="font-jakarta text-lg text-on-surface-variant leading-relaxed">
+              Find what matters.
+            </p>
+</div>
+<!-- Step 2 -->
+<div class="reveal-on-scroll group rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-secondary/40 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(238,152,0,0.08)] p-8 sm:p-10 flex flex-col transition-all duration-300" style="transition-delay: 100ms;">
+<span class="font-space-grotesk text-xl font-bold text-secondary mb-6 transition-transform duration-300 group-hover:translate-x-1">02 — Analyze</span>
+<p class="font-jakarta text-lg text-on-surface-variant leading-relaxed">
+              Explore the information in depth.
+            </p>
+</div>
+<!-- Step 3 -->
+<div class="reveal-on-scroll group rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-primary/40 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(255,107,43,0.08)] p-8 sm:p-10 flex flex-col transition-all duration-300" style="transition-delay: 200ms;">
+<span class="font-space-grotesk text-xl font-bold text-primary mb-6 transition-transform duration-300 group-hover:translate-x-1">03 — Understand</span>
+<p class="font-jakarta text-lg text-on-surface-variant leading-relaxed">
+              Get a clearer picture and make better decisions.
+            </p>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 8. FAQ SECTION -->
+<!-- ========================================================================= -->
+<section class="w-full bg-surface-container-lowest pb-32 md:pb-44 text-on-surface relative" id="faq">
+<div class="max-w-4xl mx-auto px-6 lg:px-12">
+<div class="text-center mb-16 sm:mb-20 reveal-on-scroll">
+<h2 class="font-space-grotesk text-3xl sm:text-5xl font-bold text-on-surface tracking-tight">
+            Frequently asked questions.
+          </h2>
+</div>
+<!-- Hairline Accordion Cards with smooth CSS grid expansion -->
+<div class="space-y-4">
+<!-- Item 1 -->
+<div class="faq-item reveal-on-scroll rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] overflow-hidden transition-all duration-300">
+<button aria-expanded="false" class="faq-toggle w-full p-6 sm:p-7 flex items-center justify-between text-left text-on-surface hover:text-primary transition-colors duration-200" type="button">
+<span class="font-space-grotesk text-lg sm:text-xl font-semibold">What is CryptoScan?</span>
+<span class="material-symbols-outlined faq-icon text-on-surface-variant transition-transform duration-300">expand_more</span>
+</button>
+<div class="faq-accordion-body">
+<div class="faq-accordion-inner px-6 sm:px-7 pb-6 sm:pb-7 font-jakarta text-base text-on-surface-variant leading-relaxed">
+              CryptoScan is an intelligent platform designed to make complex information easier to explore and understand.
+            </div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="faq-item reveal-on-scroll rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] overflow-hidden transition-all duration-300" style="transition-delay: 80ms;">
+<button aria-expanded="false" class="faq-toggle w-full p-6 sm:p-7 flex items-center justify-between text-left text-on-surface hover:text-primary transition-colors duration-200" type="button">
+<span class="font-space-grotesk text-lg sm:text-xl font-semibold">How does CryptoScan work?</span>
+<span class="material-symbols-outlined faq-icon text-on-surface-variant transition-transform duration-300">expand_more</span>
+</button>
+<div class="faq-accordion-body">
+<div class="faq-accordion-inner px-6 sm:px-7 pb-6 sm:pb-7 font-jakarta text-base text-on-surface-variant leading-relaxed">
+              CryptoScan organizes information into a clear experience so users can discover, analyze, and understand what matters.
+            </div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="faq-item reveal-on-scroll rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] overflow-hidden transition-all duration-300" style="transition-delay: 160ms;">
+<button aria-expanded="false" class="faq-toggle w-full p-6 sm:p-7 flex items-center justify-between text-left text-on-surface hover:text-primary transition-colors duration-200" type="button">
+<span class="font-space-grotesk text-lg sm:text-xl font-semibold">Who is CryptoScan for?</span>
+<span class="material-symbols-outlined faq-icon text-on-surface-variant transition-transform duration-300">expand_more</span>
+</button>
+<div class="faq-accordion-body">
+<div class="faq-accordion-inner px-6 sm:px-7 pb-6 sm:pb-7 font-jakarta text-base text-on-surface-variant leading-relaxed">
+              CryptoScan is built for anyone who needs a faster and clearer way to explore complex information.
+            </div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="faq-item reveal-on-scroll rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] overflow-hidden transition-all duration-300" style="transition-delay: 240ms;">
+<button aria-expanded="false" class="faq-toggle w-full p-6 sm:p-7 flex items-center justify-between text-left text-on-surface hover:text-primary transition-colors duration-200" type="button">
+<span class="font-space-grotesk text-lg sm:text-xl font-semibold">What makes CryptoScan different?</span>
+<span class="material-symbols-outlined faq-icon text-on-surface-variant transition-transform duration-300">expand_more</span>
+</button>
+<div class="faq-accordion-body">
+<div class="faq-accordion-inner px-6 sm:px-7 pb-6 sm:pb-7 font-jakarta text-base text-on-surface-variant leading-relaxed">
+              CryptoScan focuses on clarity, intelligent organization, and a simple experience instead of overwhelming users with unnecessary information.
+            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 9. FINAL CTA SECTION -->
+<!-- ========================================================================= -->
+<section class="relative w-full bg-surface-container-lowest py-32 md:py-44 overflow-hidden border-t border-white/[0.04]" id="start">
+<!-- Ambient Glow -->
+<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+<div class="w-[700px] h-[350px] bg-gradient-to-tr from-primary-container/20 via-secondary/10 to-transparent blur-[140px] rounded-full ambient-glow-pulse"></div>
+</div>
+<div class="max-w-5xl mx-auto px-6 lg:px-12 relative z-10 text-center reveal-on-scroll">
+<h2 class="font-space-grotesk text-4xl sm:text-6xl font-bold text-on-surface tracking-tight mb-6">
+          See information differently.
+        </h2>
+<p class="font-jakarta text-lg sm:text-xl text-on-surface-variant max-w-xl mx-auto mb-10 leading-relaxed font-light">
+          Explore a smarter way to discover, analyze, and understand.
+        </p>
+<div>
+<a class="inline-flex items-center justify-center px-10 py-4 rounded-full bg-primary-container text-white font-space-grotesk font-semibold text-sm tracking-wide shadow-[0_0_32px_rgba(255,107,43,0.45)] hover:shadow-[0_0_52px_rgba(255,107,43,0.75)] hover:scale-[1.04] active:scale-[0.98] transition-all duration-300" href="login.html">
+            Start Scanning
+          </a>
+</div>
+</div>
+</section>
+</main>
+<!-- ========================================================================= -->
+<!-- 10. FOOTER -->
+<!-- ========================================================================= -->
+<footer class="w-full bg-surface-container-lowest border-t border-white/[0.06] py-16">
+<div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col gap-12">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<img alt="CryptoScan Logo Mark" class="h-6 w-6 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W_vTrnHQe183Vsy0OKIhSJPQZCkNCRQHjHdGfjhyElBms8nBmBrHzQrIhVxBP0H2PRUrkU4U-TmKVvdnBh-rPJzvuhh7KW7JQx6mOO2O5C7uLcvFFgewsiVyW-flS4xDKyt_hea8F0OrkTAj3RoGUlYrf_aCg6do__2E5Dmr7YFWkeZjy-pApcQIFujTobLgUEDw88SL1hfs6AcSUUo6xV1Zi3VQkydTARaeXU9DZtsMeJ_k4PCu3Riw"/>
+<span class="font-space-grotesk font-bold text-lg tracking-tight text-on-surface">CryptoScan</span>
+</div>
+<p class="font-jakarta text-sm text-on-surface-variant">
+            Intelligent information. Clearer understanding.
+          </p>
+</div>
+<nav class="flex flex-wrap items-center gap-8">
+<a class="text-sm text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#product">Product</a>
+<a class="text-sm text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#features">Features</a>
+<a class="text-sm text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#how-it-works">How It Works</a>
+<a class="text-sm text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#faq">FAQ</a>
+</nav>
+</div>
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-white/[0.04]">
+<p class="font-mono text-xs text-on-surface-variant/70">
+          © 2026 CryptoScan. All rights reserved.
+        </p>
+</div>
+</div>
+</footer>
+<!-- Interactive Scripts -->
+<script>
     document.addEventListener('DOMContentLoaded', () => {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -594,13 +644,13 @@
 
       function updateNavbar() {
         if (window.scrollY > 30) {
-          header.classList.add('bg-white/90', 'shadow-md', 'shadow-purple-900/5');
-          header.classList.remove('bg-white/70');
+          header.classList.add('bg-surface-container-lowest/95', 'shadow-lg', 'shadow-black/40', 'border-white/[0.08]');
+          header.classList.remove('bg-surface-container-lowest/80', 'border-white/[0.04]');
           navContainer.classList.remove('h-20');
           navContainer.classList.add('h-16');
         } else {
-          header.classList.remove('bg-white/90', 'shadow-md', 'shadow-purple-900/5');
-          header.classList.add('bg-white/70');
+          header.classList.remove('bg-surface-container-lowest/95', 'shadow-lg', 'shadow-black/40', 'border-white/[0.08]');
+          header.classList.add('bg-surface-container-lowest/80', 'border-white/[0.04]');
           navContainer.classList.remove('h-16');
           navContainer.classList.add('h-20');
         }
@@ -628,7 +678,78 @@
         revealElements.forEach(el => el.classList.add('is-visible'));
       }
 
-      // 3. Mobile Navigation Toggle
+      // 3. Hero Visual Tilt / Parallax Mouse-Follow
+      const tiltCard = document.getElementById('hero-tilt-card');
+      const tiltWrapper = tiltCard ? tiltCard.parentElement : null;
+
+      if (tiltCard && tiltWrapper && !prefersReducedMotion && window.matchMedia('(pointer: fine)').matches) {
+        let rafId = null;
+        let targetX = 0;
+        let targetY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        function updateTilt() {
+          currentX += (targetX - currentX) * 0.1;
+          currentY += (targetY - currentY) * 0.1;
+          tiltCard.style.transform = `rotateX(${currentY.toFixed(2)}deg) rotateY(${currentX.toFixed(2)}deg)`;
+
+          if (Math.abs(targetX - currentX) > 0.01 || Math.abs(targetY - currentY) > 0.01) {
+            rafId = requestAnimationFrame(updateTilt);
+          } else {
+            rafId = null;
+          }
+        }
+
+        tiltWrapper.addEventListener('mousemove', (e) => {
+          const rect = tiltWrapper.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const percentX = (x / rect.width) * 2 - 1;
+          const percentY = (y / rect.height) * 2 - 1;
+
+          targetX = percentX * 4; // Max 4 deg Y rotation
+          targetY = -percentY * 4; // Max 4 deg X rotation
+
+          if (!rafId) {
+            rafId = requestAnimationFrame(updateTilt);
+          }
+        });
+
+        tiltWrapper.addEventListener('mouseleave', () => {
+          targetX = 0;
+          targetY = 0;
+          if (!rafId) {
+            rafId = requestAnimationFrame(updateTilt);
+          }
+        });
+      }
+
+      // 4. Smooth FAQ Accordion
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const toggle = item.querySelector('.faq-toggle');
+        const body = item.querySelector('.faq-accordion-body');
+        const icon = item.querySelector('.faq-icon');
+
+        toggle.addEventListener('click', () => {
+          const isOpen = body.classList.contains('open');
+
+          if (isOpen) {
+            body.classList.remove('open');
+            icon.classList.remove('rotate-180');
+            toggle.setAttribute('aria-expanded', 'false');
+            item.classList.remove('border-primary/40');
+          } else {
+            body.classList.add('open');
+            icon.classList.add('rotate-180');
+            toggle.setAttribute('aria-expanded', 'true');
+            item.classList.add('border-primary/40');
+          }
+        });
+      });
+
+      // 5. Mobile navigation
       const mobileMenuButton = document.getElementById('mobile-menu-button');
       const mobileNav = document.getElementById('mobile-nav');
 
@@ -661,7 +782,47 @@
           }
         });
       }
+
+      // 6. Active navigation section
+      const sectionLinks = [...document.querySelectorAll('.nav-link')];
+      const trackedSections = sectionLinks
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+
+      if ('IntersectionObserver' in window && trackedSections.length) {
+        const navObserver = new IntersectionObserver((entries) => {
+          const visible = entries
+            .filter(entry => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+          if (!visible) return;
+          sectionLinks.forEach(link => {
+            link.classList.toggle('is-active', link.getAttribute('href') === `#${visible.target.id}`);
+          });
+        }, { rootMargin: '-35% 0px -55% 0px', threshold: [0.05, 0.2, 0.5] });
+
+        trackedSections.forEach(section => navObserver.observe(section));
+      }
+
+      // 7. Close FAQ with Escape and close mobile menu with Escape
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          document.querySelectorAll('.faq-item').forEach(item => {
+            const toggle = item.querySelector('.faq-toggle');
+            const body = item.querySelector('.faq-accordion-body');
+            const icon = item.querySelector('.faq-icon');
+            body.classList.remove('open');
+            icon.classList.remove('rotate-180');
+            toggle.setAttribute('aria-expanded', 'false');
+            item.classList.remove('border-primary/40');
+          });
+          if (mobileNav) {
+            mobileNav.classList.remove('is-open');
+            mobileNav.setAttribute('aria-hidden', 'true');
+            if (mobileMenuButton) mobileMenuButton.setAttribute('aria-expanded', 'false');
+          }
+        }
+      });
     });
   </script>
-</body>
-</html>
+</body></html>
