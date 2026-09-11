@@ -86,10 +86,10 @@ class AppShell {
     sidebar.innerHTML = `
       <div class="sb-header">
         <a href="dashboard.html" class="sb-brand" style="display:flex; align-items:center; gap:10px; text-decoration:none; width:100%;">
-          <img src="assets/images/nebula-logo.png" alt="NEBULA Logo" class="sb-brand-logo" style="height:32px; width:auto; max-height:32px; border-radius:6px; object-fit:contain; filter:drop-shadow(0 0 6px rgba(139,92,246,0.3)); flex-shrink:0;">
+          <img src="assets/images/nebula-logo.png" alt="CryptoScan Logo" class="sb-brand-logo" style="height:32px; width:auto; max-height:32px; border-radius:6px; object-fit:contain; filter:drop-shadow(0 0 6px rgba(139,92,246,0.3)); flex-shrink:0;">
           <div style="display:flex; flex-direction:column; justify-content:center;">
-            <span class="sb-brand-name" style="font-size:15px; font-weight:800; letter-spacing:1.2px; background:linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">NEBULA</span>
-            <span style="font-size:8.5px; font-weight:600; color:var(--text-muted); letter-spacing:0.8px; text-transform:uppercase; line-height:1.2; margin-top:1px;">CryptoScan Security</span>
+            <span class="sb-brand-name" style="font-size:15px; font-weight:800; letter-spacing:1.2px; background:linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2;">CryptoScan</span>
+            <span style="font-size:8.5px; font-weight:600; color:var(--text-muted); letter-spacing:0.8px; text-transform:uppercase; line-height:1.2; margin-top:1px;">Quantum Security</span>
           </div>
         </a>
       </div>
@@ -142,8 +142,8 @@ class AppShell {
           </svg>
         </button>
         <div class="tb-breadcrumbs" style="display:flex; align-items:center; gap:8px;">
-          <img src="assets/images/nebula-logo.png" alt="NEBULA" style="height:22px; width:auto; border-radius:4px;">
-          <span style="font-weight:700; color:var(--text-h);">NEBULA</span>
+          <img src="assets/images/nebula-logo.png" alt="CryptoScan" style="height:22px; width:auto; border-radius:4px;">
+          <span style="font-weight:700; color:var(--text-h);">CryptoScan</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
           <span class="current" style="color:#c084fc; font-weight:600;">${title}</span>
         </div>
