@@ -1858,23 +1858,23 @@
             const isTopRight = (c === 'Critical' && u === 'Critical');
             const isSelected = (activeMatrixFilter && activeMatrixFilter.criticality === c && activeMatrixFilter.urgency === u);
 
-            let cellBg = 'rgba(30, 41, 59, 0.5)';
-            let borderStyle = '1px solid var(--border-color)';
+            let cellBg = 'rgba(255, 255, 255, 0.65)';
+            let borderStyle = '1px solid rgba(216, 180, 254, 0.5)';
 
             if (c === 'Critical' && u === 'Critical') {
-              cellBg = count > 0 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.12)';
+              cellBg = count > 0 ? 'rgba(254, 226, 226, 0.9)' : 'rgba(254, 242, 242, 0.7)';
               borderStyle = '2px solid #ef4444';
             } else if ((c === 'Critical' && u === 'High') || (c === 'High' && u === 'Critical')) {
-              cellBg = count > 0 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.08)';
-              borderStyle = '1px solid rgba(245, 158, 11, 0.4)';
+              cellBg = count > 0 ? 'rgba(254, 243, 199, 0.9)' : 'rgba(255, 251, 235, 0.7)';
+              borderStyle = '1px solid rgba(245, 158, 11, 0.5)';
             } else if (c === 'Low' && u === 'Low') {
-              cellBg = count > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.05)';
-              borderStyle = '1px solid rgba(16, 185, 129, 0.3)';
+              cellBg = count > 0 ? 'rgba(209, 250, 229, 0.9)' : 'rgba(236, 253, 245, 0.7)';
+              borderStyle = '1px solid rgba(16, 185, 129, 0.4)';
             }
 
             if (isSelected) {
-              borderStyle = '2px solid var(--purple)';
-              cellBg = 'rgba(139, 92, 246, 0.3)';
+              borderStyle = '2px solid #7c3aed';
+              cellBg = 'rgba(243, 232, 255, 0.95)';
             }
 
             html += `
