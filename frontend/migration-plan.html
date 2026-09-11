@@ -1711,7 +1711,7 @@
         if (margin < 0) {
           cat = 'VULNERABLE_NOW';
           catLabel = 'Vulnerable Now (X + Y > Z)';
-        } else if (margin <= 2) {
+        } else if (margin <= 3.0) {
           cat = 'WITHIN_HORIZON';
           catLabel = 'Vulnerable Within Horizon';
         }
@@ -1829,8 +1829,8 @@
           };
         }));
 
-        // Identify at-risk components
-        const atRisk = allFindings.filter(f => getSeverity(f) !== 'SAFE' || isQuantum(f));
+        // Include all components for complete Mosca Risk Categorization (Vulnerable Now, Within Horizon, Safe Timeline)
+        const atRisk = allFindings;
 
         if (atRisk.length === 0) {
           if (safeEl) safeEl.style.display = 'block';

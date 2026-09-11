@@ -314,9 +314,15 @@ const CryptoEngine = {
     const cat = (finding.category || '').toLowerCase();
     const snippet = (finding.snippet || finding.code || '').toLowerCase();
     const text = (file + ' ' + title + ' ' + usage + ' ' + cat + ' ' + snippet).toLowerCase();
+    const algo = (finding.algorithm || finding.title || '').toLowerCase();
 
     let suggested = 5;
     let rationale = 'Standard application cryptographic asset (5y baseline retention)';
+
+    function algoIsAsymmetric(f) {
+      const a = (f.algorithm || f.title || '').toLowerCase();
+      return a.includes('rsa') || a.includes('ecdsa') || a.includes('ecdh') || a.includes('dsa') || a.includes('ecc') || a.includes('elgamal');
+    }
 
     if (text.includes('session') || text.includes('token') || text.includes('ephemeral') || text.includes('jwt') || text.includes('nonce') || file.includes('session') || file.includes('cookie') || text.includes('otp')) {
       suggested = 1;
@@ -324,20 +330,21 @@ const CryptoEngine = {
     } else if (type === 'certificate' || file.endsWith('.crt') || file.endsWith('.pem') || text.includes('tls') || text.includes('ssl') || text.includes('cert')) {
       suggested = 2;
       rationale = 'TLS / X.509 Certificate validity window (2y standard lifecycle)';
+    } else if (algo.includes('md5') || algo.includes('sha1') || algo.includes('sha-1') || algo.includes('des') || algo.includes('rc4') || algo.includes('3des') || algo.includes('blowfish')) {
+      suggested = 8.5;
+      rationale = 'Legacy symmetric cipher / hash with 8.5y operational retention window';
+    } else if (algo.includes('sha256') || algo.includes('sha-256') || algo.includes('sha3') || algo.includes('blake') || algo.includes('aes') || algo.includes('chacha') || algo.includes('bcrypt') || algo.includes('argon') || algo.includes('pbkdf2')) {
+      suggested = 5;
+      rationale = 'Modern symmetric cipher / hash with 5y standard retention window';
     } else if (text.includes('health') || text.includes('medical') || text.includes('hipaa') || text.includes('root ca') || text.includes('sovereign') || text.includes('master key')) {
       suggested = 30;
       rationale = 'Permanent compliance / healthcare / root master key (30y archival retention)';
     } else if (text.includes('archive') || text.includes('at-rest') || text.includes('database') || text.includes('backup') || text.includes('s3') || type === 'cloud_service') {
       suggested = 20;
       rationale = 'Long-term storage / Database data at-rest (20y retention)';
-    } else if (type === 'key' || algoIsAsymmetric(finding) || file.includes('.env') || text.includes('private key') || text.includes('credential')) {
+    } else if (algoIsAsymmetric(finding) || file.includes('.env') || text.includes('private key') || text.includes('credential')) {
       suggested = 10;
       rationale = 'Asymmetric key / Persistent secret credential (10y protection window)';
-    }
-
-    function algoIsAsymmetric(f) {
-      const a = (f.algorithm || f.title || '').toLowerCase();
-      return a.includes('rsa') || a.includes('ecdsa') || a.includes('ecdh') || a.includes('dsa') || a.includes('ecc');
     }
 
     const confirmed = (finding.user_confirmed_lifetime !== undefined && finding.user_confirmed_lifetime !== null && finding.user_confirmed_lifetime !== '')
@@ -661,11 +668,18 @@ const CryptoEngine = {
     const mosca_at_risk = (X + Y) > Z;
 
     let urgency_tier = 'Low';
+    let category = 'SAFE_TIMELINE';
+    let categoryLabel = 'Safe Under Current Timeline';
+
     if (urgency_margin < 0) {
       urgency_tier = 'Critical';
-    } else if (urgency_margin <= 2) {
+      category = 'VULNERABLE_NOW';
+      categoryLabel = 'Vulnerable Now (X + Y > Z)';
+    } else if (urgency_margin <= 3.0) {
       urgency_tier = 'High';
-    } else if (urgency_margin <= 5) {
+      category = 'WITHIN_HORIZON';
+      categoryLabel = 'Vulnerable Within Threat Horizon';
+    } else if (urgency_margin <= 5.0) {
       urgency_tier = 'Medium';
     }
 
@@ -680,7 +694,9 @@ const CryptoEngine = {
       urgency_margin,
       mosca_at_risk,
       urgency_tier,
-      priority_score
+      priority_score,
+      category,
+      categoryLabel
     };
   },
 
