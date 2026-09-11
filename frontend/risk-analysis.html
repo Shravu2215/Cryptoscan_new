@@ -1858,30 +1858,55 @@
             const isTopRight = (c === 'Critical' && u === 'Critical');
             const isSelected = (activeMatrixFilter && activeMatrixFilter.criticality === c && activeMatrixFilter.urgency === u);
 
-            let cellBg = 'rgba(255, 255, 255, 0.65)';
-            let borderStyle = '1px solid rgba(216, 180, 254, 0.5)';
+            // 4x4 Risk Matrix Color Mapping matching the reference image:
+            // Critical Critical: Deep Red (#EF4444)
+            // High/Critical blends: Vivid Orange (#F97316)
+            // Medium/High blends: Warm Amber / Gold (#F59E0B / #EAB308)
+            // Low/Medium blends: Lime Green (#84CC16)
+            // Low Low: Forest Green (#10B981)
+            const colorMatrix = {
+              'Critical': {
+                'Critical': { bg: 'linear-gradient(135deg, #ef4444, #dc2626)', text: '#ffffff', border: '#b91c1c' },
+                'High':     { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ffffff', border: '#c2410c' },
+                'Medium':   { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#1e1b4b', border: '#a16207' },
+                'Low':      { bg: 'linear-gradient(135deg, #84cc16, #65a30d)', text: '#1e1b4b', border: '#4d7c0f' }
+              },
+              'High': {
+                'Critical': { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ffffff', border: '#c2410c' },
+                'High':     { bg: 'linear-gradient(135deg, #f59e0b, #d97706)', text: '#ffffff', border: '#b45309' },
+                'Medium':   { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#1e1b4b', border: '#a16207' },
+                'Low':      { bg: 'linear-gradient(135deg, #22c55e, #16a34a)', text: '#ffffff', border: '#15803d' }
+              },
+              'Medium': {
+                'Critical': { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ffffff', border: '#c2410c' },
+                'High':     { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#1e1b4b', border: '#a16207' },
+                'Medium':   { bg: 'linear-gradient(135deg, #84cc16, #65a30d)', text: '#1e1b4b', border: '#4d7c0f' },
+                'Low':      { bg: 'linear-gradient(135deg, #10b981, #059669)', text: '#ffffff', border: '#047857' }
+              },
+              'Low': {
+                'Critical': { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#1e1b4b', border: '#a16207' },
+                'High':     { bg: 'linear-gradient(135deg, #84cc16, #65a30d)', text: '#1e1b4b', border: '#4d7c0f' },
+                'Medium':   { bg: 'linear-gradient(135deg, #10b981, #059669)', text: '#ffffff', border: '#047857' },
+                'Low':      { bg: 'linear-gradient(135deg, #059669, #047857)', text: '#ffffff', border: '#065f46' }
+              }
+            };
 
-            if (c === 'Critical' && u === 'Critical') {
-              cellBg = count > 0 ? 'rgba(254, 226, 226, 0.9)' : 'rgba(254, 242, 242, 0.7)';
-              borderStyle = '2px solid #ef4444';
-            } else if ((c === 'Critical' && u === 'High') || (c === 'High' && u === 'Critical')) {
-              cellBg = count > 0 ? 'rgba(254, 243, 199, 0.9)' : 'rgba(255, 251, 235, 0.7)';
-              borderStyle = '1px solid rgba(245, 158, 11, 0.5)';
-            } else if (c === 'Low' && u === 'Low') {
-              cellBg = count > 0 ? 'rgba(209, 250, 229, 0.9)' : 'rgba(236, 253, 245, 0.7)';
-              borderStyle = '1px solid rgba(16, 185, 129, 0.4)';
-            }
+            const styleConf = (colorMatrix[c] && colorMatrix[c][u]) || { bg: 'rgba(255,255,255,0.7)', text: '#1e1b4b', border: '#d8b4fe' };
+            let cellBg = styleConf.bg;
+            let textColor = styleConf.text;
+            let borderStyle = `1.5px solid ${styleConf.border}`;
+            let opacityStyle = count > 0 ? 'opacity: 1;' : 'opacity: 0.85;';
 
             if (isSelected) {
-              borderStyle = '2px solid #7c3aed';
-              cellBg = 'rgba(243, 232, 255, 0.95)';
+              borderStyle = '3px solid #7c3aed';
+              opacityStyle = 'opacity: 1; transform: scale(1.03); box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);';
             }
 
             html += `
-        <div onclick="onMatrixCellClick('${c}', '${u}')" style="background: ${cellBg}; border: ${borderStyle}; border-radius: 10px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; ${isTopRight ? 'box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);' : ''}">
-          ${isTopRight ? `<div style="position: absolute; top: 4px; right: 6px; font-size: 9px; font-weight: 800; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px;">🔥 Max Risk</div>` : ''}
-          <div style="font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${count > 0 ? 'var(--text-h)' : 'var(--text-s)'};">${count}</div>
-          <div style="font-size: 10px; color: var(--text-m); margin-top: 2px;">finding${count === 1 ? '' : 's'}</div>
+        <div onclick="onMatrixCellClick('${c}', '${u}')" style="background: ${cellBg}; border: ${borderStyle}; border-radius: 12px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); position: relative; ${opacityStyle} ${isTopRight ? 'box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);' : ''}">
+          ${isTopRight ? `<div style="position: absolute; top: 4px; right: 6px; font-size: 8.5px; font-weight: 800; color: #ffffff; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">🔥 Max Risk</div>` : ''}
+          <div style="font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: ${textColor}; text-shadow: 0 1px 2px rgba(0,0,0,0.15);">${count}</div>
+          <div style="font-size: 10px; font-weight: 600; color: ${textColor}; opacity: 0.9; margin-top: 2px;">finding${count === 1 ? '' : 's'}</div>
         </div>
       `;
           });
