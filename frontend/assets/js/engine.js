@@ -749,6 +749,48 @@ const CryptoEngine = {
     return f;
   },
 
+  calculateDynamicRiskScore: function(findings, filesScanned) {
+    const list = findings || [];
+    if (list.length === 0) {
+      return { score: 0, level: 'Low Risk', text: '0 / 100 (Low Risk)', color: '#10b981' };
+    }
+
+    let c = 0, h = 0, m = 0, l = 0, q = 0;
+    list.forEach(f => {
+      const sev = (f.severity || '').toLowerCase();
+      if (sev === 'critical') c++;
+      else if (sev === 'high') h++;
+      else if (sev === 'medium') m++;
+      else if (sev === 'low') l++;
+      if (f.quantum === 'yes' || f.isQuantumVulnerable || (f.quantumStatus && f.quantumStatus.toLowerCase().includes('vulnerable'))) q++;
+    });
+
+    const severityPoints = (c * 8) + (h * 4) + (m * 2) + (l * 0.5) + (q * 3.5);
+    const dynamicScore = Math.min(99, Math.round(100 * (1 - Math.exp(-severityPoints / 32))));
+    const finalScore = Math.max(8, dynamicScore);
+
+    let level = 'Low Risk';
+    let color = '#10b981';
+    if (finalScore >= 75) {
+      level = 'Critical Risk';
+      color = '#ef4444';
+    } else if (finalScore >= 50) {
+      level = 'High Risk';
+      color = '#f97316';
+    } else if (finalScore >= 25) {
+      level = 'Moderate';
+      color = '#f59e0b';
+    }
+
+    return {
+      score: finalScore,
+      level: level,
+      text: `${finalScore} / 100 (${level})`,
+      color: color,
+      breakdown: { c, h, m, l, q, severityPoints }
+    };
+  },
+
   processRealBackendFindings: function(repo, scanId, dbFindings) {
     const globalZ = this.getGlobalZ();
 
@@ -849,6 +891,7 @@ const CryptoEngine = {
 
     const repoName = repo.name || 'Scanned Repository';
     const uniqueFilesCount = new Set(activeFindings.map(f => f.file)).size || activeFindings.length;
+    const riskObj = this.calculateDynamicRiskScore(activeFindings, uniqueFilesCount);
 
     const scanResult = {
       scanId: scanId,
@@ -864,6 +907,10 @@ const CryptoEngine = {
       assetsFound: cbomAssets.length,
       criticalCount: criticalCount,
       quantumCount: quantumCount,
+      riskScore: riskObj.score,
+      riskLevel: riskObj.level,
+      riskText: riskObj.text,
+      riskColor: riskObj.color,
       findings: activeFindings,
       suppressedFindings: suppressedFindings,
       resolvedFindings: resolvedFindings,
@@ -885,7 +932,11 @@ const CryptoEngine = {
       filesCount: uniqueFilesCount,
       findingsCount: activeFindings.length,
       criticalCount: criticalCount,
-      quantumCount: quantumCount
+      quantumCount: quantumCount,
+      riskScore: riskObj.score,
+      riskLevel: riskObj.level,
+      riskText: riskObj.text,
+      riskColor: riskObj.color
     };
 
     if (existingRepoIdx >= 0) {

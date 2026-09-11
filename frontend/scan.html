@@ -1614,25 +1614,15 @@
         document.getElementById('res-crit').textContent = c;
         document.getElementById('res-quantum').textContent = q;
 
-        // Dynamic Risk Score Calculation
+        // Live Dynamic Risk Score Calculation
         const scoreEl = document.getElementById('res-score');
         if (scoreEl) {
-          if (findings.length === 0) {
-            scoreEl.textContent = '0 / 100';
-            scoreEl.style.color = 'var(--green)';
-          } else {
-            const rawScore = Math.min(100, Math.round(c * 25 + h * 15 + m * 8 + l * 3 + q * 10));
-            if (rawScore >= 60) {
-              scoreEl.textContent = `${rawScore} / 100 (High Risk)`;
-              scoreEl.style.color = 'var(--red)';
-            } else if (rawScore >= 30) {
-              scoreEl.textContent = `${rawScore} / 100 (Moderate)`;
-              scoreEl.style.color = 'var(--amber)';
-            } else {
-              scoreEl.textContent = `${rawScore} / 100 (Low Risk)`;
-              scoreEl.style.color = 'var(--green)';
-            }
-          }
+          const filesCount = parseInt(document.getElementById('res-files').textContent) || 1;
+          const riskObj = (window.CryptoEngine && window.CryptoEngine.calculateDynamicRiskScore)
+            ? CryptoEngine.calculateDynamicRiskScore(findings, filesCount)
+            : { text: findings.length === 0 ? '0 / 100 (Low Risk)' : '45 / 100 (Moderate)', color: '#f59e0b' };
+          scoreEl.textContent = riskObj.text;
+          scoreEl.style.color = riskObj.color;
         }
 
         const chart = document.getElementById('risk-chart');
