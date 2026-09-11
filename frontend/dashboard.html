@@ -1076,9 +1076,10 @@
       const data = CryptoEngine.getData();
       const hasData = (data.repositories && data.repositories.length > 0) || (data.scans && data.scans.length > 0);
 
-      const currentScan = (data.scans && data.scans.length > 0) ? data.scans[0] : (data.activeScan || {});
-      const targetScans = currentScan.findings ? [currentScan] : (data.scans || []);
-      const allFindings = targetScans.flatMap(s => s.findings || []);
+      // Aggregate ALL scans — dashboard should reflect the full portfolio, not just the latest scan
+      const allScans = (data.scans && data.scans.length > 0) ? data.scans : (data.activeScan ? [data.activeScan] : []);
+      const currentScan = allScans[0] || {}; // most recent for header/meta display
+      const allFindings = allScans.flatMap(s => s.findings || []);
       const totalFindings = allFindings.length || data.totalFindings || 0;
 
       const critCount = allFindings.filter(f => (f.severity || '').toLowerCase() === 'critical').length;
@@ -1093,17 +1094,20 @@
 
       // Header Updates
       if (hasData) {
-        const latestScan = currentScan;
-        const repoName = (latestScan && latestScan.repoName) ? latestScan.repoName : (data.repositories && data.repositories.length > 0 ? data.repositories[0].name : 'Repository');
+        // Show aggregate title: if multiple scans, show count; else show the repo name
+        const repoName = allScans.length > 1
+          ? `All Repositories (${allScans.length} scans)`
+          : (currentScan.repoName || (data.repositories && data.repositories.length > 0 ? data.repositories[0].name : 'Repository'));
         document.getElementById('hdr-repo-name').textContent = repoName;
 
         let timeStr = 'N/A';
-        if (latestScan && (latestScan.timestamp || latestScan.scanDate)) {
-          timeStr = latestScan.timestamp || new Date(latestScan.scanDate).toLocaleString();
+        if (currentScan && (currentScan.timestamp || currentScan.scanDate)) {
+          timeStr = currentScan.timestamp || new Date(currentScan.scanDate).toLocaleString();
         } else if (data.repositories && data.repositories.length > 0 && data.repositories[0].lastScan) {
           timeStr = data.repositories[0].lastScan;
         }
-        document.getElementById('hdr-repo-meta').innerHTML = `Branch: <span style="color:var(--text-b)">main</span> &nbsp;|&nbsp; Last Scan: <span style="color:var(--text-b)">${timeStr}</span>`;
+        const totalScansLabel = allScans.length > 1 ? ` &nbsp;|&nbsp; Total Scans: <span style="color:var(--purple)">${allScans.length}</span>` : '';
+        document.getElementById('hdr-repo-meta').innerHTML = `Last Scan: <span style="color:var(--text-b)">${timeStr}</span>${totalScansLabel}`;
 
         const badge = document.getElementById('hdr-status-badge');
         badge.style.display = 'inline-block';
@@ -1125,15 +1129,17 @@
         }
       }
 
-      // Calculate totals
-      let totalFilesScanned = currentScan.filesScanned || currentScan.filesDiscovered || (new Set(allFindings.map(f => f.file || f.filePath)).size) || 0;
-      let totalCbomComponents = currentScan.assetsFound || (currentScan.cbom ? currentScan.cbom.length : 0) || (new Set(allFindings.map(f => f.algorithm)).size) || 0;
+      // Calculate totals across ALL scans
+      let totalFilesScanned = allScans.reduce((sum, s) => sum + (s.filesScanned || s.filesDiscovered || 0), 0)
+        || (new Set(allFindings.map(f => f.file || f.filePath)).size) || 0;
+      let totalCbomComponents = allScans.reduce((sum, s) => sum + (s.assetsFound || (s.cbom ? s.cbom.length : 0)), 0)
+        || (new Set(allFindings.map(f => f.algorithm)).size) || 0;
       let langsSet = new Set();
       let apisSet = new Set();
       let algosSet = new Set();
-      let secretsCount = currentScan.secretsFound || 0;
+      let secretsCount = allScans.reduce((sum, s) => sum + (s.secretsFound || 0), 0);
 
-      targetScans.forEach(s => {
+      allScans.forEach(s => {
         if (s.languages) s.languages.forEach(l => langsSet.add(l));
         if (s.cryptoApis) s.cryptoApis.forEach(a => apisSet.add(a));
       });
@@ -1173,27 +1179,37 @@
       const emptyRepos = document.getElementById('empty-repos');
       const tbody = document.getElementById('repos-tbody');
 
-      const displayRepos = (data.repositories && data.repositories.length > 0)
-        ? data.repositories
-        : (data.scans || []).map(s => ({
-          name: s.repoName || 'Scanned Repository',
-          lastScan: s.timestamp || 'Just now',
-          status: 'completed'
-        }));
+      // Build scan rows from ALL scans — each scan is one row
+      const scanRows = allScans.map(s => {
+        const findings = s.findings || [];
+        const crit = findings.filter(f => (f.severity||'').toLowerCase() === 'critical').length;
+        const high = findings.filter(f => (f.severity||'').toLowerCase() === 'high').length;
+        const isVerified = s.verified || s.isVerified || !!(s.verificationResult && s.verificationResult.verified && !s.verificationResult.localOnly);
+        const isLocalVerified = !isVerified && !!(s.verificationResult && s.verificationResult.verified);
+        const riskLabel = crit > 0 ? 'CRITICAL' : high > 0 ? 'HIGH' : findings.length > 0 ? 'MEDIUM' : 'LOW';
+        const riskBadge = crit > 0 ? 'badge-crit' : high > 0 ? 'badge-high' : findings.length > 0 ? 'badge-med' : 'badge-low';
+        const timeStr = s.timestamp || s.scanDate ? new Date(s.timestamp || s.scanDate).toLocaleString() : 'Just now';
+        const verifBadge = isVerified
+          ? '<span class="badge badge-pass" style="background:rgba(16,185,129,0.15);color:#059669;border:1px solid rgba(16,185,129,0.3);">✅ VERIFIED</span>'
+          : isLocalVerified
+            ? '<span class="badge badge-med" style="background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);">⚠️ LOCAL ONLY</span>'
+            : '<span class="badge badge-low" style="background:rgba(100,116,139,0.12);color:var(--text-m);border:1px solid var(--border-color);">NOT VERIFIED</span>';
+        return { s, timeStr, riskLabel, riskBadge, verifBadge, findingsCount: findings.length };
+      });
 
-      if (!hasData || displayRepos.length === 0) {
+      if (!hasData || scanRows.length === 0) {
         tbl.style.display = 'none';
         emptyRepos.style.display = 'flex';
       } else {
         tbl.style.display = 'table';
         emptyRepos.style.display = 'none';
-        tbody.innerHTML = displayRepos.map(r => `
-      <tr>
-        <td><span style="font-weight:600;color:var(--text-h);">${r.name}</span></td>
-        <td><span style="font-size:12px;color:var(--text-s)">${r.lastScan || 'Just now'}</span></td>
-        <td><span class="badge badge-med">Generated</span></td>
-        <td><span class="badge badge-crit">Completed</span></td>
-        <td><span class="badge badge-low">Not Verified</span></td>
+        tbody.innerHTML = scanRows.map(({ s, timeStr, riskBadge, riskLabel, verifBadge, findingsCount }) => `
+      <tr style="cursor:pointer;" onclick="window.location.href='findings.html'">
+        <td><span style="font-weight:600;color:var(--text-h);">${s.repoName || 'Scanned Repository'}</span></td>
+        <td><span style="font-size:12px;color:var(--text-s)">${timeStr}</span></td>
+        <td><span class="badge badge-med">GENERATED (${findingsCount})</span></td>
+        <td><span class="badge ${riskBadge}">${riskLabel}</span></td>
+        <td>${verifBadge}</td>
       </tr>
     `).join('');
       }

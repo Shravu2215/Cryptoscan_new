@@ -1177,15 +1177,22 @@
 
       let c = 0, h = 0, m = 0, l = 0, safe = 0;
       scans.forEach(s => {
-        let r = getHighestRisk(s.findings || []).class;
-        if (r === 'crit') c++;
-        else if (r === 'high') h++;
-        else if (r === 'med') m++;
-        else if (r === 'low') l++;
-        else safe++;
+        const findings = s.findings || [];
+        if (findings.length === 0) {
+          safe++;
+        } else {
+          findings.forEach(f => {
+            const sev = (f.severity || '').toUpperCase();
+            if (sev === 'CRITICAL') c++;
+            else if (sev === 'HIGH') h++;
+            else if (sev === 'MEDIUM') m++;
+            else if (sev === 'LOW') l++;
+            else safe++;
+          });
+        }
       });
 
-      const tot = scans.length;
+      const tot = (c + h + m + l + safe) || 1;
       chart.innerHTML = ''; leg.innerHTML = '';
 
       const gradientStyles = {
