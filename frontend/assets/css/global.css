@@ -180,6 +180,8 @@ a {
   min-width: 0;
   min-height: 100vh;
   margin-left: 264px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .app-topbar {
