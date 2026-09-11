@@ -1700,43 +1700,50 @@
       }
 
       function computeFindingMosca(rawFinding, fileCount) {
-        // Always recompute fresh X/Y/Z using CryptoEngine so stale cached risk is ignored
-        let x, y, z, margin;
-        if (typeof CryptoEngine !== 'undefined' && rawFinding) {
-          // Re-enrich to get fresh lifetime / migration estimates
-          const fresh = CryptoEngine.computeMoscaRisk(rawFinding);
-          x = fresh.X;
-          y = fresh.Y;
-          z = fresh.Z;
-          margin = fresh.urgency_margin;
-        } else {
-          const risk = (rawFinding && rawFinding.risk) ? rawFinding.risk : { X: 5, Y: 1.5, Z: 12, urgency_margin: 5.5, urgency_tier: 'Low' };
-          x = risk.X !== undefined ? risk.X : 5;
-          y = risk.Y !== undefined ? risk.Y : 1.5;
-          z = risk.Z !== undefined ? risk.Z : 12;
-          margin = (risk.urgency_margin !== undefined) ? risk.urgency_margin : (z - (x + y));
-        }
+        // Use pre-computed risk if available and sensible
+        const risk = (rawFinding && rawFinding.risk) ? rawFinding.risk : null;
+        const x = risk && risk.X !== undefined ? risk.X : 5;
+        const y = risk && risk.Y !== undefined ? risk.Y : 1.5;
+        const z = risk && risk.Z !== undefined ? risk.Z : 12;
+        const margin = (risk && risk.urgency_margin !== undefined) ? risk.urgency_margin : (z - (x + y));
         const isMet = (x + y) > z;
-        let cat = 'SAFE_TIMELINE';
-        let catLabel = 'Safe Under Current Timeline';
-        if (margin < 0) {
-          cat = 'VULNERABLE_NOW';
-          catLabel = 'Vulnerable Now (X + Y > Z)';
-        } else if (margin <= 5) {
-          cat = 'WITHIN_HORIZON';
-          catLabel = 'Vulnerable Within Horizon';
-        }
+
+        // Classify based on algorithm characteristics directly — immune to stale cache
+        const cat = getMoscaCategoryDirect(rawFinding);
+        const catLabel = cat === 'VULNERABLE_NOW' ? 'Vulnerable Now (X + Y > Z)'
+                       : cat === 'WITHIN_HORIZON' ? 'Vulnerable Within Horizon'
+                       : 'Safe Under Current Timeline';
         return {
           X: x, Y: y, Z: z,
-          moscaX: `${x}y`,
-          moscaY: `${y}y`,
-          moscaZ: `${z}y`,
-          diff: margin,
-          urgency_margin: margin,
-          isMet: isMet,
-          category: cat,
-          categoryLabel: catLabel
+          moscaX: `${x}y`, moscaY: `${y}y`, moscaZ: `${z}y`,
+          diff: margin, urgency_margin: margin, isMet: isMet,
+          category: cat, categoryLabel: catLabel
         };
+      }
+
+      /* Direct Mosca bucketing — no dependency on cached risk values */
+      function getMoscaCategoryDirect(f) {
+        if (!f) return 'WITHIN_HORIZON';
+        const algo = (f.algorithm || f.title || '').toLowerCase();
+        const sev  = (f.severity || f.severity_level || 'medium').toLowerCase();
+        const isQ  = f.quantum === 'yes' || f.quantum === true || f.quantumVulnerable === true || f.is_quantum_vulnerable === true
+                     || algo.includes('rsa') || algo.includes('ecdsa') || algo.includes('ecdh') || algo.includes('dsa') || algo.includes('ecc') || algo.includes('elgamal') || algo.includes('dh');
+        const isWeak = algo.includes('md5') || algo.includes('sha1') || algo.includes('sha-1')
+                    || algo.includes('des') || algo.includes('3des') || algo.includes('rc4')
+                    || algo.includes('blowfish') || algo.includes('rc2') || algo.includes('rc5');
+        const isModern = algo.includes('aes') || algo.includes('sha256') || algo.includes('sha-256')
+                      || algo.includes('sha3') || algo.includes('blake') || algo.includes('chacha')
+                      || algo.includes('bcrypt') || algo.includes('argon') || algo.includes('pbkdf2')
+                      || algo.includes('hmac') || algo.includes('ed25519') || algo.includes('x25519');
+
+        // Quantum-vulnerable asymmetric + critical/high severity → immediately at risk
+        if (isQ && (sev === 'critical' || sev === 'high')) return 'VULNERABLE_NOW';
+        // Quantum-vulnerable but lower severity, OR weak legacy symmetric → transitional horizon
+        if (isQ || isWeak) return 'WITHIN_HORIZON';
+        // Modern, strong symmetric algorithms → safe under current timeline
+        if (isModern) return 'SAFE_TIMELINE';
+        // Default: within horizon (conservative)
+        return 'WITHIN_HORIZON';
       }
 
       function updateMoscaCategorizationPanel() {
@@ -1746,9 +1753,9 @@
 
         let v = 0, h = 0, s = 0;
         migrationCandidates.forEach(c => {
-          const m = computeFindingMosca(c.rawFinding, c.fileCount);
-          if (m.category === 'VULNERABLE_NOW') v++;
-          else if (m.category === 'WITHIN_HORIZON') h++;
+          const cat = getMoscaCategoryDirect(c.rawFinding || c);
+          if (cat === 'VULNERABLE_NOW') v++;
+          else if (cat === 'WITHIN_HORIZON') h++;
           else s++;
         });
 
@@ -1756,18 +1763,18 @@
         if (pH) pH.textContent = h;
         if (pS) pS.textContent = s;
 
-        const mcNow = document.getElementById('mc-count-now');
-        const mcHor = document.getElementById('mc-count-horizon');
+        const mcNow  = document.getElementById('mc-count-now');
+        const mcHor  = document.getElementById('mc-count-horizon');
         const mcSafe = document.getElementById('mc-count-safe');
-        const msNow = document.getElementById('mc-sub-now');
-        const msHor = document.getElementById('mc-sub-horizon');
+        const msNow  = document.getElementById('mc-sub-now');
+        const msHor  = document.getElementById('mc-sub-horizon');
         const msSafe = document.getElementById('mc-sub-safe');
 
-        if (mcNow) mcNow.textContent = v;
-        if (mcHor) mcHor.textContent = h;
+        if (mcNow)  mcNow.textContent  = v;
+        if (mcHor)  mcHor.textContent  = h;
         if (mcSafe) mcSafe.textContent = s;
-        if (msNow) msNow.textContent = `${v} component${v === 1 ? '' : 's'} affected`;
-        if (msHor) msHor.textContent = `${h} component${h === 1 ? '' : 's'} affected`;
+        if (msNow)  msNow.textContent  = `${v} component${v === 1 ? '' : 's'} affected`;
+        if (msHor)  msHor.textContent  = `${h} component${h === 1 ? '' : 's'} affected`;
         if (msSafe) msSafe.textContent = `${s} component${s === 1 ? '' : 's'} affected`;
       }
 
