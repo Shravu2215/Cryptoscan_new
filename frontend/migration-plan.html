@@ -1700,27 +1700,39 @@
       }
 
       function computeFindingMosca(rawFinding, fileCount) {
-        const risk = (rawFinding && rawFinding.risk) ? rawFinding.risk : { X: 5, Y: 1.5, Z: 12, urgency_margin: 5.5, urgency_tier: 'Low' };
-        const x = risk.X !== undefined ? risk.X : 5;
-        const y = risk.Y !== undefined ? risk.Y : 1.5;
-        const z = risk.Z !== undefined ? risk.Z : 12;
-        const margin = (risk.urgency_margin !== undefined) ? risk.urgency_margin : (z - (x + y));
+        // Always recompute fresh X/Y/Z using CryptoEngine so stale cached risk is ignored
+        let x, y, z, margin;
+        if (typeof CryptoEngine !== 'undefined' && rawFinding) {
+          // Re-enrich to get fresh lifetime / migration estimates
+          const fresh = CryptoEngine.computeMoscaRisk(rawFinding);
+          x = fresh.X;
+          y = fresh.Y;
+          z = fresh.Z;
+          margin = fresh.urgency_margin;
+        } else {
+          const risk = (rawFinding && rawFinding.risk) ? rawFinding.risk : { X: 5, Y: 1.5, Z: 12, urgency_margin: 5.5, urgency_tier: 'Low' };
+          x = risk.X !== undefined ? risk.X : 5;
+          y = risk.Y !== undefined ? risk.Y : 1.5;
+          z = risk.Z !== undefined ? risk.Z : 12;
+          margin = (risk.urgency_margin !== undefined) ? risk.urgency_margin : (z - (x + y));
+        }
         const isMet = (x + y) > z;
         let cat = 'SAFE_TIMELINE';
         let catLabel = 'Safe Under Current Timeline';
         if (margin < 0) {
           cat = 'VULNERABLE_NOW';
           catLabel = 'Vulnerable Now (X + Y > Z)';
-        } else if (margin <= 2) {
+        } else if (margin <= 5) {
           cat = 'WITHIN_HORIZON';
           catLabel = 'Vulnerable Within Horizon';
         }
         return {
-          ...risk,
+          X: x, Y: y, Z: z,
           moscaX: `${x}y`,
           moscaY: `${y}y`,
           moscaZ: `${z}y`,
           diff: margin,
+          urgency_margin: margin,
           isMet: isMet,
           category: cat,
           categoryLabel: catLabel
@@ -1734,7 +1746,7 @@
 
         let v = 0, h = 0, s = 0;
         migrationCandidates.forEach(c => {
-          const m = c.mosca || computeFindingMosca(c.rawFinding, c.fileCount);
+          const m = computeFindingMosca(c.rawFinding, c.fileCount);
           if (m.category === 'VULNERABLE_NOW') v++;
           else if (m.category === 'WITHIN_HORIZON') h++;
           else s++;
