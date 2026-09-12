@@ -329,21 +329,22 @@ html.dark .card, html.dark .gcard, html.dark .p-card, html.dark-mode .card, html
   color: #CBD5E1 !important;
 }
 
-html.dark .scard, html.dark-mode .scard {
+html.dark .scard, html.dark-mode .scard, body.dark .scard, body.dark-mode .scard, html:not(.light-mode) .scard {
   background: rgba(15, 23, 42, 0.85) !important;
   border-color: rgba(51, 65, 85, 0.8) !important;
 }
 
-html.dark .scard-primary, html.dark-mode .scard-primary {
+html.dark .scard-primary, html.dark-mode .scard-primary, body.dark .scard-primary, body.dark-mode .scard-primary, html:not(.light-mode) .scard-primary {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
   border-color: rgba(124, 58, 237, 0.5) !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .scard-primary .sc-lbl, html.dark-mode .scard-primary .sc-lbl {
+html.dark .scard-primary .sc-lbl, html.dark-mode .scard-primary .sc-lbl, body.dark .scard-primary .sc-lbl, html:not(.light-mode) .scard-primary .sc-lbl {
   color: #94A3B8 !important;
 }
 
-html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val {
+html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val, body.dark .scard-primary .sc-val, html:not(.light-mode) .scard-primary .sc-val {
   color: #C084FC !important;
 }
 

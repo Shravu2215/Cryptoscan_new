@@ -1046,9 +1046,16 @@ window.addEventListener('DOMContentLoaded', () => {
   if (tBtn) {
     updateThemeUI();
     tBtn.addEventListener('click', () => {
-      document.documentElement.classList.toggle('light-mode');
       const isLight = document.documentElement.classList.contains('light-mode');
-      localStorage.setItem('cs_theme', isLight ? 'light' : 'dark');
+      if (isLight) {
+        document.documentElement.classList.remove('light-mode');
+        document.documentElement.classList.add('dark', 'dark-mode');
+        localStorage.setItem('cs_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark', 'dark-mode');
+        document.documentElement.classList.add('light-mode');
+        localStorage.setItem('cs_theme', 'light');
+      }
       updateThemeUI();
     });
   }
