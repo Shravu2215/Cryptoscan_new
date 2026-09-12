@@ -348,6 +348,39 @@ html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val, body.da
   color: #C084FC !important;
 }
 
+/* Recommended PQC Replacement Box in Dark Mode */
+html.dark .rec-replace, html.dark-mode .rec-replace, body.dark .rec-replace, body.dark-mode .rec-replace, html:not(.light-mode) .rec-replace {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .replace-lbl, html.dark-mode .replace-lbl, body.dark .replace-lbl, body.dark-mode .replace-lbl, html:not(.light-mode) .replace-lbl {
+  color: #A7F3D0 !important;
+}
+
+html.dark .replace-val, html.dark-mode .replace-val, body.dark .replace-val, body.dark-mode .replace-val, html:not(.light-mode) .replace-val {
+  color: #34D399 !important;
+}
+
+html.dark .replace-icon-wrap, html.dark-mode .replace-icon-wrap, body.dark .replace-icon-wrap, body.dark-mode .replace-icon-wrap, html:not(.light-mode) .replace-icon-wrap {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #34D399 !important;
+}
+
+html.dark .rg-card, html.dark-mode .rg-card, body.dark .rg-card, html:not(.light-mode) .rg-card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark .rg-lbl, html.dark-mode .rg-lbl, body.dark .rg-lbl, html:not(.light-mode) .rg-lbl {
+  color: #94A3B8 !important;
+}
+
+html.dark .rg-val, html.dark-mode .rg-val, body.dark .rg-val, html:not(.light-mode) .rg-val {
+  color: #F8FAFC !important;
+}
+
 html.dark .stat-tile, html.dark .p-stat-tile, html.dark-mode .stat-tile, html.dark-mode .p-stat-tile {
   background: rgba(30, 41, 59, 0.5) !important;
   border-color: rgba(51, 65, 85, 0.8) !important;
