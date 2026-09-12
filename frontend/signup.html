@@ -6,10 +6,8 @@
 <title>Create Account – CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') !== 'dark') {
-        document.documentElement.classList.add('light-mode');
-        localStorage.setItem('cs_theme', 'light');
-      }
+      document.documentElement.classList.add('light-mode');
+      localStorage.setItem('cs_theme', 'light');
     }
     initTheme();
   </script>

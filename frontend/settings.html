@@ -6,10 +6,8 @@
 <title>Settings — CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') !== 'dark') {
-        document.documentElement.classList.add('light-mode');
-        localStorage.setItem('cs_theme', 'light');
-      }
+      document.documentElement.classList.add('light-mode');
+      localStorage.setItem('cs_theme', 'light');
     }
     initTheme();
   </script>
@@ -22,17 +20,17 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   /* Dark theme variables — Modern Slate Dark */
-  --bg-main: #111827;
-  --bg-sidebar: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #334155;
-  --border-color: #334155;
-  --border-light: #334155;
+  --bg-main: #F2EFFC;
+  --bg-sidebar: rgba(255, 255, 255, 0.75);
+  --bg-card: rgba(255, 255, 255, 0.75);
+  --bg-card-hover: rgba(243, 232, 255, 0.85);
+  --border-color: rgba(216, 180, 254, 0.65);
+  --border-light: rgba(243, 232, 255, 0.8);
   
-  --text-h: #f8fafc; /* Headers text */
-  --text-b: #cbd5e1; /* Body text */
-  --text-m: #94a3b8; /* Muted text */
-  --text-s: #64748b; /* Subtle text */
+  --text-h: #1E1B4B; /* Headers text */
+  --text-b: #312E81; /* Body text */
+  --text-m: #6B7280; /* Muted text */
+  --text-s: #9CA3AF; /* Subtle text */
   
   --green: #10b981;
   --green-bg: rgba(16, 185, 129, 0.1);
@@ -52,7 +50,7 @@
       --text-h: #0f172a;
       --text-b: #334155;
       --text-m: #475569;
-      --text-s: #64748b;
+      --text-s: #9CA3AF;
     }
 
 html{font-size:14px}

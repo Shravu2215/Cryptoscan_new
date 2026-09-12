@@ -6,10 +6,8 @@
 <title>Sign In – CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') !== 'dark') {
-        document.documentElement.classList.add('light-mode');
-        localStorage.setItem('cs_theme', 'light');
-      }
+      document.documentElement.classList.add('light-mode');
+      localStorage.setItem('cs_theme', 'light');
     }
     initTheme();
   </script>
@@ -25,10 +23,10 @@
   --red: #ef4444;
   --red-bg: rgba(239, 68, 68, 0.1);
   --amber: #f59e0b;
-  --text-h: #f8fafc;
-  --text-b: #cbd5e1;
-  --text-m: #94a3b8;
-  --text-s: #64748b;
+  --text-h: #1E1B4B;
+  --text-b: #312E81;
+  --text-m: #6B7280;
+  --text-s: #9CA3AF;
   --border: #1f2937;
   --border-focus: #10b981;
   --bg: #0b0f19;
@@ -46,7 +44,7 @@
       --text-h: #0f172a;
       --text-b: #334155;
       --text-m: #475569;
-      --text-s: #64748b;
+      --text-s: #9CA3AF;
     }
 
 
