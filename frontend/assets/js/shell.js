@@ -197,10 +197,10 @@ class AppShell {
         const isLight = document.documentElement.classList.contains('light-mode');
         if (isLight) {
           document.documentElement.classList.remove('light-mode');
-          document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('dark', 'dark-mode');
           localStorage.setItem('cs_theme', 'dark');
         } else {
-          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.remove('dark', 'dark-mode');
           document.documentElement.classList.add('light-mode');
           localStorage.setItem('cs_theme', 'light');
         }
