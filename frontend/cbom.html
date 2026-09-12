@@ -6,12 +6,13 @@
 <title>CBOM — CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') === 'dark') {
-        document.documentElement.classList.add('dark', 'dark-mode');
-        document.documentElement.classList.remove('light-mode');
-      } else {
+      var saved = localStorage.getItem('cs_theme');
+      if (saved === 'light') {
         document.documentElement.classList.add('light-mode');
-        document.documentElement.classList.remove('dark', 'dark-mode');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
       }
     }
     initTheme();
@@ -21,17 +22,17 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   /* Dark theme variables — Modern Slate Dark */
-  --bg-main: #F2EFFC;
-  --bg-sidebar: rgba(255, 255, 255, 0.75);
-  --bg-card: rgba(255, 255, 255, 0.75);
-  --bg-card-hover: rgba(243, 232, 255, 0.85);
-  --border-color: rgba(216, 180, 254, 0.65);
-  --border-light: rgba(243, 232, 255, 0.8);
+  --bg-main: #111827;
+  --bg-sidebar: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --border-color: #334155;
+  --border-light: #334155;
   
-  --text-h: #1E1B4B; /* Headers text */
-  --text-b: #312E81; /* Body text */
-  --text-m: #6B7280; /* Muted text */
-  --text-s: #9CA3AF; /* Subtle text */
+  --text-h: #f8fafc; /* Headers text */
+  --text-b: #cbd5e1; /* Body text */
+  --text-m: #94a3b8; /* Muted text */
+  --text-s: #64748b; /* Subtle text */
   
   /* State Colors */
   --green: #10b981; /* Secure/Verified */
@@ -66,7 +67,7 @@
       --text-h: #0f172a;
       --text-b: #334155;
       --text-m: #475569;
-      --text-s: #9CA3AF;
+      --text-s: #64748b;
     }
 
 
@@ -129,6 +130,105 @@ body {
   margin-left: auto; background: var(--border-color);
   color: var(--text-h); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
 }
+
+/* Main Content Area */
+.main {
+  margin-left: var(--sb-w); flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto;
+}
+
+/* Header */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 32px; background: var(--bg-main);
+  position: sticky; top: 0; z-index: 50;
+  border-bottom: 1px solid var(--border-color);
+}
+.tb-left { display: flex; flex-direction: column; gap: 4px; }
+.tb-title { font-size: 20px; font-weight: 600; color: var(--text-h); letter-spacing: -0.02em; line-height: 1; }
+.tb-sub { font-size: 13px; color: var(--text-m); }
+.tb-right { display: flex; align-items: center; gap: 16px; }
+
+/* Buttons */
+.btn-p {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: var(--red); border: none; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600; color: #ffffff; cursor: pointer;
+  transition: opacity var(--t); text-decoration: none;
+}
+.btn-p:hover { opacity: 0.9; }
+
+.btn-sec {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: transparent; border: 1px solid var(--border-color);
+  border-radius: var(--r-sm); font-size: 13px; font-weight: 500; color: var(--text-b);
+  cursor: pointer; text-decoration: none; transition: all var(--t);
+}
+.btn-sec:hover { background: var(--bg-card); border-color: var(--text-s); }
+
+/* Dashboard Grid */
+.content { padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.row { display: flex; gap: 24px; }
+.col { display: flex; flex-direction: column; gap: 24px; }
+.col-2 { flex: 2; } .col-1 { flex: 1; }
+
+/* Cards */
+.gcard {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--r-lg); padding: 24px; position: relative;
+}
+.gc-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.gc-ttl { font-size: 14px; font-weight: 600; color: var(--text-h); }
+.gc-sub { font-size: 12px; color: var(--text-m); margin-top: 4px; }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.scard {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--r-md); padding: 16px;
+}
+.scard-primary {
+  background: linear-gradient(135deg, #991b1b, #dc2626);
+  color: #ffffff;
+  border: none;
+}
+.scard-primary .sc-lbl, .scard-primary .empty-sub { color: rgba(255,255,255,0.8); }
+.scard-primary .sc-val, .scard-primary .empty-val { color: #ffffff; }
+
+.sc-lbl { font-size: 12px; color: var(--text-m); font-weight: 500; margin-bottom: 8px; }
+.sc-val { font-size: 24px; font-weight: 600; color: var(--text-h); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.empty-val { font-size: 24px; font-weight: 600; color: var(--text-s); }
+.empty-sub { font-size: 11px; color: var(--text-s); margin-top: 4px; }
+
+/* Risk Distribution */
+.risk-dist { display: flex; flex-direction: column; gap: 12px; }
+.risk-bar-container { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; display: flex; overflow: hidden; }
+.risk-bar { height: 100%; }
+.risk-legend { display: flex; justify-content: space-between; font-size: 12px; }
+.legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-b); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 12px 16px; font-size: 11px; font-weight: 500;
+  color: var(--text-m); text-align: left; border-bottom: 1px solid var(--border-color);
+}
+tbody td {
+  padding: 16px; font-size: 13px; color: var(--text-b);
+  border-bottom: 1px solid var(--border-color);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg-card-hover); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; border: 1px solid transparent; }
+.badge-crit { background: var(--red-bg); color: var(--red); border-color: rgba(239, 68, 68, 0.2); }
+.badge-high { background: var(--amber-bg); color: var(--amber); border-color: rgba(245, 158, 11, 0.2); }
+.badge-med { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234, 179, 8, 0.2); }
+.badge-low { background: rgba(100, 116, 139, 0.12); color: #64748b; border-color: rgba(100, 116, 139, 0.3); font-weight: 600; }
+.badge-quant { background: var(--purple-bg); color: var(--purple); border-color: rgba(139, 92, 246, 0.2); }
+.badge-external { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+.badge-internal { background: rgba(100, 116, 139, 0.12); color: #64748b; border-color: rgba(100, 116, 139, 0.3); font-weight: 600; }
 :root.light-mode .badge-internal, html.light-mode .badge-internal { background: rgba(71, 85, 105, 0.12); color: #334155; border-color: rgba(71, 85, 105, 0.3); font-weight: 700; }
 :root.light-mode .badge-low, html.light-mode .badge-low { background: rgba(71, 85, 105, 0.12); color: #334155; border-color: rgba(71, 85, 105, 0.3); font-weight: 700; }
 
@@ -225,21 +325,6 @@ body {
 </style>
 <style>
   /* CBOM Layout Additions */
-  .scard-primary {
-    background: linear-gradient(135deg, rgba(243, 232, 255, 0.85), rgba(255, 255, 255, 0.75));
-    color: #1e1b4b;
-    border: 1px solid rgba(216, 180, 254, 0.6);
-    box-shadow: 0 4px 16px -2px rgba(124, 58, 237, 0.12);
-  }
-  html.dark .scard-primary, html.dark-mode .scard-primary, :root.dark .scard-primary, body.dark .scard-primary, html:not(.light-mode) .scard-primary {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
-    border-color: rgba(124, 58, 237, 0.5) !important;
-    color: #F8FAFC !important;
-  }
-  .scard-primary .sc-lbl, .scard-primary .empty-sub { color: var(--text-m); }
-  html.dark .scard-primary .sc-lbl, html.dark-mode .scard-primary .sc-lbl, body.dark .scard-primary .sc-lbl, html:not(.light-mode) .scard-primary .sc-lbl { color: #94A3B8 !important; }
-  .scard-primary .sc-val, .scard-primary .empty-val { color: #7c3aed; }
-  html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val, body.dark .scard-primary .sc-val, html:not(.light-mode) .scard-primary .sc-val { color: #C084FC !important; }
   .filter-bar {
     display: flex; gap: 12px; align-items: center;
     padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-wrap: wrap;
@@ -323,19 +408,6 @@ body {
 
   <div class="content">
     
-    <!-- Page Header & Actions -->
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px;">
-      <div>
-        <h1 style="font-size:22px; font-weight:700; color:var(--text-h); letter-spacing:-0.02em;">Cryptographic Bill of Materials (CBOM)</h1>
-        <div style="font-size:13px; color:var(--text-m); margin-top:2px;">Software Bill of Materials (SBOM) enriched with cryptographic assets and quantum risk posture</div>
-      </div>
-      <div id="header-actions" style="display:none; align-items:center; gap:12px;">
-        <button class="btn-sec" id="btn-export-cbom-csv" onclick="exportCBOMCSV()">Export CSV</button>
-        <button class="btn-sec" id="btn-export-cbom-json" onclick="downloadCBOM()">Export JSON (CycloneDX)</button>
-        <button class="btn-sec" id="btn-view-cbom-json" onclick="openJsonDrawer()">View JSON</button>
-      </div>
-    </div>
-
     <!-- Empty State -->
     <div id="view-no-data" class="gcard" style="display:none; text-align:center; padding: 80px 20px;">
       <div class="empty-state">
@@ -738,15 +810,12 @@ async function init() {
         const algoUpper = (algo || '').toUpperCase();
         const isAsymmetricVuln = algoUpper.includes('RSA') || algoUpper.includes('ECDSA') || algoUpper.includes('ECDH') || algoUpper.includes('ECC') || algoUpper.includes('DSA') || algoUpper.includes('ED25519');
 
-        const rawMode = enriched.mode || (typeof CryptoEngine !== 'undefined' ? CryptoEngine.extractMode(enriched) : null);
-        const cleanMode = (rawMode && rawMode !== '-' && rawMode !== '—') ? String(rawMode).toUpperCase() : '—';
-
         return {
           id: enriched.id || Math.random().toString(36).substr(2, 9),
           rawFinding: enriched,
           algorithm: algo,
           type: enriched.type || getAlgoType(algo),
-          mode: cleanMode,
+          mode: (algo.split('-')[1] || '—').toUpperCase(),
           suggested_lifetime: enriched.suggested_lifetime || 5,
           user_confirmed_lifetime: enriched.user_confirmed_lifetime || null,
           subfactors: enriched.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 },
@@ -1061,7 +1130,6 @@ function closeDrawer() {
 
 // JSON generation (CycloneDX like)
 function generateCycloneDX() {
-  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
   return JSON.stringify({
     bomFormat: "CycloneDX",
     specVersion: "1.5",
@@ -1070,7 +1138,7 @@ function generateCycloneDX() {
       timestamp: new Date().toISOString(),
       tools: [{ vendor: "CryptoScan", name: "CryptoScanner API" }]
     },
-    components: targetItems.map(c => {
+    components: inventory.map(c => {
       const risk = c.moscaRisk || { X: 5, Y: 1, Z: 12, urgency_margin: 6, urgency_tier: 'Low', priority_score: 2 };
       const sf = c.subfactors || { data_sensitivity: 1, exposure: 1, system_role: 1, regulatory_impact: 2 };
       return {
@@ -1079,7 +1147,6 @@ function generateCycloneDX() {
         group: c.library,
         properties: [
           { name: "crypto:type", value: c.type || "algorithm" },
-          { name: "crypto:mode", value: c.mode || "—" },
           { name: "crypto:suggested_lifetime", value: String(c.suggested_lifetime || 5) },
           { name: "crypto:user_confirmed_lifetime", value: c.user_confirmed_lifetime ? String(c.user_confirmed_lifetime) : "null" },
           { name: "crypto:effective_lifetime_X", value: String(risk.X) },
@@ -1125,75 +1192,13 @@ function copyJSON() {
 }
 
 function downloadCBOM() {
-  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
-  if (!targetItems || targetItems.length === 0) {
-    alert('No CBOM components available to export.');
-    return;
-  }
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const json = generateCycloneDX();
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `cryptoscan-cbom-${timestamp}.json`;
-  document.body.appendChild(a);
+  a.download = `cbom_${new Date().getTime()}.json`;
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function exportCBOMCSV() {
-  const targetItems = (typeof filteredInventory !== 'undefined' && filteredInventory.length > 0) ? filteredInventory : inventory;
-  if (!targetItems || targetItems.length === 0) {
-    alert('No CBOM components available to export.');
-    return;
-  }
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const headers = [
-    'Algorithm', 'Type', 'Mode', 'Purpose', 'Exposure', 'Criticality',
-    'File', 'Line', 'Library', 'Version', 'Key Size', 'Latency Impact (ms)', 'Risk', 'Quantum Vulnerable'
-  ];
-
-  const escapeCsv = (str) => {
-    if (str === null || str === undefined) return '""';
-    const s = String(str).replace(/"/g, '""');
-    return `"${s}"`;
-  };
-
-  const rows = targetItems.map(c => {
-    const expRaw = (c.exposure || '').toLowerCase();
-    const isExt = expRaw === 'external-facing' || expRaw === 'external' || (c.exposure_label && c.exposure_label.toLowerCase() === 'external');
-    const expLabel = isExt ? 'External' : 'Internal';
-
-    return [
-      escapeCsv(c.algorithm || ''),
-      escapeCsv(c.type || ''),
-      escapeCsv(c.mode || '—'),
-      escapeCsv(c.purpose || ''),
-      escapeCsv(expLabel),
-      escapeCsv(c.criticality || 'Not tagged'),
-      escapeCsv(c.file || ''),
-      escapeCsv(c.line || ''),
-      escapeCsv(c.library || ''),
-      escapeCsv(c.version || '—'),
-      escapeCsv(c.keySize || '—'),
-      escapeCsv(c.latencyImpactMs ?? '—'),
-      escapeCsv(c.risk || 'SAFE'),
-      escapeCsv(c.quantumVulnerable ? 'Yes' : 'No')
-    ].join(',');
-  });
-
-  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cryptoscan-cbom-${timestamp}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
