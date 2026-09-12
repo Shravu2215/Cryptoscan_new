@@ -365,14 +365,27 @@
       box-shadow: 0 4px 16px -2px rgba(124, 58, 237, 0.12);
     }
 
+    html.dark .scard-primary, html.dark-mode .scard-primary, :root.dark .scard-primary {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
+      border-color: rgba(124, 58, 237, 0.5) !important;
+    }
+
     .scard-primary .sc-lbl,
     .scard-primary .empty-sub {
       color: var(--text-m);
     }
 
+    html.dark .scard-primary .sc-lbl, html.dark-mode .scard-primary .sc-lbl {
+      color: #94A3B8 !important;
+    }
+
     .scard-primary .sc-val,
     .scard-primary .empty-val {
       color: #7c3aed;
+    }
+
+    html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val {
+      color: #C084FC !important;
     }
 
     .sc-lbl {
