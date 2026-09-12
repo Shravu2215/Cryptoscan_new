@@ -971,9 +971,9 @@
             </div>
             <div id="quantum-content" style="display:none;">
               <div id="quantum-gauge-container" style="margin-bottom:12px;"></div>
-              <div
-                style="margin-top:14px;padding:12px;background:rgba(255,255,255,0.7);border:1px solid rgba(216,180,254,0.4);border-radius:12px;backdrop-filter:blur(8px);">
-                <div style="font-size:11px;font-weight:700;color:#7c3aed;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Quantum Exposure Assessment</div>
+              <div class="q-exposure-box"
+                style="margin-top:14px;padding:12px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;backdrop-filter:blur(8px);">
+                <div style="font-size:11px;font-weight:700;color:var(--accent-violet);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Quantum Exposure Assessment</div>
                 <div id="q-exposure" style="font-size:13px;color:var(--text-b);line-height:1.4;">Calculating…</div>
               </div>
               <div id="hndl-block"
@@ -1268,8 +1268,8 @@
             <svg width="150" height="150" viewBox="0 0 160 160" style="overflow:visible; flex-shrink:0;">
               <circle cx="80" cy="80" r="${r}" fill="none" stroke="rgba(216, 180, 254, 0.2)" stroke-width="16"></circle>
               ${paths}
-              <text x="80" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1e1b4b" font-family="'JetBrains Mono', monospace">${totalFindings}</text>
-              <text x="80" y="94" text-anchor="middle" font-size="10" font-weight="700" fill="#6b7280" font-family="sans-serif" letter-spacing="0.5">FINDINGS</text>
+              <text x="80" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="var(--text-h)" font-family="'JetBrains Mono', monospace">${totalFindings}</text>
+              <text x="80" y="94" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-m)" font-family="sans-serif" letter-spacing="0.5">FINDINGS</text>
             </svg>`;
         }
 
@@ -1308,19 +1308,19 @@
                 <circle cx="65" cy="65" r="${r}" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="${safeDash} ${c - safeDash}" stroke-dashoffset="0" transform="rotate(-90 65 65)"></circle>
                 <circle cx="65" cy="65" r="${r}" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="${vulnDash} ${c - vulnDash}" stroke-dashoffset="${-safeDash}" transform="rotate(-90 65 65)"></circle>
                 <circle cx="65" cy="65" r="${r}" fill="none" stroke="#9ca3af" stroke-width="12" stroke-dasharray="${unkDash} ${c - unkDash}" stroke-dashoffset="${-(safeDash + vulnDash)}" transform="rotate(-90 65 65)"></circle>
-                <text x="65" y="61" text-anchor="middle" font-size="20" font-weight="700" fill="#1e1b4b" font-family="'JetBrains Mono', monospace">${qReadyPct}%</text>
-                <text x="65" y="79" text-anchor="middle" font-size="9" font-weight="700" fill="#6b7280" letter-spacing="0.5">PQC READY</text>
+                <text x="65" y="61" text-anchor="middle" font-size="20" font-weight="700" fill="var(--text-h)" font-family="'JetBrains Mono', monospace">${qReadyPct}%</text>
+                <text x="65" y="79" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text-m)" letter-spacing="0.5">PQC READY</text>
               </svg>
               <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(209, 250, 229, 0.75); border:1px solid rgba(16, 185, 129, 0.3);">
+                <div class="q-pill q-pill-safe" style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(209, 250, 229, 0.75); border:1px solid rgba(16, 185, 129, 0.3);">
                   <span style="font-size:11px; font-weight:600; color:#047857;">Quantum Safe</span>
                   <span style="font-size:12px; font-weight:700; color:#047857; font-family:monospace;">${quantSafeCount}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(254, 226, 226, 0.75); border:1px solid rgba(239, 68, 68, 0.3);">
+                <div class="q-pill q-pill-vuln" style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(254, 226, 226, 0.75); border:1px solid rgba(239, 68, 68, 0.3);">
                   <span style="font-size:11px; font-weight:600; color:#dc2626;">Vulnerable</span>
                   <span style="font-size:12px; font-weight:700; color:#dc2626; font-family:monospace;">${quantVulnCount}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(243, 244, 246, 0.8); border:1px solid rgba(156, 163, 175, 0.3);">
+                <div class="q-pill q-pill-unk" style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; border-radius:8px; background:rgba(243, 244, 246, 0.8); border:1px solid rgba(156, 163, 175, 0.3);">
                   <span style="font-size:11px; font-weight:600; color:#4b5563;">Unknown</span>
                   <span style="font-size:12px; font-weight:700; color:#4b5563; font-family:monospace;">${quantUnkCount}</span>
                 </div>

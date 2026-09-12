@@ -141,12 +141,100 @@ html.dark {
   --glow-primary: 0 0 35px rgba(139, 92, 246, 0.4);
 }
 
-/* System-Wide Dark Mode Component Overrides */
+/* System-Wide Dark Mode Component & Contrast Overrides */
 html.dark body, html.dark-mode body, :root.dark body {
   background-color: #0B0F19 !important;
   color: #CBD5E1 !important;
 }
 
+/* Headings & Titles in Dark Mode */
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+html.dark .gc-ttl, html.dark .card-ttl, html.dark .p-card-title, html.dark .tb-title,
+html.dark .sc-val, html.dark .mc-value, html.dark .hero-status-title,
+html.dark-mode h1, html.dark-mode h2, html.dark-mode h3, html.dark-mode h4,
+html.dark-mode .gc-ttl, html.dark-mode .card-ttl, html.dark-mode .p-card-title,
+html.dark-mode .tb-title, html.dark-mode .sc-val, html.dark-mode .mc-value {
+  color: #F8FAFC !important;
+}
+
+/* Subtitles, Muted Labels, Descriptions, and Meta Text in Dark Mode */
+html.dark .gc-sub, html.dark .card-sub, html.dark .p-sub, html.dark .tb-sub,
+html.dark .sc-lbl, html.dark .stat-lbl, html.dark .mc-title, html.dark .empty-msg,
+html.dark .empty-sub, html.dark .risk-count, html.dark .legend-item, html.dark .f-label,
+html.dark .hero-status-desc, html.dark .chart-btn, html.dark .current-sub,
+html.dark-mode .gc-sub, html.dark-mode .card-sub, html.dark-mode .p-sub,
+html.dark-mode .tb-sub, html.dark-mode .sc-lbl, html.dark-mode .stat-lbl,
+html.dark-mode .mc-title, html.dark-mode .empty-msg, html.dark-mode .empty-sub,
+html.dark-mode .risk-count, html.dark-mode .legend-item, html.dark-mode .f-label,
+html.dark-mode .hero-status-desc {
+  color: #94A3B8 !important;
+}
+
+/* SVG Chart Text Fills in Dark Mode */
+html.dark svg text, html.dark-mode svg text, :root.dark svg text {
+  fill: #F8FAFC !important;
+}
+
+html.dark svg text[fill*="text-muted"], html.dark-mode svg text[fill*="text-muted"],
+html.dark svg text[fill*="text-m"], html.dark-mode svg text[fill*="text-m"],
+html.dark svg text[font-size="9"], html.dark svg text[font-size="10"],
+html.dark svg text[font-size="11"], html.dark svg text[font-size="12"],
+html.dark-mode svg text[font-size="9"], html.dark-mode svg text[font-size="10"],
+html.dark-mode svg text[font-size="11"], html.dark-mode svg text[font-size="12"] {
+  fill: #94A3B8 !important;
+}
+
+/* Severity Breakdown Rows (Critical, High, Medium, Low, Info) in Dark Mode */
+html.dark #crypto-overview-content [style*="background"],
+html.dark-mode #crypto-overview-content [style*="background"] {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark #cov-crit-lbl, html.dark-mode #cov-crit-lbl { color: #F87171 !important; }
+html.dark #cov-high-lbl, html.dark-mode #cov-high-lbl { color: #FBBF24 !important; }
+html.dark #cov-med-lbl, html.dark-mode #cov-med-lbl { color: #FACC15 !important; }
+html.dark #cov-low-lbl, html.dark-mode #cov-low-lbl { color: #CBD5E1 !important; }
+html.dark #cov-info-lbl, html.dark-mode #cov-info-lbl { color: #60A5FA !important; }
+
+/* Quantum Readiness Ring Gauge Pills in Dark Mode */
+html.dark .q-pill-safe, html.dark-mode .q-pill-safe {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+html.dark .q-pill-safe span, html.dark-mode .q-pill-safe span {
+  color: #34D399 !important;
+}
+
+html.dark .q-pill-vuln, html.dark-mode .q-pill-vuln {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+html.dark .q-pill-vuln span, html.dark-mode .q-pill-vuln span {
+  color: #F87171 !important;
+}
+
+html.dark .q-pill-unk, html.dark-mode .q-pill-unk {
+  background: rgba(148, 163, 184, 0.15) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+html.dark .q-pill-unk span, html.dark-mode .q-pill-unk span {
+  color: #CBD5E1 !important;
+}
+
+/* Quantum Exposure Assessment Box in Dark Mode */
+html.dark .q-exposure-box, html.dark-mode .q-exposure-box,
+html.dark #quantum-content [style*="background"],
+html.dark-mode #quantum-content [style*="background"] {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark #q-exposure, html.dark-mode #q-exposure {
+  color: #CBD5E1 !important;
+}
+
+/* Sidebar & Topbar Shell in Dark Mode */
 html.dark .app-sidebar, html.dark-mode .app-sidebar, :root.dark .app-sidebar {
   background: rgba(15, 23, 42, 0.88) !important;
   border: 1px solid rgba(51, 65, 85, 0.8) !important;
@@ -159,10 +247,29 @@ html.dark .app-topbar, html.dark-mode .app-topbar, :root.dark .app-topbar {
   box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* Cards & Containers in Dark Mode */
 html.dark .card, html.dark .gcard, html.dark .p-card, html.dark-mode .card, html.dark-mode .gcard, html.dark-mode .p-card {
   background: rgba(15, 23, 42, 0.85) !important;
   border-color: rgba(51, 65, 85, 0.8) !important;
   color: #CBD5E1 !important;
+}
+
+html.dark .scard, html.dark-mode .scard {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark .scard-primary, html.dark-mode .scard-primary {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
+  border-color: rgba(124, 58, 237, 0.5) !important;
+}
+
+html.dark .scard-primary .sc-lbl, html.dark-mode .scard-primary .sc-lbl {
+  color: #94A3B8 !important;
+}
+
+html.dark .scard-primary .sc-val, html.dark-mode .scard-primary .sc-val {
+  color: #C084FC !important;
 }
 
 html.dark .stat-tile, html.dark .p-stat-tile, html.dark-mode .stat-tile, html.dark-mode .p-stat-tile {
