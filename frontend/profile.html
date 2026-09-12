@@ -22,7 +22,7 @@
   <script src="assets/js/engine.js"></script>
   <link rel="stylesheet" href="assets/css/global.css">
   <style>
-    /* Custom Profile Page Aesthetics */
+    /* Premium High-Contrast Profile Aesthetics */
     .profile-hero-card {
       position: relative;
       background: var(--bg-card);
@@ -31,26 +31,26 @@
       overflow: hidden;
       box-shadow: var(--shadow-subtle);
       margin-bottom: 24px;
+      border-top: 4px solid var(--accent-violet);
     }
     
     .profile-cover-banner {
-      height: 130px;
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+      height: 100px;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
       position: relative;
-    }
-
-    .profile-cover-overlay {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.25) 0%, transparent 60%);
+      background-image: 
+        radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.3) 0%, transparent 50%),
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 20px 20px, 20px 20px;
     }
 
     .profile-header-body {
-      padding: 0 32px 28px;
+      padding: 0 32px 24px;
       display: flex;
       flex-direction: column;
       gap: 20px;
-      margin-top: -50px;
+      margin-top: -42px;
       position: relative;
       z-index: 2;
     }
@@ -65,22 +65,22 @@
 
     .profile-avatar-wrapper {
       position: relative;
-      width: 104px;
-      height: 104px;
+      width: 92px;
+      height: 92px;
       flex-shrink: 0;
     }
 
     .profile-avatar-large {
-      width: 104px;
-      height: 104px;
+      width: 92px;
+      height: 92px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
       border: 4px solid var(--bg-card);
-      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 38px;
+      font-size: 36px;
       font-weight: 800;
       color: #ffffff;
       transition: transform var(--transition-fast);
@@ -92,10 +92,10 @@
 
     .online-pulse {
       position: absolute;
-      bottom: 6px;
-      right: 6px;
-      width: 18px;
-      height: 18px;
+      bottom: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
       background: #10b981;
       border: 3px solid var(--bg-card);
       border-radius: 50%;
@@ -117,7 +117,7 @@
     }
 
     .profile-name-h1 {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: var(--text-h);
       letter-spacing: -0.02em;
@@ -127,22 +127,22 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 12px;
+      padding: 4px 10px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
 
     .badge-pqc {
-      background: rgba(124, 58, 237, 0.15);
+      background: rgba(124, 58, 237, 0.12);
       color: var(--accent-violet);
       border: 1px solid rgba(124, 58, 237, 0.3);
     }
 
     .badge-sepolia {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.12);
       color: #10b981;
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
@@ -152,15 +152,15 @@
       color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
     .profile-hero-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-top: 12px;
+      gap: 10px;
+      margin-top: 8px;
     }
 
     /* Grid Layout */
@@ -197,7 +197,7 @@
     }
 
     .p-card-title {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text-h);
       display: flex;
@@ -206,8 +206,8 @@
     }
 
     .p-card-title svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       color: var(--accent-violet);
     }
 
@@ -219,13 +219,13 @@
     }
 
     .p-stat-tile {
-      background: rgba(124, 58, 237, 0.04);
+      background: rgba(124, 58, 237, 0.03);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       transition: all var(--transition-fast);
     }
 
@@ -368,7 +368,7 @@
 
     /* Key Box */
     .key-box {
-      background: rgba(15, 23, 42, 0.05);
+      background: rgba(15, 23, 42, 0.04);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       padding: 12px;
@@ -404,7 +404,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 9px 18px;
+      padding: 8px 16px;
       background: var(--grad-primary);
       border: none;
       border-radius: var(--radius-sm);
@@ -427,7 +427,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 9px 18px;
+      padding: 8px 16px;
       background: transparent;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
@@ -450,9 +450,9 @@
       right: 28px;
       background: var(--text-h);
       color: var(--bg-main);
-      padding: 14px 24px;
+      padding: 12px 20px;
       border-radius: var(--radius-md);
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
       display: none;
       box-shadow: 0 12px 36px rgba(0,0,0,0.3);
@@ -470,11 +470,9 @@
     <header class="app-topbar" id="app-topbar"></header>
     <main class="app-page-container" style="padding: 24px 32px; max-width: 1200px; margin: 0 auto; width: 100%;">
       
-      <!-- HERO HEADER CARD -->
+      <!-- HERO HEADER CARD WITH CRISP TEXT CONTRAST -->
       <div class="profile-hero-card">
-        <div class="profile-cover-banner">
-          <div class="profile-cover-overlay"></div>
-        </div>
+        <div class="profile-cover-banner"></div>
         <div class="profile-header-body">
           <div style="display: flex; align-items: flex-end; gap: 20px;">
             <div class="profile-avatar-wrapper">
@@ -491,18 +489,16 @@
                 <span id="main-job" style="font-weight: 600; color: var(--text-h);">Security Specialist</span>
                 <span>•</span>
                 <span id="main-email">user@example.com</span>
-                <span>•</span>
-                <span>Member since Aug 2026</span>
               </div>
             </div>
           </div>
           <div class="profile-hero-actions">
             <button class="btn-sec" onclick="exportProfileAudit()">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Export Clearance Audit
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export Audit
             </button>
             <button class="btn-p" onclick="toggleEditMode(true)">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               Edit Profile
             </button>
           </div>
@@ -533,7 +529,7 @@
                 <div class="p-stat-lbl">Total Scans</div>
               </div>
               <div class="p-stat-tile">
-                <div class="p-stat-val" id="stat-pqc-score" style="color: #10b981;">94%</div>
+                <div class="p-stat-val" id="stat-pqc-score" style="color: #10b981;">N/A</div>
                 <div class="p-stat-lbl">PQC Health</div>
               </div>
               <div class="p-stat-tile">
@@ -561,37 +557,37 @@
               <div class="f-group">
                 <label class="f-label">Full Name</label>
                 <div class="f-val-view" id="view-name"></div>
-                <input type="text" class="f-val-edit" id="edit-name" placeholder="Full Name">
+                <input type="text" class="f-val-edit" id="edit-name" placeholder="Enter Full Name">
               </div>
               <div class="f-group">
                 <label class="f-label">Email Address</label>
                 <div class="f-val-view" id="view-email"></div>
-                <input type="email" class="f-val-edit" id="edit-email" placeholder="Email Address">
+                <input type="email" class="f-val-edit" id="edit-email" placeholder="Enter Email Address">
               </div>
               <div class="f-group">
                 <label class="f-label">Phone Number</label>
                 <div class="f-val-view" id="view-phone"></div>
-                <input type="text" class="f-val-edit" id="edit-phone" placeholder="+1 (555) 019-2834">
+                <input type="text" class="f-val-edit" id="edit-phone" placeholder="Enter Phone Number">
               </div>
               <div class="f-group">
                 <label class="f-label">Organization / Enterprise</label>
                 <div class="f-val-view" id="view-org"></div>
-                <input type="text" class="f-val-edit" id="edit-org" placeholder="Organization Name">
+                <input type="text" class="f-val-edit" id="edit-org" placeholder="Enter Organization">
               </div>
               <div class="f-group">
                 <label class="f-label">Job Title / Security Role</label>
                 <div class="f-val-view" id="view-job"></div>
-                <input type="text" class="f-val-edit" id="edit-job" placeholder="Role Title">
+                <input type="text" class="f-val-edit" id="edit-job" placeholder="Enter Role Title">
               </div>
               <div class="f-group">
                 <label class="f-label">Location / Region</label>
                 <div class="f-val-view" id="view-loc"></div>
-                <input type="text" class="f-val-edit" id="edit-loc" placeholder="City, Country">
+                <input type="text" class="f-val-edit" id="edit-loc" placeholder="Enter Location">
               </div>
               <div class="f-group" style="grid-column: 1 / -1;">
                 <label class="f-label">Security Focus / Bio</label>
                 <div class="f-val-view" id="view-bio"></div>
-                <input type="text" class="f-val-edit" id="edit-bio" placeholder="e.g. Post-Quantum Migration Lead & Cryptographic Compliance Officer">
+                <input type="text" class="f-val-edit" id="edit-bio" placeholder="Enter Bio or Security Focus">
               </div>
             </div>
           </div>
@@ -611,20 +607,20 @@
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 14px;">
-              <div style="font-size: 12.5px; font-weight: 600; color: var(--text-h);">ML-DSA-65 Quantum Key Fingerprint</div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-h);">ML-DSA-65 Quantum Key Fingerprint</div>
               <div class="key-box">
                 <span id="pqc-key-display">ML-DSA-65:0x9F8B2C4E...3A2F7E1D</span>
                 <button class="btn-copy" onclick="copyKey()" title="Copy Key">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
               </div>
               
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
                 <span style="font-size: 13px; color: var(--text-h); font-weight: 500;">Two-Factor Auth (2FA)</span>
                 <span class="badge-pill badge-sepolia">Active</span>
               </div>
               
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
                 <span style="font-size: 13px; color: var(--text-h); font-weight: 500;">Default CBOM Format</span>
                 <span style="font-size: 12px; font-weight: 700; color: var(--accent-violet);">CycloneDX 1.4 JSON</span>
               </div>
@@ -645,7 +641,7 @@
                 <div class="tl-dot"></div>
                 <div class="tl-body">
                   <div class="tl-title">CryptoScan Session Authenticated</div>
-                  <div class="tl-time">Just now</div>
+                  <div class="tl-time">Active Now</div>
                 </div>
               </div>
               <div class="tl-node">
@@ -653,13 +649,6 @@
                 <div class="tl-body">
                   <div class="tl-title">Ethereum Sepolia Proof Anchored</div>
                   <div class="tl-time">2 hours ago</div>
-                </div>
-              </div>
-              <div class="tl-node">
-                <div class="tl-dot"></div>
-                <div class="tl-body">
-                  <div class="tl-title">CycloneDX CBOM Generated</div>
-                  <div class="tl-time">Yesterday</div>
                 </div>
               </div>
             </div>
@@ -680,36 +669,50 @@
     loadProfile();
   });
 
+  function parseScanDate(dStr) {
+    if (!dStr) return 'Never';
+    const d = new Date(dStr);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString();
+    const num = Number(dStr);
+    if (!isNaN(num)) {
+      const dNum = new Date(num);
+      if (!isNaN(dNum.getTime())) return dNum.toLocaleDateString();
+    }
+    return 'Never';
+  }
+
   function loadProfile() {
     let user = null;
     if (typeof Auth !== 'undefined') {
       user = Auth.getUser();
     }
     
-    // Load persisted local profile overrides if available
+    // Load persisted user profile edits
     let storedProfile = {};
     try {
       storedProfile = JSON.parse(localStorage.getItem('cs_profile') || '{}');
     } catch {}
 
-    const name = storedProfile.name || (user && user.name ? user.name : 'Shravani Security Lead');
-    const email = storedProfile.email || (user && user.email ? user.email : 'shravani@cryptoscan.io');
-    const phone = storedProfile.phone || '+1 (555) 389-4021';
-    const org = storedProfile.org || 'CryptoScan Enterprise';
-    const job = storedProfile.job || 'Quantum Compliance Lead';
-    const loc = storedProfile.loc || 'San Francisco, CA';
-    const bio = storedProfile.bio || 'Post-Quantum Migration Lead & Cryptographic Compliance Officer';
+    const name = storedProfile.name || (user && user.name ? user.name : (user && user.email ? user.email.split('@')[0] : 'User'));
+    const email = storedProfile.email || (user && user.email ? user.email : '');
+    const phone = storedProfile.phone || '';
+    const org = storedProfile.org || '';
+    const job = storedProfile.job || '';
+    const loc = storedProfile.loc || '';
+    const bio = storedProfile.bio || '';
+
+    const fmtView = (val) => val ? val : '<span style="color: var(--text-muted); font-style: italic;">Not set</span>';
 
     // Populate Views
-    document.getElementById('view-name').textContent = name;
-    document.getElementById('view-email').textContent = email;
-    document.getElementById('view-phone').textContent = phone;
-    document.getElementById('view-org').textContent = org;
-    document.getElementById('view-job').textContent = job;
-    document.getElementById('view-loc').textContent = loc;
-    document.getElementById('view-bio').textContent = bio;
+    document.getElementById('view-name').innerHTML = fmtView(name);
+    document.getElementById('view-email').innerHTML = fmtView(email);
+    document.getElementById('view-phone').innerHTML = fmtView(phone);
+    document.getElementById('view-org').innerHTML = fmtView(org);
+    document.getElementById('view-job').innerHTML = fmtView(job);
+    document.getElementById('view-loc').innerHTML = fmtView(loc);
+    document.getElementById('view-bio').innerHTML = fmtView(bio);
 
-    // Populate Inputs
+    // Populate Inputs (empty if not set by user)
     document.getElementById('edit-name').value = name;
     document.getElementById('edit-email').value = email;
     document.getElementById('edit-phone').value = phone;
@@ -720,10 +723,10 @@
 
     // Populate Main Header
     document.getElementById('main-name').textContent = name;
-    document.getElementById('main-email').textContent = email;
-    document.getElementById('main-job').textContent = job;
+    document.getElementById('main-email').textContent = email || 'No email specified';
+    document.getElementById('main-job').textContent = job || 'Security Member';
 
-    const initial = name.charAt(0).toUpperCase();
+    const initial = name ? name.charAt(0).toUpperCase() : 'U';
     document.getElementById('main-avatar').textContent = initial;
 
     // Update stats from CryptoEngine
@@ -732,14 +735,21 @@
       const scans = data.scans || [];
       const repos = new Set(scans.map(s => s.repository));
       
-      document.getElementById('stat-repos-count').textContent = repos.size || 3;
-      document.getElementById('stat-scans-count').textContent = scans.length || 12;
+      document.getElementById('stat-repos-count').textContent = repos.size;
+      document.getElementById('stat-scans-count').textContent = scans.length;
       
       if (scans.length > 0) {
-        const sorted = [...scans].sort((a,b) => new Date(b.date) - new Date(a.date));
-        document.getElementById('stat-last-scan').textContent = new Date(sorted[0].date).toLocaleDateString();
+        document.getElementById('stat-pqc-score').textContent = '94%';
+        const sorted = [...scans].sort((a,b) => {
+          const timeA = new Date(a.date || a.timestamp || 0).getTime();
+          const timeB = new Date(b.date || b.timestamp || 0).getTime();
+          return timeB - timeA;
+        });
+        const rawDate = sorted[0].date || sorted[0].timestamp;
+        document.getElementById('stat-last-scan').textContent = parseScanDate(rawDate);
       } else {
-        document.getElementById('stat-last-scan').textContent = 'Sep 12, 2026';
+        document.getElementById('stat-pqc-score').textContent = 'N/A';
+        document.getElementById('stat-last-scan').textContent = 'Never';
       }
     }
   }
@@ -770,10 +780,10 @@
     // Update Auth user session if present
     if (typeof Auth !== 'undefined') {
       const user = Auth.getUser() || {};
-      user.name = profile.name;
-      user.email = profile.email;
+      if (profile.name) user.name = profile.name;
+      if (profile.email) user.email = profile.email;
       localStorage.setItem('cs_user', JSON.stringify(user));
-      Auth.initProfile();
+      if (typeof Auth.initProfile === 'function') Auth.initProfile();
     }
 
     toggleEditMode(false);
