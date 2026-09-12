@@ -355,7 +355,8 @@ html.dark .rec-replace, html.dark-mode .rec-replace, body.dark .rec-replace, bod
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
-html.dark .replace-lbl, html.dark-mode .replace-lbl, body.dark .replace-lbl, body.dark-mode .replace-lbl, html:not(.light-mode) .replace-lbl {
+html.dark .replace-lbl, html.dark-mode .replace-lbl, body.dark .replace-lbl, body.dark-mode .replace-lbl, html:not(.light-mode) .replace-lbl,
+html.dark .rec-replace > div, html.dark-mode .rec-replace > div, body.dark .rec-replace > div, html:not(.light-mode) .rec-replace > div {
   color: #A7F3D0 !important;
 }
 
