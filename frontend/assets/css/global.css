@@ -263,6 +263,12 @@ html.dark .stat-cov-val-sec, html.dark-mode .stat-cov-val-sec {
   color: #F87171 !important;
 }
 
+/* Activity Feed Item Card in Dark Mode */
+html.dark .act-item-card, html.dark-mode .act-item-card {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
 /* Sidebar & Topbar Shell in Dark Mode */
 html.dark .app-sidebar, html.dark-mode .app-sidebar, :root.dark .app-sidebar {
   background: rgba(15, 23, 42, 0.88) !important;

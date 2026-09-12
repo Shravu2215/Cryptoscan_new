@@ -1276,12 +1276,13 @@
       const tot = (c + h + m + l + safe) || 1;
       chart.innerHTML = ''; leg.innerHTML = '';
 
+      const isDarkMode = document.documentElement.classList.contains('dark') || document.documentElement.classList.contains('dark-mode');
       const gradientStyles = {
-        red: { bg: 'linear-gradient(135deg, #ef4444, #dc2626)', text: '#dc2626', pillBg: 'rgba(254, 226, 226, 0.75)', border: 'rgba(239, 68, 68, 0.3)' },
-        amber: { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ea580c', pillBg: 'rgba(255, 237, 213, 0.75)', border: 'rgba(249, 115, 22, 0.3)' },
-        yellow: { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: '#ca8a04', pillBg: 'rgba(254, 249, 195, 0.75)', border: 'rgba(234, 179, 8, 0.3)' },
-        gray: { bg: 'linear-gradient(135deg, #9ca3af, #6b7280)', text: '#4b5563', pillBg: 'rgba(243, 244, 246, 0.75)', border: 'rgba(156, 163, 175, 0.3)' },
-        green: { bg: 'linear-gradient(135deg, #10b981, #059669)', text: '#059669', pillBg: 'rgba(209, 250, 229, 0.75)', border: 'rgba(16, 185, 129, 0.3)' }
+        red: { bg: 'linear-gradient(135deg, #ef4444, #dc2626)', text: isDarkMode ? '#f87171' : '#dc2626', pillBg: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : 'rgba(254, 226, 226, 0.75)', border: isDarkMode ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.3)' },
+        amber: { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: isDarkMode ? '#fbbf24' : '#ea580c', pillBg: isDarkMode ? 'rgba(249, 115, 22, 0.15)' : 'rgba(255, 237, 213, 0.75)', border: isDarkMode ? 'rgba(249, 115, 22, 0.35)' : 'rgba(249, 115, 22, 0.3)' },
+        yellow: { bg: 'linear-gradient(135deg, #eab308, #ca8a04)', text: isDarkMode ? '#facc15' : '#ca8a04', pillBg: isDarkMode ? 'rgba(234, 179, 8, 0.15)' : 'rgba(254, 249, 195, 0.75)', border: isDarkMode ? 'rgba(234, 179, 8, 0.35)' : 'rgba(234, 179, 8, 0.3)' },
+        gray: { bg: 'linear-gradient(135deg, #9ca3af, #6b7280)', text: isDarkMode ? '#cbd5e1' : '#4b5563', pillBg: isDarkMode ? 'rgba(148, 163, 184, 0.15)' : 'rgba(243, 244, 246, 0.75)', border: isDarkMode ? 'rgba(148, 163, 184, 0.35)' : 'rgba(156, 163, 175, 0.3)' },
+        green: { bg: 'linear-gradient(135deg, #10b981, #059669)', text: isDarkMode ? '#34d399' : '#059669', pillBg: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(209, 250, 229, 0.75)', border: isDarkMode ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.3)' }
       };
 
       function addSeg(val, colorKey, lbl) {
@@ -1328,12 +1329,12 @@
         }
 
         feed.innerHTML += `
-      <div style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.5); backdrop-filter:blur(12px); box-shadow:0 4px 16px -2px rgba(124,58,237,0.06); transition:all 0.2s ease;">
+      <div class="act-item-card" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; background:var(--bg-surface); border:1px solid var(--border-color); backdrop-filter:blur(12px); box-shadow:0 4px 16px -2px rgba(124,58,237,0.06); transition:all 0.2s ease;">
         <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(209, 250, 229, 0.95), rgba(243, 232, 255, 0.85)); border:1px solid rgba(16, 185, 129, 0.4); color:#059669; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(16,185,129,0.15);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <div style="flex:1; min-width:0;">
-          <div style="font-size:13px; font-weight:600; color:var(--text-h); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Scan completed for <span style="color:#7c3aed; font-weight:700;">${repoName}</span></div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-h); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Scan completed for <span style="color:var(--accent-violet); font-weight:700;">${repoName}</span></div>
           <div style="font-size:11px; color:var(--text-m); margin-top:2px; font-family:'JetBrains Mono', monospace;">${displayDate}</div>
         </div>
       </div>
