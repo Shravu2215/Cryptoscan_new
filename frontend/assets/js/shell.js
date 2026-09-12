@@ -10,10 +10,16 @@ class AppShell {
   }
 
   init() {
-    // Always enforce Light Mode globally
-    document.documentElement.classList.add('light-mode');
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('cs_theme', 'light');
+    // Theme Preference Initialization
+    const savedTheme = localStorage.getItem('cs_theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark', 'dark-mode');
+      document.documentElement.classList.remove('light-mode');
+    } else {
+      document.documentElement.classList.add('light-mode');
+      document.documentElement.classList.remove('dark', 'dark-mode');
+      localStorage.setItem('cs_theme', 'light');
+    }
 
     // Determine current page to set active nav item
     const path = window.location.pathname;
@@ -159,6 +165,10 @@ class AppShell {
           <span>Search</span>
           <kbd>⌘ K</kbd>
         </button>
+        <button class="icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme" style="display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;display:none;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
         <button class="icon-btn" id="compact-toggle-btn" title="Toggle Fit-to-Screen Compact View" style="display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
         </button>
@@ -243,11 +253,11 @@ class AppShell {
   }
 
   updateThemeIcons() {
-    const isLight = document.documentElement.classList.contains('light-mode');
+    const isDark = document.documentElement.classList.contains('dark') || document.documentElement.classList.contains('dark-mode');
     const sunIcons = document.querySelectorAll('.theme-icon-sun');
     const moonIcons = document.querySelectorAll('.theme-icon-moon');
-    sunIcons.forEach(icon => icon.style.display = isLight ? 'block' : 'none');
-    moonIcons.forEach(icon => icon.style.display = isLight ? 'none' : 'block');
+    sunIcons.forEach(icon => icon.style.display = isDark ? 'block' : 'none');
+    moonIcons.forEach(icon => icon.style.display = isDark ? 'none' : 'block');
   }
 
   loadUserData() {

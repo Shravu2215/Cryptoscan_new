@@ -7,8 +7,13 @@
   <title>Repositories - CryptoScan</title>
   <script>
     function initTheme() {
-      document.documentElement.classList.add('light-mode');
-      localStorage.setItem('cs_theme', 'light');
+      if (localStorage.getItem('cs_theme') === 'dark') {
+        document.documentElement.classList.add('dark', 'dark-mode');
+        document.documentElement.classList.remove('light-mode');
+      } else {
+        document.documentElement.classList.add('light-mode');
+        document.documentElement.classList.remove('dark', 'dark-mode');
+      }
     }
     initTheme();
   </script>
