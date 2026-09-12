@@ -6,8 +6,9 @@
 <title>Sign In – CryptoScan</title>
   <script>
     function initTheme() {
-      if (localStorage.getItem('cs_theme') === 'light') {
+      if (localStorage.getItem('cs_theme') !== 'dark') {
         document.documentElement.classList.add('light-mode');
+        localStorage.setItem('cs_theme', 'light');
       }
     }
     initTheme();
