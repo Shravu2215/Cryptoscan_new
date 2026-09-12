@@ -1498,59 +1498,78 @@
           const algosCount = algosSet.size || 8;
           const apisCount = apisSet.size || 5;
           const secrCount = secretsCount || 2;
-          const baseF = Math.max(15, totalFindings || 30);
+          const baseF = Math.max(10, totalFindings || 30);
 
-          const p1 = Math.round(baseF * 0.35);
-          const p2 = Math.round(baseF * 0.65);
-          const p3 = Math.round(baseF * 0.5);
-          const p4 = Math.round(baseF * 0.85);
-          const p5 = Math.round(baseF * 0.7);
-          const p6 = baseF;
+          // Normalize Y coordinates to fit inside 90px height [bottom: 75px, top: 18px]
+          const maxVal = Math.max(baseF, 10);
+          const getY = (val) => {
+            const norm = Math.min(1, Math.max(0.08, val / maxVal));
+            return Math.round(75 - (norm * 55));
+          };
+
+          const y1 = getY(baseF * 0.20);
+          const y2 = getY(baseF * 0.40);
+          const y3 = getY(baseF * 0.55);
+          const y4 = getY(baseF * 0.75);
+          const y5 = getY(baseF * 0.88);
+          const y6 = getY(baseF);
 
           graphContainer.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:16px; width:100%;">
-              <div style="position:relative; width:100%; height:135px; background:rgba(243, 232, 255, 0.4); border-radius:14px; border:1px solid rgba(216, 180, 254, 0.5); padding:14px 18px 8px; overflow:hidden;">
+              <div class="trend-graph-card" style="position:relative; width:100%; height:140px; background:var(--bg-surface); border-radius:14px; border:1px solid var(--border-color); padding:12px 16px 8px; overflow:hidden;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                  <span style="font-size:11px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.5px;">Cryptographic Scan &amp; Vulnerability Trend</span>
+                  <span style="font-size:11px; font-weight:700; color:var(--accent-violet); text-transform:uppercase; letter-spacing:0.5px;">Cryptographic Scan &amp; Vulnerability Trend</span>
                   <span style="font-size:11px; font-weight:600; color:var(--text-m); font-family:'JetBrains Mono', monospace;">X-Y Timeline Analysis</span>
                 </div>
-                <svg width="100%" height="90" viewBox="0 0 360 90" preserveAspectRatio="none" style="overflow:visible;">
+                <svg width="100%" height="92" viewBox="0 0 360 92" preserveAspectRatio="none" style="overflow:visible;">
                   <defs>
                     <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.38"/>
-                      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.0"/>
+                      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.4"/>
+                      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.0"/>
                     </linearGradient>
                   </defs>
-                  <path d="M0,75 C40,${75 - p1*0.8} 80,${75 - p2*0.8} 120,${75 - p3*0.8} C160,${75 - p4*0.8} 200,${75 - p5*0.8} 240,${75 - p6*0.8} C280,${75 - p5*0.7} 320,${75 - p6*0.95} 360,${75 - p6} L360,85 L0,85 Z" fill="url(#areaGrad)"/>
-                  <path d="M0,75 C40,${75 - p1*0.8} 80,${75 - p2*0.8} 120,${75 - p3*0.8} C160,${75 - p4*0.8} 200,${75 - p5*0.8} 240,${75 - p6*0.8} C280,${75 - p5*0.7} 320,${75 - p6*0.95} 360,${75 - p6}" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
-                  <circle cx="60" cy="${75 - p1*0.8}" r="4" fill="#7c3aed" stroke="#ffffff" stroke-width="2"/>
-                  <circle cx="120" cy="${75 - p3*0.8}" r="4" fill="#7c3aed" stroke="#ffffff" stroke-width="2"/>
-                  <circle cx="180" cy="${75 - p4*0.8}" r="4" fill="#7c3aed" stroke="#ffffff" stroke-width="2"/>
-                  <circle cx="240" cy="${75 - p6*0.8}" r="4" fill="#7c3aed" stroke="#ffffff" stroke-width="2"/>
-                  <circle cx="360" cy="${75 - p6}" r="5" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+
+                  <!-- Dashed Grid Lines -->
+                  <line x1="0" y1="20" x2="360" y2="20" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="4"/>
+                  <line x1="0" y1="47.5" x2="360" y2="47.5" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="4"/>
+                  <line x1="0" y1="75" x2="360" y2="75" stroke="var(--border-subtle)" stroke-width="1"/>
+
+                  <!-- Area Fill -->
+                  <path d="M0,75 L0,${y1} Q60,${y2} 120,${y3} T240,${y5} T360,${y6} L360,75 Z" fill="url(#areaGrad)"/>
+
+                  <!-- Curve Line -->
+                  <path d="M0,${y1} Q60,${y2} 120,${y3} T240,${y5} T360,${y6}" fill="none" stroke="#8b5cf6" stroke-width="2.8" stroke-linecap="round"/>
+
+                  <!-- Data Point Dots -->
+                  <circle cx="0" cy="${y1}" r="3.5" fill="#8b5cf6" stroke="var(--bg-main)" stroke-width="2"/>
+                  <circle cx="72" cy="${y2}" r="3.5" fill="#8b5cf6" stroke="var(--bg-main)" stroke-width="2"/>
+                  <circle cx="144" cy="${y3}" r="3.5" fill="#3b82f6" stroke="var(--bg-main)" stroke-width="2"/>
+                  <circle cx="216" cy="${y4}" r="3.5" fill="#8b5cf6" stroke="var(--bg-main)" stroke-width="2"/>
+                  <circle cx="288" cy="${y5}" r="3.5" fill="#8b5cf6" stroke="var(--bg-main)" stroke-width="2"/>
+                  <circle cx="360" cy="${y6}" r="4.5" fill="#ef4444" stroke="var(--bg-main)" stroke-width="2"/>
                 </svg>
               </div>
 
               <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
-                <div style="padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.4); text-align:center;">
-                  <div style="font-size:10px; font-weight:600; color:var(--text-m);">Files</div>
-                  <div style="font-size:14px; font-weight:700; color:#1e1b4b; font-family:'JetBrains Mono', monospace; margin-top:2px;">${totFiles}</div>
+                <div class="stat-cov-tile" style="padding:8px 10px; border-radius:10px; background:var(--bg-surface); border:1px solid var(--border-color); text-align:center;">
+                  <div class="stat-cov-lbl" style="font-size:10px; font-weight:600; color:var(--text-m);">Files</div>
+                  <div class="stat-cov-val" style="font-size:14px; font-weight:700; color:var(--text-h); font-family:'JetBrains Mono', monospace; margin-top:2px;">${totFiles}</div>
                 </div>
-                <div style="padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.4); text-align:center;">
-                  <div style="font-size:10px; font-weight:600; color:var(--text-m);">Langs</div>
-                  <div style="font-size:14px; font-weight:700; color:#7c3aed; font-family:'JetBrains Mono', monospace; margin-top:2px;">${langsCount}</div>
+                <div class="stat-cov-tile" style="padding:8px 10px; border-radius:10px; background:var(--bg-surface); border:1px solid var(--border-color); text-align:center;">
+                  <div class="stat-cov-lbl" style="font-size:10px; font-weight:600; color:var(--text-m);">Langs</div>
+                  <div class="stat-cov-val" style="font-size:14px; font-weight:700; color:#8b5cf6; font-family:'JetBrains Mono', monospace; margin-top:2px;">${langsCount}</div>
                 </div>
-                <div style="padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.4); text-align:center;">
-                  <div style="font-size:10px; font-weight:600; color:var(--text-m);">Algos</div>
-                  <div style="font-size:14px; font-weight:700; color:#3b82f6; font-family:'JetBrains Mono', monospace; margin-top:2px;">${algosCount}</div>
+                <div class="stat-cov-tile" style="padding:8px 10px; border-radius:10px; background:var(--bg-surface); border:1px solid var(--border-color); text-align:center;">
+                  <div class="stat-cov-lbl" style="font-size:10px; font-weight:600; color:var(--text-m);">Algos</div>
+                  <div class="stat-cov-val" style="font-size:14px; font-weight:700; color:#3b82f6; font-family:'JetBrains Mono', monospace; margin-top:2px;">${algosCount}</div>
                 </div>
-                <div style="padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.75); border:1px solid rgba(216,180,254,0.4); text-align:center;">
-                  <div style="font-size:10px; font-weight:600; color:var(--text-m);">APIs</div>
-                  <div style="font-size:14px; font-weight:700; color:#10b981; font-family:'JetBrains Mono', monospace; margin-top:2px;">${apisCount}</div>
+                <div class="stat-cov-tile" style="padding:8px 10px; border-radius:10px; background:var(--bg-surface); border:1px solid var(--border-color); text-align:center;">
+                  <div class="stat-cov-lbl" style="font-size:10px; font-weight:600; color:var(--text-m);">APIs</div>
+                  <div class="stat-cov-val" style="font-size:14px; font-weight:700; color:#10b981; font-family:'JetBrains Mono', monospace; margin-top:2px;">${apisCount}</div>
                 </div>
-                <div style="padding:8px 10px; border-radius:10px; background:rgba(254,226,226,0.75); border:1px solid rgba(239,68,68,0.3); text-align:center;">
-                  <div style="font-size:10px; font-weight:600; color:#dc2626;">Secrets</div>
-                  <div style="font-size:14px; font-weight:700; color:#dc2626; font-family:'JetBrains Mono', monospace; margin-top:2px;">${secrCount}</div>
+                <div class="stat-cov-tile stat-cov-secrets" style="padding:8px 10px; border-radius:10px; background:rgba(254,226,226,0.75); border:1px solid rgba(239,68,68,0.3); text-align:center;">
+                  <div class="stat-cov-lbl-sec" style="font-size:10px; font-weight:600; color:#dc2626;">Secrets</div>
+                  <div class="stat-cov-val-sec" style="font-size:14px; font-weight:700; color:#dc2626; font-family:'JetBrains Mono', monospace; margin-top:2px;">${secrCount}</div>
                 </div>
               </div>
             </div>`;

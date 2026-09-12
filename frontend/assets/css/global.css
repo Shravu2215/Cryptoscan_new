@@ -234,6 +234,35 @@ html.dark #q-exposure, html.dark-mode #q-exposure {
   color: #CBD5E1 !important;
 }
 
+/* Trend Graph & Coverage Metric Tiles in Dark Mode */
+html.dark .trend-graph-card, html.dark-mode .trend-graph-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark .stat-cov-tile, html.dark-mode .stat-cov-tile {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark .stat-cov-lbl, html.dark-mode .stat-cov-lbl {
+  color: #94A3B8 !important;
+}
+
+html.dark .stat-cov-val, html.dark-mode .stat-cov-val {
+  color: #F8FAFC !important;
+}
+
+html.dark .stat-cov-secrets, html.dark-mode .stat-cov-secrets {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+html.dark .stat-cov-lbl-sec, html.dark-mode .stat-cov-lbl-sec,
+html.dark .stat-cov-val-sec, html.dark-mode .stat-cov-val-sec {
+  color: #F87171 !important;
+}
+
 /* Sidebar & Topbar Shell in Dark Mode */
 html.dark .app-sidebar, html.dark-mode .app-sidebar, :root.dark .app-sidebar {
   background: rgba(15, 23, 42, 0.88) !important;
