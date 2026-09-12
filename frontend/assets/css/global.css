@@ -382,6 +382,36 @@ html.dark .rg-val, html.dark-mode .rg-val, body.dark .rg-val, html:not(.light-mo
   color: #F8FAFC !important;
 }
 
+/* Verification Hero Card Dark Mode Overrides */
+html.dark .verify-hero, html.dark-mode .verify-hero, body.dark .verify-hero, html:not(.light-mode) .verify-hero {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
+  border: 1px solid rgba(124, 58, 237, 0.4) !important;
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .verify-hero.status-verified, html.dark-mode .verify-hero.status-verified, body.dark .verify-hero.status-verified, html:not(.light-mode) .verify-hero.status-verified {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.95)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+html.dark .verify-hero.status-failed, html.dark-mode .verify-hero.status-failed, body.dark .verify-hero.status-failed, html:not(.light-mode) .verify-hero.status-failed {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.95)) !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+html.dark .verify-hero.status-incomplete, html.dark-mode .verify-hero.status-incomplete, body.dark .verify-hero.status-incomplete, html:not(.light-mode) .verify-hero.status-incomplete {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+html.dark .vh-title, html.dark-mode .vh-title, body.dark .vh-title, html:not(.light-mode) .vh-title {
+  color: #F8FAFC !important;
+}
+
+html.dark .vh-desc, html.dark-mode .vh-desc, body.dark .vh-desc, html:not(.light-mode) .vh-desc {
+  color: #CBD5E1 !important;
+}
+
 html.dark .stat-tile, html.dark .p-stat-tile, html.dark-mode .stat-tile, html.dark-mode .p-stat-tile {
   background: rgba(30, 41, 59, 0.5) !important;
   border-color: rgba(51, 65, 85, 0.8) !important;

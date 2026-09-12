@@ -282,10 +282,22 @@
       box-shadow: 0 8px 32px -4px rgba(124, 58, 237, 0.08);
     }
 
+    html.dark .verify-hero, html.dark-mode .verify-hero, body.dark .verify-hero, html:not(.light-mode) .verify-hero {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
+      border: 1px solid rgba(124, 58, 237, 0.4) !important;
+      box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4) !important;
+    }
+
     .verify-hero.status-verified {
       background: linear-gradient(135deg, rgba(209, 250, 229, 0.95), rgba(243, 232, 255, 0.85));
       border: 1px solid rgba(16, 185, 129, 0.4);
       box-shadow: 0 8px 32px -4px rgba(16, 185, 129, 0.15);
+    }
+
+    html.dark .verify-hero.status-verified, html.dark-mode .verify-hero.status-verified, body.dark .verify-hero.status-verified, html:not(.light-mode) .verify-hero.status-verified {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.95)) !important;
+      border: 1px solid rgba(16, 185, 129, 0.4) !important;
+      box-shadow: 0 8px 32px -4px rgba(16, 185, 129, 0.2) !important;
     }
 
     .verify-hero.status-failed {
@@ -294,10 +306,22 @@
       box-shadow: 0 8px 32px -4px rgba(239, 68, 68, 0.15);
     }
 
+    html.dark .verify-hero.status-failed, html.dark-mode .verify-hero.status-failed, body.dark .verify-hero.status-failed, html:not(.light-mode) .verify-hero.status-failed {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.95)) !important;
+      border: 1px solid rgba(239, 68, 68, 0.4) !important;
+      box-shadow: 0 8px 32px -4px rgba(239, 68, 68, 0.2) !important;
+    }
+
     .verify-hero.status-incomplete {
       background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(243, 232, 255, 0.85));
       border: 1px solid rgba(245, 158, 11, 0.4);
       box-shadow: 0 8px 32px -4px rgba(245, 158, 11, 0.15);
+    }
+
+    html.dark .verify-hero.status-incomplete, html.dark-mode .verify-hero.status-incomplete, body.dark .verify-hero.status-incomplete, html:not(.light-mode) .verify-hero.status-incomplete {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.95)) !important;
+      border: 1px solid rgba(245, 158, 11, 0.4) !important;
+      box-shadow: 0 8px 32px -4px rgba(245, 158, 11, 0.2) !important;
     }
 
     .vh-icon {
@@ -321,10 +345,20 @@
       border: 1px solid rgba(16, 185, 129, 0.4);
     }
 
+    html.dark .vh-icon.verified, html.dark-mode .vh-icon.verified, body.dark .vh-icon.verified, html:not(.light-mode) .vh-icon.verified {
+      background: rgba(16, 185, 129, 0.2) !important;
+      color: #34D399 !important;
+    }
+
     .vh-icon.failed {
       background: rgba(254, 226, 226, 0.9);
       color: #dc2626;
       border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    html.dark .vh-icon.failed, html.dark-mode .vh-icon.failed, body.dark .vh-icon.failed, html:not(.light-mode) .vh-icon.failed {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #F87171 !important;
     }
 
     .vh-icon.incomplete {
@@ -333,10 +367,20 @@
       border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
+    html.dark .vh-icon.incomplete, html.dark-mode .vh-icon.incomplete, body.dark .vh-icon.incomplete, html:not(.light-mode) .vh-icon.incomplete {
+      background: rgba(245, 158, 11, 0.2) !important;
+      color: #FBBF24 !important;
+    }
+
     .vh-icon.unverified {
       background: rgba(243, 232, 255, 0.9);
       color: #7c3aed;
       border: 1px solid rgba(167, 139, 250, 0.4);
+    }
+
+    html.dark .vh-icon.unverified, html.dark-mode .vh-icon.unverified, body.dark .vh-icon.unverified, html:not(.light-mode) .vh-icon.unverified {
+      background: rgba(124, 58, 237, 0.2) !important;
+      color: #C084FC !important;
     }
 
     .vh-title {
@@ -346,6 +390,10 @@
       letter-spacing: -0.02em;
     }
 
+    html.dark .vh-title, html.dark-mode .vh-title, body.dark .vh-title, html:not(.light-mode) .vh-title {
+      color: #F8FAFC !important;
+    }
+
     .vh-desc {
       font-size: 14px;
       color: #374151;
@@ -353,6 +401,10 @@
       margin-top: 8px;
       line-height: 1.5;
       font-weight: 500;
+    }
+
+    html.dark .vh-desc, html.dark-mode .vh-desc, body.dark .vh-desc, html:not(.light-mode) .vh-desc {
+      color: #CBD5E1 !important;
     }
 
     /* Pipeline Progress */
