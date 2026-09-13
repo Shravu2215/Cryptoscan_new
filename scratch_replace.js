@@ -1,5 +1,5 @@
 const fs = require('fs');
-const files = ['scan.html', 'cbom.html', 'profile.html', 'settings.html', 'verification.html', 'repositories.html'];
+const files = ['scan.html', 'cbom.html', 'profile.html', 'verification.html', 'repositories.html'];
 
 files.forEach(file => {
   let content = fs.readFileSync('frontend/' + file, 'utf-8');

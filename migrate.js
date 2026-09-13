@@ -9,8 +9,7 @@ const pages = [
   'cbom.html',
   'risk-migration.html',
   'verification.html',
-  'profile.html',
-  'settings.html'
+  'profile.html'
 ];
 
 const dir = path.join(__dirname, 'frontend');
